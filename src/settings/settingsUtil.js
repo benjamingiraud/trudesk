@@ -40,8 +40,9 @@ util.setSetting = function (setting, value, callback) {
   settingSchema.updateOne({ name: s.name }, s, { upsert: true }, callback)
 }
 
-util.getSettings = function (callback) {
+util.getSettings = function (callback, organizationId) {
   settingSchema.getSettings(function (err, settings) {
+    console.warn(organizationId)
     if (err) return callback('Invalid Settings')
 
     var s = {}
@@ -133,7 +134,7 @@ util.getSettings = function (callback) {
             })
 
             return done()
-          })
+          }, organizationId)
         },
         function (done) {
           var ticketPrioritySchema = require('../models/ticketpriority')
@@ -143,11 +144,11 @@ util.getSettings = function (callback) {
             content.data.priorities = _.sortBy(priorities, ['migrationNum', 'name'])
 
             return done()
-          })
+          }, organizationId)
         },
         function (done) {
           var templateSchema = require('../models/template')
-          templateSchema.find({}, function (err, templates) {
+          templateSchema.find({ organizationId: organizationId }, function (err, templates) {
             if (err) return done(err)
 
             content.data.mailTemplates = _.sortBy(templates, 'name')
@@ -165,12 +166,15 @@ util.getSettings = function (callback) {
             }
 
             return done()
-          })
+          }, organizationId)
         },
         function (done) {
           roleSchema.getRoles(function (err, roles) {
+            console.warn(organizationId)
             if (err) return done(err)
             roleOrderSchema.getOrder(function (err, roleOrder) {
+              console.warn(organizationId, roles)
+
               if (err) return done(err)
               roleOrder = roleOrder.order
 
@@ -181,8 +185,8 @@ util.getSettings = function (callback) {
               } else content.data.roles = roles
 
               return done()
-            })
-          })
+            }, organizationId)
+          }, organizationId)
         }
       ],
       function (err) {
@@ -192,7 +196,7 @@ util.getSettings = function (callback) {
         return callback(null, content)
       }
     )
-  })
+  }, organizationId)
 }
 
 module.exports = util

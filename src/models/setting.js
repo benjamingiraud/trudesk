@@ -17,28 +17,25 @@ var mongoose = require('mongoose')
 var COLLECTION = 'settings'
 
 var settingSchema = mongoose.Schema({
-  name: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
   value: { type: mongoose.Schema.Types.Mixed, required: true }
 })
+settingSchema.index({ name: 1, organizationId: 1 }, { unique: true })
 
-settingSchema.statics.getSettings = function (callback) {
-  var q = this.model(COLLECTION)
-    .find()
+settingSchema.statics.getSettings = function (callback, organizationId) {
+  return this.model(COLLECTION)
+    .find({ organizationId: organizationId })
     .select('name value')
-
-  return q.exec(callback)
+    .exec(callback)
 }
 
-settingSchema.statics.getSettingByName = function (name, callback) {
-  var q = this.model(COLLECTION).findOne({ name: name })
-
-  return q.exec(callback)
+settingSchema.statics.getSettingByName = function (name, callback, organizationId) {
+  return this.model(COLLECTION).findOne({ name: name, organizationId: organizationId }, callback)
 }
 
-settingSchema.statics.getSettingsByName = function (names, callback) {
-  var q = this.model(COLLECTION).find({ name: names })
-
-  return q.exec(callback)
+settingSchema.statics.getSettingsByName = function (names, callback, organizationId) {
+  return this.model(COLLECTION).find({ name: names, organizationId }, callback)
 }
 
 settingSchema.statics.getSetting = settingSchema.statics.getSettingByName

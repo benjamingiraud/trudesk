@@ -50,8 +50,12 @@ var apiNotices = {}
  }
  */
 apiNotices.create = function (req, res) {
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   var postData = req.body
   var notice = new NoticeSchema(postData)
+  notice.organizationId = organizationId
   notice.save(function (err, notice) {
     if (err) {
       winston.debug(err)
@@ -96,14 +100,21 @@ apiNotices.create = function (req, res) {
  */
 apiNotices.updateNotice = function (req, res) {
   var id = req.params.id
-  NoticeSchema.getNotice(id, function (err, notice) {
-    if (err) return res.status(400).json({ success: false, error: err })
-    notice.update(req.body, function (err) {
-      if (err) return res.status(400).json({ success: false, error: err })
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
-      res.json({ success: true })
-    })
-  })
+  NoticeSchema.getNotice(
+    id,
+    function (err, notice) {
+      if (err) return res.status(400).json({ success: false, error: err })
+      notice.update(req.body, function (err) {
+        if (err) return res.status(400).json({ success: false, error: err })
+
+        res.json({ success: true })
+      })
+    },
+    organizationId
+  )
 }
 
 /**
@@ -127,6 +138,9 @@ apiNotices.updateNotice = function (req, res) {
  }
  */
 apiNotices.clearActive = function (req, res) {
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   NoticeSchema.getNotices(function (err, notices) {
     if (err) return res.status(400).json({ success: false, error: err })
 
@@ -138,7 +152,7 @@ apiNotices.clearActive = function (req, res) {
     })
 
     res.json({ success: true })
-  })
+  }, organizationId)
 }
 
 /**
@@ -164,15 +178,22 @@ apiNotices.clearActive = function (req, res) {
  */
 apiNotices.deleteNotice = function (req, res) {
   var id = req.params.id
-  NoticeSchema.getNotice(id, function (err, notice) {
-    if (err) return res.status(400).json({ success: false, error: err })
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
-    notice.remove(function (err) {
+  NoticeSchema.getNotice(
+    id,
+    function (err, notice) {
       if (err) return res.status(400).json({ success: false, error: err })
 
-      res.json({ success: true })
-    })
-  })
+      notice.remove(function (err) {
+        if (err) return res.status(400).json({ success: false, error: err })
+
+        res.json({ success: true })
+      })
+    },
+    organizationId
+  )
 }
 
 module.exports = apiNotices

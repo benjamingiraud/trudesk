@@ -23,6 +23,7 @@ var Department = require('../../../models/department')
 var accountsApi = {}
 
 accountsApi.create = function (req, res) {
+  console.log('heyyyyo')
   var postData = req.body
   if (!postData) return apiUtil.sendApiError_InvalidPostData(res)
 

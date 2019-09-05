@@ -18,18 +18,19 @@ var mongoose = require('mongoose')
 var COLLECTION = 'role_order'
 
 var roleOrder = mongoose.Schema({
-  order: [mongoose.Schema.Types.ObjectId]
+  order: [mongoose.Schema.Types.ObjectId],
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true }
 })
 
-roleOrder.statics.getOrder = function (callback) {
+roleOrder.statics.getOrder = function (callback, organizationId) {
   return this.model(COLLECTION)
-    .findOne({})
+    .findOne({ organizationId: organizationId })
     .exec(callback)
 }
 
-roleOrder.statics.getOrderLean = function (callback) {
+roleOrder.statics.getOrderLean = function (callback, organizationId) {
   return this.model(COLLECTION)
-    .findOne({})
+    .findOne({ organizationId: organizationId })
     .lean()
     .exec(callback)
 }

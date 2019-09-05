@@ -169,9 +169,12 @@ middleware.checkOrigin = function (req, res, next) {
 
 // API
 middleware.api = function (req, res, next) {
+  console.log('heyyyyy middleware')
   var accessToken = req.headers.accesstoken
+  var organizationId = req.params.organizationId
 
-  var userSchema = require('../models/user')
+  if (_.isUndefined(organizationId) || _.isNil(organizationId))
+    return res.status(401).json({ error: 'organizationId must be provided' })
 
   if (_.isUndefined(accessToken) || _.isNull(accessToken)) {
     var user = req.user
@@ -180,9 +183,23 @@ middleware.api = function (req, res, next) {
     return next()
   }
 
+  var userSchema = require('../models/user')
+  var organizationSchema = require('../models/organization')
+
+  organizationSchema.getById(organizationId, function (err, organization) {
+    if (err) return res.status(401).json({ error: err.message })
+    if (!organization) return res.status(401).json({ error: 'Organization not found' })
+
+    req.organization = organization
+
+    console.log(organization)
+  })
+
   userSchema.getUserByAccessToken(accessToken, function (err, user) {
     if (err) return res.status(401).json({ error: err.message })
     if (!user) return res.status(401).json({ error: 'Invalid Access Token' })
+    if ('' + user.organizationId !== '' + req.organization._id)
+      return res.status(401).json({ error: "User doesn't have access to this organization" })
 
     req.user = user
 

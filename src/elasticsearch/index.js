@@ -240,7 +240,7 @@ ES.getIndexCount = function (callback) {
   )
 }
 
-ES.init = function (callback) {
+ES.init = function (callback, organizationId) {
   global.esStatus = 'Not Configured'
   global.esRebuilding = false
   settingUtil.getSettings(function (err, s) {
@@ -282,7 +282,7 @@ ES.init = function (callback) {
         if (_.isFunction(callback)) return callback(err)
       }
     )
-  })
+  }, organizationId)
 }
 
 ES.checkConnection = function (callback) {

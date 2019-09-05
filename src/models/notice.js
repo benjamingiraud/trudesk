@@ -31,6 +31,7 @@ var COLLECTION = 'notices'
  */
 var noticeSchema = mongoose.Schema({
   name: { type: String, required: true },
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
   date: { type: Date, default: Date.now, required: true },
   color: { type: String, default: '#e74c3c', required: true },
   fontColor: { type: String, default: '#ffffff', required: true },
@@ -46,27 +47,27 @@ noticeSchema.pre('save', function (next) {
   return next()
 })
 
-noticeSchema.statics.getNotices = function (callback) {
+noticeSchema.statics.getNotices = function (callback, organizationId) {
   return this.model(COLLECTION)
-    .find({})
+    .find({ organizationId: organizationId })
     .exec(callback)
 }
 
-noticeSchema.statics.getNotice = function (id, callback) {
+noticeSchema.statics.getNotice = function (id, callback, organizationId) {
   return this.model(COLLECTION)
-    .findOne({ _id: id })
+    .findOne({ _id: id, organizationId: organizationId })
     .exec(callback)
 }
 
-noticeSchema.statics.getNoticeByName = function (name, callback) {
+noticeSchema.statics.getNoticeByName = function (name, callback, organizationId) {
   return this.model(COLLECTION)
-    .find({ name: name })
+    .find({ name: name, organizationId: organizationId })
     .exec(callback)
 }
 
-noticeSchema.statics.getActive = function (callback) {
+noticeSchema.statics.getActive = function (callback, organizationId) {
   return this.model(COLLECTION)
-    .findOne({ active: true })
+    .findOne({ active: true, organizationId: organizationId })
     .exec(callback)
 }
 

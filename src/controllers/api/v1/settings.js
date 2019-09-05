@@ -29,6 +29,9 @@ function defaultApiResponse (err, res) {
 }
 
 apiSettings.getSettings = function (req, res) {
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   settingsUtil.getSettings(function (err, settings) {
     if (err) return res.status(400).json({ success: false, error: err })
 
@@ -57,10 +60,13 @@ apiSettings.getSettings = function (req, res) {
     }
 
     return res.json({ success: true, settings: settings })
-  })
+  }, organizationId)
 }
 
 apiSettings.getSingleSetting = function (req, res) {
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   settingsUtil.getSettings(function (err, settings) {
     if (err) return res.status(400).json({ success: false, error: err })
 
@@ -68,7 +74,7 @@ apiSettings.getSingleSetting = function (req, res) {
     if (!setting) return res.status(400).json({ success: false, error: 'invalid setting' })
 
     return res.json({ success: true, setting: setting })
-  })
+  }, organizationId)
 }
 
 /**
@@ -101,6 +107,9 @@ apiSettings.getSingleSetting = function (req, res) {
  }
  */
 apiSettings.updateSetting = function (req, res) {
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   var postData = req.body
   if (_.isUndefined(postData)) return res.status(400).json({ success: false, error: 'Invalid Post Data' })
 
@@ -112,30 +121,34 @@ apiSettings.updateSetting = function (req, res) {
   async.each(
     postData,
     function (item, callback) {
-      SettingsSchema.getSettingByName(item.name, function (err, s) {
-        if (err) return callback(err.message)
-        if (_.isNull(s) || _.isUndefined(s)) {
-          s = new SettingsSchema({
-            name: item.name
-          })
-        }
-
-        if (s.name === 'legal:privacypolicy') {
-          item.value = sanitizeHtml(item.value, {
-            allowedTags: false
-          })
-        }
-
-        s.value = item.value
-
-        s.save(function (err, savedSetting) {
+      SettingsSchema.getSettingByName(
+        item.name,
+        function (err, s) {
           if (err) return callback(err.message)
+          if (_.isNull(s) || _.isUndefined(s)) {
+            s = new SettingsSchema({
+              name: item.name
+            })
+          }
 
-          updatedSettings.push(savedSetting)
+          if (s.name === 'legal:privacypolicy') {
+            item.value = sanitizeHtml(item.value, {
+              allowedTags: false
+            })
+          }
 
-          return callback()
-        })
-      })
+          s.value = item.value
+
+          s.save(function (err, savedSetting) {
+            if (err) return callback(err.message)
+
+            updatedSettings.push(savedSetting)
+
+            return callback()
+          })
+        },
+        organizationId
+      )
     },
     function (err) {
       if (err) return res.status(400).json({ success: false, error: err })

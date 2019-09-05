@@ -18,6 +18,7 @@ var COLLECTION = 'templates'
 
 var templateSchema = mongoose.Schema({
   name: { type: String, required: true },
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
   subject: { type: String, required: true },
   displayName: String,
   description: String,
@@ -30,9 +31,9 @@ templateSchema.pre('save', function (next) {
   return next()
 })
 
-templateSchema.statics.get = function (name, callback) {
+templateSchema.statics.get = function (name, callback, organizationId) {
   return this.model(COLLECTION)
-    .findOne({ name: name })
+    .findOne({ name: name, organizationId: organizationId })
     .exec(callback)
 }
 

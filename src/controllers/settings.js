@@ -55,6 +55,8 @@ function handleError (res, err) {
 }
 
 function renderView (res, content) {
+  console.log('settings.js')
+
   settingsUtil.getSettings(function (err, returnedContent) {
     if (err) return handleError(res, err)
 

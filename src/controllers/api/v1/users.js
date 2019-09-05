@@ -44,6 +44,9 @@ var apiUsers = {}
  }
  */
 apiUsers.getWithLimit = function (req, res) {
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   var limit = 10
   if (!_.isUndefined(req.query.limit)) {
     limit = parseInt(req.query.limit)
@@ -54,7 +57,8 @@ apiUsers.getWithLimit = function (req, res) {
   var obj = {
     limit: limit,
     page: page,
-    search: search
+    search: search,
+    organizationId: organizationId
   }
 
   async.waterfall(
@@ -148,15 +152,15 @@ apiUsers.getWithLimit = function (req, res) {
  }
  */
 apiUsers.create = function (req, res) {
-  var response = {}
-  response.success = true
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var postData = req.body
-
   if (_.isUndefined(postData) || !_.isObject(postData)) {
     return res.status(400).json({ success: false, error: 'Invalid Post Data' })
   }
-
+  var response = {}
+  response.success = true
   var propCheck = ['aUsername', 'aPass', 'aPassConfirm', 'aFullname', 'aEmail', 'aRole']
 
   if (
@@ -183,7 +187,8 @@ apiUsers.create = function (req, res) {
     fullname: postData.aFullname,
     email: postData.aEmail,
     accessToken: chance.hash(),
-    role: postData.aRole
+    role: postData.aRole,
+    organizationId: organizationId
   })
 
   if (postData.aTitle) {
@@ -210,20 +215,24 @@ apiUsers.create = function (req, res) {
         postData.aGrps,
         function (id, done) {
           if (_.isUndefined(id)) return done(null)
-          groupSchema.getGroupById(id, function (err, grp) {
-            if (err) return done(err)
-            if (!grp) return done('Invalid Group (' + id + ') - Group not found. Check Group ID')
-
-            grp.addMember(a._id, function (err, success) {
+          groupSchema.getGroupById(
+            id,
+            function (err, grp) {
               if (err) return done(err)
+              if (!grp) return done('Invalid Group (' + id + ') - Group not found. Check Group ID')
 
-              grp.save(function (err) {
+              grp.addMember(a._id, function (err, success) {
                 if (err) return done(err)
-                groups.push(grp)
-                done(null, success)
+
+                grp.save(function (err) {
+                  if (err) return done(err)
+                  groups.push(grp)
+                  done(null, success)
+                })
               })
-            })
-          })
+            },
+            organizationId
+          )
         },
         function (err) {
           if (err) return res.status(400).json({ success: false, error: err })
@@ -360,6 +369,9 @@ apiUsers.createPublicAccount = function (req, res) {
  }
  */
 apiUsers.update = function (req, res) {
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   var username = req.params.username
   if (_.isNull(username) || _.isUndefined(username))
     return res.status(400).json({ success: false, error: 'Invalid Post Data' })
@@ -386,39 +398,43 @@ apiUsers.update = function (req, res) {
   async.series(
     {
       user: function (done) {
-        UserSchema.getUserByUsername(username, function (err, user) {
-          if (err) return done(err)
-          if (!user) return done('Invalid User Object')
-
-          obj._id = user._id
-
-          if (
-            !_.isUndefined(obj.password) &&
-            !_.isEmpty(obj.password) &&
-            !_.isUndefined(obj.passconfirm) &&
-            !_.isEmpty(obj.passconfirm)
-          ) {
-            if (obj.password === obj.passconfirm) {
-              user.password = obj.password
-            }
-          }
-
-          if (!_.isUndefined(obj.fullname) && obj.fullname.length > 0) user.fullname = obj.fullname
-          if (!_.isUndefined(obj.email) && obj.email.length > 0) user.email = obj.email
-          if (!_.isUndefined(obj.title) && obj.title.length > 0) user.title = obj.title
-          if (!_.isUndefined(obj.role) && obj.role.length > 0) user.role = obj.role
-
-          user.save(function (err, nUser) {
+        UserSchema.getUserByUsername(
+          username,
+          function (err, user) {
             if (err) return done(err)
+            if (!user) return done('Invalid User Object')
 
-            nUser.populate('role', function (err, populatedUser) {
+            obj._id = user._id
+
+            if (
+              !_.isUndefined(obj.password) &&
+              !_.isEmpty(obj.password) &&
+              !_.isUndefined(obj.passconfirm) &&
+              !_.isEmpty(obj.passconfirm)
+            ) {
+              if (obj.password === obj.passconfirm) {
+                user.password = obj.password
+              }
+            }
+
+            if (!_.isUndefined(obj.fullname) && obj.fullname.length > 0) user.fullname = obj.fullname
+            if (!_.isUndefined(obj.email) && obj.email.length > 0) user.email = obj.email
+            if (!_.isUndefined(obj.title) && obj.title.length > 0) user.title = obj.title
+            if (!_.isUndefined(obj.role) && obj.role.length > 0) user.role = obj.role
+
+            user.save(function (err, nUser) {
               if (err) return done(err)
-              var resUser = stripUserFields(populatedUser)
 
-              return done(null, resUser)
+              nUser.populate('role', function (err, populatedUser) {
+                if (err) return done(err)
+                var resUser = stripUserFields(populatedUser)
+
+                return done(null, resUser)
+              })
             })
-          })
-        })
+          },
+          organizationId
+        )
       },
       groups: function (done) {
         if (!saveGroups) {
@@ -470,7 +486,7 @@ apiUsers.update = function (req, res) {
                 return done(null, userGroups)
               }
             )
-          })
+          }, organizationId)
         }
       }
     },
@@ -516,6 +532,9 @@ apiUsers.update = function (req, res) {
  }
  */
 apiUsers.updatePreferences = function (req, res) {
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   var username = req.params.username
   if (typeof username === 'undefined') {
     return res.status(400).json({ success: false, error: 'Invalid Request' })
@@ -525,29 +544,33 @@ apiUsers.updatePreferences = function (req, res) {
   var preference = data.preference
   var value = data.value
 
-  UserSchema.getUserByUsername(username, function (err, user) {
-    if (err) {
-      winston.warn('[API:USERS:UpdatePreferences] Error= ' + err)
-      return res.status(400).json({ success: false, error: err })
-    }
-
-    if (_.isNull(user.preferences)) {
-      user.preferences = {}
-    }
-
-    user.preferences[preference] = value
-
-    user.save(function (err, u) {
+  UserSchema.getUserByUsername(
+    username,
+    function (err, user) {
       if (err) {
         winston.warn('[API:USERS:UpdatePreferences] Error= ' + err)
         return res.status(400).json({ success: false, error: err })
       }
 
-      var resUser = stripUserFields(u)
+      if (_.isNull(user.preferences)) {
+        user.preferences = {}
+      }
 
-      return res.json({ success: true, user: resUser })
-    })
-  })
+      user.preferences[preference] = value
+
+      user.save(function (err, u) {
+        if (err) {
+          winston.warn('[API:USERS:UpdatePreferences] Error= ' + err)
+          return res.status(400).json({ success: false, error: err })
+        }
+
+        var resUser = stripUserFields(u)
+
+        return res.json({ success: true, user: resUser })
+      })
+    },
+    organizationId
+  )
 }
 
 /**
@@ -571,6 +594,9 @@ apiUsers.updatePreferences = function (req, res) {
  }
  */
 apiUsers.deleteUser = function (req, res) {
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   var username = req.params.username
 
   if (_.isUndefined(username) || _.isNull(username)) return res.status(400).json({ error: 'Invalid Request' })
@@ -578,49 +604,53 @@ apiUsers.deleteUser = function (req, res) {
   async.waterfall(
     [
       function (cb) {
-        UserSchema.getUserByUsername(username, function (err, user) {
-          if (err) return cb(err)
+        UserSchema.getUserByUsername(
+          username,
+          function (err, user) {
+            if (err) return cb(err)
 
-          if (_.isNull(user)) {
-            return cb({ message: 'Invalid User' })
-          }
+            if (_.isNull(user)) {
+              return cb({ message: 'Invalid User' })
+            }
 
-          if (user.username.toLowerCase() === req.user.username) {
-            return cb({ message: 'Cannot remove yourself!' })
-          }
+            if (user.username.toLowerCase() === req.user.username) {
+              return cb({ message: 'Cannot remove yourself!' })
+            }
 
-          if (!permissions.canThis(req.user.role, 'accounts:delete')) return cb({ message: 'Access Denied' })
+            if (!permissions.canThis(req.user.role, 'accounts:delete')) return cb({ message: 'Access Denied' })
 
-          // TODO: FIX THIS FOR HIERARCHY!!
-          // if (req.user.role.toLowerCase() === 'support' || req.user.role.toLowerCase() === 'user') {
-          //     if (user.role.toLowerCase() === 'mod' || user.role.toLowerCase() === 'admin')
-          //         return cb({message: 'Insufficient permissions'});
-          //
-          // }
+            // TODO: FIX THIS FOR HIERARCHY!!
+            // if (req.user.role.toLowerCase() === 'support' || req.user.role.toLowerCase() === 'user') {
+            //     if (user.role.toLowerCase() === 'mod' || user.role.toLowerCase() === 'admin')
+            //         return cb({message: 'Insufficient permissions'});
+            //
+            // }
 
-          return cb(null, user)
-        })
+            return cb(null, user)
+          },
+          organizationId
+        )
       },
       function (user, cb) {
         var ticketSchema = require('../../../models/ticket')
-        ticketSchema.find({ owner: user._id }, function (err, tickets) {
+        ticketSchema.find({ owner: user._id, organizationId: organizationId }, function (err, tickets) {
           if (err) return cb(err)
 
           var hasTickets = _.size(tickets) > 0
           return cb(null, hasTickets, user)
         })
       },
-      function (hasTickets, user, cb) {
-        var conversationSchema = require('../../../models/chat/conversation')
-        conversationSchema.getConversationsWithLimit(user._id, 10, function (err, conversations) {
-          if (err) return cb(err)
+      // function (hasTickets, user, cb) {
+      //   var conversationSchema = require('../../../models/chat/conversation')
+      //   conversationSchema.getConversationsWithLimit(user._id, 10, function (err, conversations) {
+      //     if (err) return cb(err)
 
-          var hasConversations = _.size(conversations) > 0
-          return cb(null, hasTickets, hasConversations, user)
-        })
-      },
-      function (hasTickets, hasConversations, user, cb) {
-        if (hasTickets || hasConversations) {
+      //     var hasConversations = _.size(conversations) > 0
+      //     return cb(null, hasTickets, hasConversations, user)
+      //   })
+      // },
+      function (hasTickets, user, cb) {
+        if (hasTickets) {
           // Disable if the user has tickets or conversations
           user.softDelete(function (err) {
             if (err) return cb(err)
@@ -669,25 +699,32 @@ apiUsers.enableUser = function (req, res) {
   var username = req.params.username
   if (_.isUndefined(username)) return res.status(400).json({ error: 'Invalid Request' })
 
-  UserSchema.getUserByUsername(username, function (err, user) {
-    if (err) {
-      winston.debug(err)
-      return res.status(400).json({ error: err.message })
-    }
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
-    if (_.isUndefined(user) || _.isNull(user)) return res.status(400).json({ error: 'Invalid Request' })
+  UserSchema.getUserByUsername(
+    username,
+    function (err, user) {
+      if (err) {
+        winston.debug(err)
+        return res.status(400).json({ error: err.message })
+      }
 
-    if (!permissions.canThis(req.user.role, 'accounts:delete'))
-      return res.status(401).json({ error: 'Invalid Permissions' })
+      if (_.isUndefined(user) || _.isNull(user)) return res.status(400).json({ error: 'Invalid Request' })
 
-    user.deleted = false
+      if (!permissions.canThis(req.user.role, 'accounts:delete'))
+        return res.status(401).json({ error: 'Invalid Permissions' })
 
-    user.save(function (err) {
-      if (err) return res.status(400).json({ error: err.message })
+      user.deleted = false
 
-      res.json({ success: true })
-    })
-  })
+      user.save(function (err) {
+        if (err) return res.status(400).json({ error: err.message })
+
+        res.json({ success: true })
+      })
+    },
+    organizationId
+  )
 }
 
 /**
@@ -721,6 +758,9 @@ apiUsers.single = function (req, res) {
   var username = req.params.username
   if (_.isUndefined(username)) return res.status(400).json({ error: 'Invalid Request.' })
 
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   var response = {
     success: true,
     groups: []
@@ -729,27 +769,35 @@ apiUsers.single = function (req, res) {
   async.waterfall(
     [
       function (done) {
-        UserSchema.getUserByUsername(username, function (err, user) {
-          if (err) return done(err)
+        UserSchema.getUserByUsername(
+          username,
+          function (err, user) {
+            if (err) return done(err)
 
-          if (_.isUndefined(user) || _.isNull(user)) return done('Invalid Request')
+            if (_.isUndefined(user) || _.isNull(user)) return done('Invalid Request')
 
-          user = stripUserFields(user)
-          response.user = user
+            user = stripUserFields(user)
+            response.user = user
 
-          done(null, user)
-        })
+            done(null, user)
+          },
+          organizationId
+        )
       },
       function (user, done) {
-        groupSchema.getAllGroupsOfUserNoPopulate(user._id, function (err, grps) {
-          if (err) return done(err)
+        groupSchema.getAllGroupsOfUserNoPopulate(
+          user._id,
+          function (err, grps) {
+            if (err) return done(err)
 
-          response.groups = _.map(grps, function (o) {
-            return o._id
-          })
+            response.groups = _.map(grps, function (o) {
+              return o._id
+            })
 
-          done(null, response.groups)
-        })
+            done(null, response.groups)
+          },
+          organizationId
+        )
       }
     ],
     function (err) {
@@ -780,19 +828,33 @@ apiUsers.single = function (req, res) {
  }
  */
 apiUsers.notificationCount = function (req, res) {
-  notificationSchema.getUnreadCount(req.user._id, function (err, count) {
-    if (err) return res.status(400).json({ success: false, error: err.message })
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
-    return res.json({ success: true, count: count.toString() })
-  })
+  notificationSchema.getUnreadCount(
+    req.user._id,
+    function (err, count) {
+      if (err) return res.status(400).json({ success: false, error: err.message })
+
+      return res.json({ success: true, count: count.toString() })
+    },
+    organizationId
+  )
 }
 
 apiUsers.getNotifications = function (req, res) {
-  notificationSchema.findAllForUser(req.user._id, function (err, notifications) {
-    if (err) return res.status(500).json({ success: false, error: err.message })
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
-    return res.json({ success: true, notifications: notifications })
-  })
+  notificationSchema.findAllForUser(
+    req.user._id,
+    function (err, notifications) {
+      if (err) return res.status(500).json({ success: false, error: err.message })
+
+      return res.json({ success: true, notifications: notifications })
+    },
+    organizationId
+  )
 }
 
 /**
@@ -966,20 +1028,26 @@ apiUsers.removeL2Auth = function (req, res) {
 
 apiUsers.checkEmail = function (req, res) {
   var email = req.body.email
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   if (_.isUndefined(email) || _.isNull(email)) {
     return res.status(400).json({ success: false, error: 'Invalid Post Data' })
   }
 
-  UserSchema.getUserByEmail(email, function (err, users) {
-    if (err) return res.status(400).json({ success: false, error: err.message })
+  UserSchema.getUserByEmail(
+    email,
+    function (err, users) {
+      if (err) return res.status(400).json({ success: false, error: err.message })
 
-    if (!_.isNull(users)) {
-      return res.json({ success: true, exist: true })
-    }
+      if (!_.isNull(users)) {
+        return res.json({ success: true, exist: true })
+      }
 
-    return res.json({ success: true, exist: false })
-  })
+      return res.json({ success: true, exist: false })
+    },
+    organizationId
+  )
 }
 
 /**
@@ -1003,6 +1071,9 @@ apiUsers.checkEmail = function (req, res) {
  }
  */
 apiUsers.getAssingees = function (req, res) {
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   UserSchema.getAssigneeUsers(function (err, users) {
     if (err) return res.status(400).json({ error: 'Invalid Request' })
 
@@ -1020,34 +1091,45 @@ apiUsers.getAssingees = function (req, res) {
         return res.json({ success: true, users: strippedUsers })
       }
     )
-  })
+  }, organizationId)
 }
 
 apiUsers.getGroups = function (req, res) {
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   if (req.user.role.isAdmin || req.user.role.isAgent) {
     var departmentSchema = require('../../../models/department')
-    departmentSchema.getDepartmentGroupsOfUser(req.user._id, function (err, groups) {
-      if (err) return res.status(400).json({ success: false, error: err.message })
+    departmentSchema.getDepartmentGroupsOfUser(
+      req.user._id,
+      function (err, groups) {
+        if (err) return res.status(400).json({ success: false, error: err.message })
 
-      var mappedGroups = groups.map(function (g) {
-        return g._id
-      })
+        var mappedGroups = groups.map(function (g) {
+          return g._id
+        })
 
-      return res.json({ success: true, groups: mappedGroups })
-    })
+        return res.json({ success: true, groups: mappedGroups })
+      },
+      organizationId
+    )
   } else {
     if (req.user.username !== req.params.username)
       return res.status(400).json({ success: false, error: 'Invalid API Call' })
 
-    groupSchema.getAllGroupsOfUserNoPopulate(req.user._id, function (err, groups) {
-      if (err) return res.status(400).json({ success: false, error: err.message })
+    groupSchema.getAllGroupsOfUserNoPopulate(
+      req.user._id,
+      function (err, groups) {
+        if (err) return res.status(400).json({ success: false, error: err.message })
 
-      var mappedGroups = groups.map(function (g) {
-        return g._id
-      })
+        var mappedGroups = groups.map(function (g) {
+          return g._id
+        })
 
-      return res.json({ success: true, groups: mappedGroups })
-    })
+        return res.json({ success: true, groups: mappedGroups })
+      },
+      organizationId
+    )
   }
 }
 

@@ -26,9 +26,11 @@ var COLLECTION = 'tags'
  * @property {String} name ```Required``` ```unique``` Name of Tag
  */
 var tagSchema = mongoose.Schema({
-  name: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
   normalized: String
 })
+tagSchema.index({ name: 1, organizationId: 1 }, { unique: true })
 
 tagSchema.pre('save', function (next) {
   this.name = this.name.trim()
@@ -37,8 +39,8 @@ tagSchema.pre('save', function (next) {
   return next()
 })
 
-tagSchema.statics.getTag = function (id, callback) {
-  var q = this.model(COLLECTION).findOne({ _id: id })
+tagSchema.statics.getTag = function (id, callback, organizationId) {
+  var q = this.model(COLLECTION).findOne({ _id: id, organizationId: organizationId })
 
   return q.exec(callback)
 }
@@ -52,17 +54,17 @@ tagSchema.statics.getTag = function (id, callback) {
  *
  * @param {QueryCallback} callback MongoDB Query Callback
  */
-tagSchema.statics.getTags = function (callback) {
+tagSchema.statics.getTags = function (callback, organizationId) {
   var q = this.model(COLLECTION)
-    .find({})
+    .find({ organizationId: organizationId })
     .sort('normalized')
 
   return q.exec(callback)
 }
 
-tagSchema.statics.getTagsWithLimit = function (limit, page, callback) {
+tagSchema.statics.getTagsWithLimit = function (limit, page, callback, organizationId) {
   var q = this.model(COLLECTION)
-    .find({})
+    .find({ organizationId: organizationId })
     .sort('normalized')
 
   if (limit !== -1) {
@@ -72,23 +74,23 @@ tagSchema.statics.getTagsWithLimit = function (limit, page, callback) {
   return q.exec(callback)
 }
 
-tagSchema.statics.getTagByName = function (tagName, callback) {
+tagSchema.statics.getTagByName = function (tagName, callback, organizationId) {
   var q = this.model(COLLECTION)
-    .find({ name: tagName })
+    .find({ name: tagName, organizationId: organizationId })
     .limit(1)
 
   return q.exec(callback)
 }
 
-tagSchema.statics.tagExist = function (tagName, callback) {
-  var q = this.model(COLLECTION).countDocuments({ name: tagName })
+tagSchema.statics.tagExist = function (tagName, callback, organizationId) {
+  var q = this.model(COLLECTION).countDocuments({ name: tagName, organizationId: organizationId })
 
   return q.exec(callback)
 }
 
-tagSchema.statics.getTagCount = function (callback) {
+tagSchema.statics.getTagCount = function (callback, organizationId) {
   var q = this.model(COLLECTION)
-    .countDocuments({})
+    .countDocuments({ organizationId: organizationId })
     .lean()
 
   return q.exec(callback)

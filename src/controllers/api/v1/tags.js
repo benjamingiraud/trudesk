@@ -40,10 +40,14 @@ var apiTags = {}
  */
 apiTags.createTag = function (req, res) {
   var data = req.body
+  var organizationId = req.params.organizationId
+
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
   if (_.isUndefined(data.tag)) return res.status(400).json({ error: 'Invalid Post Data' })
 
   var Tag = new TagSchema({
-    name: data.tag
+    name: data.tag,
+    organizationId: organizationId
   })
 
   Tag.save(function (err, T) {
@@ -57,6 +61,9 @@ apiTags.getTagsWithLimit = function (req, res) {
   var qs = req.query
   var limit = qs.limit ? qs.limit : 25
   var page = qs.page ? qs.page : 0
+  var organizationId = req.params.organizationId
+
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var tagSchema = require('../../../models/tag')
   var result = { success: true }
@@ -65,18 +72,23 @@ apiTags.getTagsWithLimit = function (req, res) {
     [
       function (done) {
         try {
-          tagSchema.getTagsWithLimit(parseInt(limit), parseInt(page), function (err, tags) {
-            if (err) return done(err)
+          tagSchema.getTagsWithLimit(
+            parseInt(limit),
+            parseInt(page),
+            function (err, tags) {
+              if (err) return done(err)
 
-            result.tags = tags
-            return done()
-          })
+              result.tags = tags
+              return done()
+            },
+            organizationId
+          )
         } catch (e) {
           return done({ message: 'Invalid Limit and/or page' })
         }
       },
       function (done) {
-        tagSchema.countDocuments({}, function (err, count) {
+        tagSchema.countDocuments({ organizationId: organizationId }, function (err, count) {
           if (err) return done(err)
           result.count = count
 
@@ -110,22 +122,29 @@ apiTags.getTagsWithLimit = function (req, res) {
 apiTags.updateTag = function (req, res) {
   var id = req.params.id
   var data = req.body
+  var organizationId = req.params.organizationId
+
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
   if (_.isUndefined(id) || _.isNull(id) || _.isNull(data) || _.isUndefined(data)) {
     return res.status(400).json({ success: false, error: 'Invalid Put Data' })
   }
 
   var tagSchema = require('../../../models/tag')
-  tagSchema.getTag(id, function (err, tag) {
-    if (err) return res.status(400).json({ success: false, error: err.message })
-
-    tag.name = data.name
-
-    tag.save(function (err, t) {
+  tagSchema.getTag(
+    id,
+    function (err, tag) {
       if (err) return res.status(400).json({ success: false, error: err.message })
 
-      return res.json({ success: true, tag: t })
-    })
-  })
+      tag.name = data.name
+
+      tag.save(function (err, t) {
+        if (err) return res.status(400).json({ success: false, error: err.message })
+
+        return res.json({ success: true, tag: t })
+      })
+    },
+    organizationId
+  )
 }
 
 /**
@@ -144,32 +163,39 @@ apiTags.updateTag = function (req, res) {
  */
 apiTags.deleteTag = function (req, res) {
   var id = req.params.id
+  var organizationId = req.params.organizationId
+
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
   if (_.isUndefined(id) || _.isNull(id)) return res.status(400).json({ success: false, error: 'Invalid Tag Id' })
 
   async.series(
     [
       function (next) {
         var ticketModel = require('../../../models/ticket')
-        ticketModel.getAllTicketsByTag(id, function (err, tickets) {
-          if (err) return next(err)
-          async.each(
-            tickets,
-            function (ticket, cb) {
-              ticket.tags = _.reject(ticket.tags, function (o) {
-                return o._id.toString() === id.toString()
-              })
+        ticketModel.getAllTicketsByTag(
+          id,
+          function (err, tickets) {
+            if (err) return next(err)
+            async.each(
+              tickets,
+              function (ticket, cb) {
+                ticket.tags = _.reject(ticket.tags, function (o) {
+                  return o._id.toString() === id.toString()
+                })
 
-              ticket.save(function (err) {
-                return cb(err)
-              })
-            },
-            function (err) {
-              if (err) return next(err)
+                ticket.save(function (err) {
+                  return cb(err)
+                })
+              },
+              function (err) {
+                if (err) return next(err)
 
-              return next(null)
-            }
-          )
-        })
+                return next(null)
+              }
+            )
+          },
+          organizationId
+        )
       },
       function (next) {
         var tagSchema = require('../../../models/tag')

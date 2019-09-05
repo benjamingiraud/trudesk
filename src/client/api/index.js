@@ -20,6 +20,7 @@ let api = {}
 
 api.tickets = {}
 api.tickets.getWithPage = payload => {
+  console.log(payload)
   const limit = payload.limit ? payload.limit : 50
   const page = payload.page ? payload.page : 0
   const type = payload.type ? payload.type : 'all'

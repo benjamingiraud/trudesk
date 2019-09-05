@@ -29,7 +29,8 @@ var COLLECTION = 'groups'
  * @property {Array} sendMailTo Members to email when a new / updated ticket has triggered
  */
 var groupSchema = mongoose.Schema({
-  name: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
   members: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -40,6 +41,7 @@ var groupSchema = mongoose.Schema({
   sendMailTo: [{ type: mongoose.Schema.Types.ObjectId, ref: 'accounts' }],
   public: { type: Boolean, required: true, default: false }
 })
+groupSchema.index({ name: 1, organizationId: 1 }, { unique: true })
 
 groupSchema.plugin(require('mongoose-autopopulate'))
 
@@ -138,9 +140,9 @@ groupSchema.statics.getWithObject = function (obj, callback) {
     .exec(callback)
 }
 
-groupSchema.statics.getAllGroups = function (callback) {
+groupSchema.statics.getAllGroups = function (callback, organizationId) {
   var q = this.model(COLLECTION)
-    .find({})
+    .find({ organizationId: organizationId })
     .populate('members', '_id username fullname email role preferences image title deleted')
     .populate('sendMailTo', '_id username fullname email role preferences image title deleted')
     .sort('name')
@@ -148,9 +150,9 @@ groupSchema.statics.getAllGroups = function (callback) {
   return q.exec(callback)
 }
 
-groupSchema.statics.getAllGroupsNoPopulate = function (callback) {
+groupSchema.statics.getAllGroupsNoPopulate = function (callback, organizationId) {
   var q = this.model(COLLECTION)
-    .find({})
+    .find({ organizationId: organizationId })
     .sort('name')
 
   return q.exec(callback)
@@ -164,21 +166,22 @@ groupSchema.statics.getAllPublicGroups = function (callback) {
   return q.exec(callback)
 }
 
-groupSchema.statics.getGroups = function (groupIds, callback) {
+groupSchema.statics.getGroups = function (groupIds, callback, organizationId) {
   if (_.isUndefined(groupIds)) return callback('Invalid Array of Group IDs - GroupSchema.GetGroups()')
 
   this.model(COLLECTION)
-    .find({ _id: { $in: groupIds } })
+    .find({ _id: { $in: groupIds }, organizationId: organizationId })
     .populate('members', '_id username fullname email role preferences image title deleted')
     .sort('name')
     .exec(callback)
 }
 
-groupSchema.statics.getAllGroupsOfUser = function (userId, callback) {
+groupSchema.statics.getAllGroupsOfUser = function (userId, callback, organizationId) {
   if (_.isUndefined(userId)) return callback('Invalid UserId - GroupSchema.GetAllGroupsOfUser()')
+  if (_.isUndefined(organizationId)) return callback('Invalid Organization Id - GroupSchema.GetAllGroupsOfUser()')
 
   var q = this.model(COLLECTION)
-    .find({ members: userId })
+    .find({ members: userId, organizationId: organizationId })
     .populate('members', '_id username fullname email role preferences image title deleted')
     .populate('sendMailTo', '_id username fullname email role preferences image title deleted')
     .sort('name')
@@ -186,21 +189,22 @@ groupSchema.statics.getAllGroupsOfUser = function (userId, callback) {
   return q.exec(callback)
 }
 
-groupSchema.statics.getAllGroupsOfUserNoPopulate = function (userId, callback) {
+groupSchema.statics.getAllGroupsOfUserNoPopulate = function (userId, callback, organizationId) {
   if (_.isUndefined(userId)) return callback('Invalid UserId - GroupSchema.GetAllGroupsOfUserNoPopulate()')
 
   var q = this.model(COLLECTION)
-    .find({ members: userId })
+    .find({ members: userId, organizationId })
     .sort('name')
 
   return q.exec(callback)
 }
 
-groupSchema.statics.getGroupById = function (gId, callback) {
+groupSchema.statics.getGroupById = function (gId, callback, organizationId) {
   if (_.isUndefined(gId)) return callback('Invalid GroupId - GroupSchema.GetGroupById()')
+  if (_.isUndefined(organizationId)) return callback('Invalid Organization Id - GroupSchema.GetGroupById()')
 
   var q = this.model(COLLECTION)
-    .findOne({ _id: gId })
+    .findOne({ _id: gId, organizationId: organizationId })
     .populate('members', '_id username fullname email role preferences image title')
     .populate('sendMailTo', '_id username fullname email role preferences image title')
 

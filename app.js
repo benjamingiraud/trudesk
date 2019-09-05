@@ -130,6 +130,7 @@ function start () {
 }
 
 function launchServer (db) {
+  var baseOrganizationId = nconf.get('mongo:baseOrganizationId')
   var ws = require('./src/webserver')
   ws.init(db, function (err) {
     if (err) {
@@ -140,10 +141,10 @@ function launchServer (db) {
     async.series(
       [
         function (next) {
-          require('./src/settings/defaults').init(next)
+          require('./src/settings/defaults').init(next, baseOrganizationId)
         },
         function (next) {
-          require('./src/permissions').register(next)
+          require('./src/permissions').register(next, baseOrganizationId)
         },
         function (next) {
           require('./src/elasticsearch').init(function (err) {
@@ -152,7 +153,7 @@ function launchServer (db) {
             }
 
             return next()
-          })
+          }, baseOrganizationId)
         },
         function (next) {
           require('./src/socketserver')(ws)
@@ -160,40 +161,47 @@ function launchServer (db) {
         },
         function (next) {
           // Start Check Mail
+          winston.debug('Starting MailCheck...')
+
           var settingSchema = require('./src/models/setting')
-          settingSchema.getSetting('mailer:check:enable', function (err, mailCheckEnabled) {
-            if (err) {
-              winston.warn(err)
-              return next(err)
-            }
+          settingSchema.getSetting(
+            'mailer:check:enable',
+            function (err, mailCheckEnabled) {
+              if (err) {
+                winston.warn(err)
+                return next(err)
+              }
 
-            if (mailCheckEnabled && mailCheckEnabled.value) {
-              settingSchema.getSettings(function (err, settings) {
-                if (err) return next(err)
+              if (mailCheckEnabled && mailCheckEnabled.value) {
+                settingSchema.getSettings(function (err, settings) {
+                  if (err) return next(err)
 
-                var mailCheck = require('./src/mailer/mailCheck')
-                winston.debug('Starting MailCheck...')
-                mailCheck.init(settings)
+                  var mailCheck = require('./src/mailer/mailCheck')
+                  mailCheck.init(settings)
 
+                  return next()
+                }, baseOrganizationId)
+              } else {
                 return next()
-              })
-            } else {
-              return next()
-            }
-          })
+              }
+            },
+            baseOrganizationId
+          )
         },
         function (next) {
-          require('./src/migration').run(next)
+          winston.debug('migration...')
+
+          require('./src/migration').run(next, baseOrganizationId)
         },
         function (next) {
           winston.debug('Building dynamic sass...')
-          require('./src/sass/buildsass').build(next)
+          require('./src/sass/buildsass').build(next, baseOrganizationId)
         },
-        // function (next) {
-        //   // Start Task Runners
-        //   require('./src/taskrunner')
-        //   return next()
-        // },
+        function (next) {
+          // Start Task Runners
+          require('./src/taskrunner')
+          return next()
+        },
         function (next) {
           var cache = require('./src/cache/cache')
           if (isDocker) {
@@ -212,11 +220,11 @@ function launchServer (db) {
           cache.init()
 
           return next()
-        },
-        function (next) {
-          var taskRunner = require('./src/taskrunner')
-          return taskRunner.init(next)
         }
+        // function (next) {
+        //   var taskRunner = require('./src/taskrunner')
+        //   return taskRunner.init(next)
+        // }
       ],
       function (err) {
         if (err) throw new Error(err)

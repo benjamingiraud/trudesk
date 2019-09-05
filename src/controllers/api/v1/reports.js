@@ -56,6 +56,9 @@ var apiReports = {
  }
  */
 apiReports.generate.ticketsByGroup = function (req, res) {
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   var postData = req.body
   if (!postData || !postData.startDate || !postData.endDate)
     return res.status(400).json({ success: false, error: 'Invalid Post Data' })
@@ -63,6 +66,7 @@ apiReports.generate.ticketsByGroup = function (req, res) {
   ticketSchema.getTicketsWithObject(
     postData.groups,
     {
+      organizationId: organizationId,
       limit: -1,
       page: 0,
       filter: {
@@ -85,37 +89,45 @@ apiReports.generate.ticketsByGroup = function (req, res) {
 }
 
 apiReports.generate.ticketsByTeam = function (req, res) {
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   var postData = req.body
   if (!postData || !postData.startDate || !postData.endDate)
     return res.status(400).json({ success: false, error: 'Invalid Post Data' })
 
   var departmentSchema = require('../../../models/department')
-  departmentSchema.getDepartmentsByTeam(postData.teams, function (err, departments) {
-    if (err) return res.status(500).json({ success: false, error: err.message })
+  departmentSchema.getDepartmentsByTeam(
+    postData.teams,
+    function (err, departments) {
+      if (err) return res.status(500).json({ success: false, error: err.message })
 
-    ticketSchema.getTicketsByDepartments(
-      departments,
-      {
-        limit: -1,
-        page: 0,
-        filter: {
-          date: {
-            start: postData.startDate,
-            end: postData.endDate
+      ticketSchema.getTicketsByDepartments(
+        departments,
+        {
+          organizationId: organizationId,
+          limit: -1,
+          page: 0,
+          filter: {
+            date: {
+              start: postData.startDate,
+              end: postData.endDate
+            }
           }
+        },
+        function (err, tickets) {
+          if (err) return res.status(500).json({ success: false, error: err.message })
+
+          var input = processReportData(tickets)
+
+          tickets = null
+
+          return processResponse(res, input)
         }
-      },
-      function (err, tickets) {
-        if (err) return res.status(500).json({ success: false, error: err.message })
-
-        var input = processReportData(tickets)
-
-        tickets = null
-
-        return processResponse(res, input)
-      }
-    )
-  })
+      )
+    },
+    organizationId
+  )
 }
 
 /**
@@ -151,6 +163,8 @@ apiReports.generate.ticketsByTeam = function (req, res) {
  */
 apiReports.generate.ticketsByPriority = function (req, res) {
   var postData = req.body
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   async.waterfall(
     [
@@ -159,7 +173,7 @@ apiReports.generate.ticketsByPriority = function (req, res) {
           groupSchema.getAllGroupsNoPopulate(function (err, grps) {
             if (err) return done(err)
             return done(null, grps)
-          })
+          }, organizationId)
         } else {
           return done(null, postData.groups)
         }
@@ -168,6 +182,7 @@ apiReports.generate.ticketsByPriority = function (req, res) {
         ticketSchema.getTicketsWithObject(
           grps,
           {
+            organizationId: organizationId,
             limit: -1,
             page: 0,
             filter: {
@@ -227,6 +242,8 @@ apiReports.generate.ticketsByPriority = function (req, res) {
  */
 apiReports.generate.ticketsByStatus = function (req, res) {
   var postData = req.body
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   async.waterfall(
     [
@@ -236,7 +253,7 @@ apiReports.generate.ticketsByStatus = function (req, res) {
             if (err) return done(err)
 
             return done(null, grps)
-          })
+          }, organizationId)
         } else {
           return done(null, postData.groups)
         }
@@ -245,6 +262,7 @@ apiReports.generate.ticketsByStatus = function (req, res) {
         ticketSchema.getTicketsWithObject(
           grps,
           {
+            organizationId: organizationId,
             limit: -1,
             page: 0,
             status: postData.status,
@@ -308,6 +326,8 @@ apiReports.generate.ticketsByStatus = function (req, res) {
  */
 apiReports.generate.ticketsByTags = function (req, res) {
   var postData = req.body
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   async.waterfall(
     [
@@ -317,7 +337,7 @@ apiReports.generate.ticketsByTags = function (req, res) {
             if (err) return done(err)
 
             return done(null, grps)
-          })
+          }, organizationId)
         } else {
           return done(null, postData.groups)
         }
@@ -326,6 +346,7 @@ apiReports.generate.ticketsByTags = function (req, res) {
         ticketSchema.getTicketsWithObject(
           grps,
           {
+            organizationId: organizationId,
             limit: -1,
             page: 0,
             filter: {
@@ -389,6 +410,9 @@ apiReports.generate.ticketsByTags = function (req, res) {
  */
 apiReports.generate.ticketsByType = function (req, res) {
   var postData = req.body
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   async.waterfall(
     [
       function (done) {
@@ -397,7 +421,7 @@ apiReports.generate.ticketsByType = function (req, res) {
             if (err) return done(err)
 
             return done(null, grps)
-          })
+          }, organizationId)
         } else {
           return done(null, postData.groups)
         }
@@ -406,6 +430,7 @@ apiReports.generate.ticketsByType = function (req, res) {
         ticketSchema.getTicketsWithObject(
           grps,
           {
+            organizationId: organizationId,
             limit: -1,
             page: 0,
             filter: {
@@ -469,6 +494,9 @@ apiReports.generate.ticketsByType = function (req, res) {
  */
 apiReports.generate.ticketsByUser = function (req, res) {
   var postData = req.body
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   async.waterfall(
     [
       function (done) {
@@ -477,7 +505,7 @@ apiReports.generate.ticketsByUser = function (req, res) {
             if (err) return done(err)
 
             return done(null, grps)
-          })
+          }, organizationId)
         } else {
           return done(null, postData.groups)
         }
@@ -486,6 +514,7 @@ apiReports.generate.ticketsByUser = function (req, res) {
         ticketSchema.getTicketsWithObject(
           grps,
           {
+            organizationId: organizationId,
             limit: -1,
             page: 0,
             filter: {
@@ -518,6 +547,9 @@ apiReports.generate.ticketsByUser = function (req, res) {
 
 apiReports.generate.ticketsByAssignee = function (req, res) {
   var postData = req.body
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   async.waterfall(
     [
       function (done) {
@@ -526,7 +558,7 @@ apiReports.generate.ticketsByAssignee = function (req, res) {
             if (err) return done(err)
 
             return done(null, grps)
-          })
+          }, organizationId)
         } else {
           return done(null, postData.groups)
         }
@@ -535,6 +567,7 @@ apiReports.generate.ticketsByAssignee = function (req, res) {
         ticketSchema.getTicketsWithObject(
           grps,
           {
+            organizationId: organizationId,
             limit: -1,
             page: 0,
             filter: {

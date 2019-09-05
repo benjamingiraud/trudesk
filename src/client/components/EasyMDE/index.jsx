@@ -12,7 +12,7 @@
  *  Copyright (c) 2014-2019. All rights reserved.
  */
 
-import React, { Fragment } from 'react'
+import React, { Fragment, Suspense } from 'react'
 import PropTypes from 'prop-types'
 
 import Log from '../../logger'
@@ -24,6 +24,9 @@ import Easymde from 'easymde'
 import 'inlineAttachment'
 import 'inputInlineAttachment'
 import 'cm4InlineAttachment'
+
+import { useTranslation } from 'react-i18next';
+import { renderToString } from 'react-dom/server'
 
 class EasyMDE extends React.Component {
   constructor (props) {
@@ -88,7 +91,7 @@ class EasyMDE extends React.Component {
           urlText: '![Image]({filename})'
         })
 
-        EasyMDE.attachFileDesc(self.element)
+        EasyMDE.attachFileDesc(self.element, this.props.t)
       }
     }
   }
@@ -115,12 +118,17 @@ class EasyMDE extends React.Component {
     return null
   }
 
-  static attachFileDesc (textarea) {
+  static attachFileDesc (textarea, t) {
+    function Description() {
+      const { t } = useTranslation();
+      return t('common:Image_Drag_Drop')
+    }
+
     const $el = $(textarea)
     const attachFileDiv = $('<div></div>')
     attachFileDiv
       .addClass('attachFileDesc')
-      .html('<p>Attach images by dragging & dropping or pasting from clipboard.</p>')
+      .html(`<p>${renderToString(<Description/>)}.</p>`)
     $el.siblings('.CodeMirror').addClass('hasFileDesc')
     $el
       .siblings('.editor-statusbar')
@@ -213,10 +221,10 @@ class EasyMDE extends React.Component {
       this.easymde.codemirror.refresh()
     }, 250)
     return (
-      <Fragment>
+      <Suspense fallback={"Loading"}>
         <textarea ref={i => (this.element = i)} value={this.state.value} onChange={e => this.onTextareaChanged(e)} />
         {this.props.showStatusBar && <div className='editor-statusbar uk-float-left uk-width-1-1' />}
-      </Fragment>
+      </Suspense>
     )
   }
 }

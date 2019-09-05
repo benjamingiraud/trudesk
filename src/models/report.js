@@ -33,6 +33,7 @@ var COLLECTION = 'reports'
  */
 var reportSchema = mongoose.Schema({
   uid: { type: Number, required: true, unique: true },
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
   name: { type: String, required: true },
   type: { type: Number, required: true },
   runDate: { type: Date, required: true, default: Date.now },

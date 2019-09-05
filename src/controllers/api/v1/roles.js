@@ -20,7 +20,10 @@ var permissions = require('../../../permissions')
 var rolesV1 = {}
 
 rolesV1.get = function (req, res) {
-  var roleSchmea = require('../../../models/role')
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
+  var roleSchema = require('../../../models/role')
   var roleOrderSchema = require('../../../models/roleorder')
 
   var roles = []
@@ -29,7 +32,7 @@ rolesV1.get = function (req, res) {
   async.parallel(
     [
       function (done) {
-        roleSchmea.find({}, function (err, r) {
+        roleSchema.find({ organizationId: organizationId }, function (err, r) {
           if (err) return done(err)
 
           roles = r
@@ -44,7 +47,7 @@ rolesV1.get = function (req, res) {
           roleOrder = ro
 
           return done()
-        })
+        }, organizationId)
       }
     ],
     function (err) {
@@ -56,6 +59,9 @@ rolesV1.get = function (req, res) {
 }
 
 rolesV1.create = function (req, res) {
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   var name = req.body.name
   if (!name) return res.status(400).json({ success: false, error: 'Invalid Post Data' })
 
@@ -65,7 +71,7 @@ rolesV1.create = function (req, res) {
   async.waterfall(
     [
       function (next) {
-        roleSchema.create({ name: name }, next)
+        roleSchema.create({ name: name, organizationId: organizationId }, next)
       },
       function (role, next) {
         if (!role) return next('Invalid Role')
@@ -80,7 +86,7 @@ rolesV1.create = function (req, res) {
 
             return next(null, role, savedRo)
           })
-        })
+        }, organizationId)
       }
     ],
     function (err, role, roleOrder) {
@@ -95,6 +101,9 @@ rolesV1.create = function (req, res) {
 }
 
 rolesV1.update = function (req, res) {
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   var _id = req.params.id
   var data = req.body
   if (_.isUndefined(_id) || _.isUndefined(data))
@@ -105,19 +114,26 @@ rolesV1.update = function (req, res) {
   var cleaned = _.omit(data, ['_id', 'hierarchy'])
   var k = permissions.buildGrants(cleaned)
   var roleSchema = require('../../../models/role')
-  roleSchema.get(data._id, function (err, role) {
-    if (err) return res.status(400).json({ success: false, error: err })
-    role.updateGrantsAndHierarchy(k, hierarchy, function (err) {
+  roleSchema.get(
+    data._id,
+    function (err, role) {
       if (err) return res.status(400).json({ success: false, error: err })
+      role.updateGrantsAndHierarchy(k, hierarchy, function (err) {
+        if (err) return res.status(400).json({ success: false, error: err })
 
-      emitter.emit('$trudesk:flushRoles')
+        emitter.emit('$trudesk:flushRoles')
 
-      return res.send('OK')
-    })
-  })
+        return res.send('OK')
+      })
+    },
+    organizationId
+  )
 }
 
 rolesV1.delete = function (req, res) {
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   var _id = req.params.id
   var newRoleId = req.body.newRoleId
   if (!_id || !newRoleId) return res.status(400).json({ success: false, error: 'Invalid Post Data' })
@@ -128,17 +144,17 @@ rolesV1.delete = function (req, res) {
   async.series(
     [
       function (done) {
-        userSchema.updateMany({ role: _id }, { $set: { role: newRoleId } }, done)
+        userSchema.updateMany({ role: _id, organizationId: organizationId }, { $set: { role: newRoleId } }, done)
       },
       function (done) {
-        roleSchema.deleteOne({ _id: _id }, done)
+        roleSchema.deleteOne({ _id: _id, organizationId: organizationId }, done)
       },
       function (done) {
         roleOrderSchema.getOrder(function (err, ro) {
           if (err) return done(err)
 
           ro.removeFromOrder(_id, done)
-        })
+        }, organizationId)
       }
     ],
     function (err) {

@@ -20,7 +20,8 @@ var COLLECTION = 'roles'
 
 var roleSchema = mongoose.Schema(
   {
-    name: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
+    organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
     normalized: String,
     description: String,
     grants: [{ type: String, required: true }],
@@ -31,6 +32,7 @@ var roleSchema = mongoose.Schema(
     toJSON: { virtuals: true }
   }
 )
+roleSchema.index({ name: 1, organizationId: 1 }, { unique: true })
 
 roleSchema.virtual('isAdmin').get(function () {
   if (_.isUndefined(global.roles)) return false
@@ -68,27 +70,27 @@ roleSchema.methods.updateGrantsAndHierarchy = function (grants, hierarchy, callb
   this.save(callback)
 }
 
-roleSchema.statics.getRoles = function (callback) {
+roleSchema.statics.getRoles = function (callback, organizationId) {
   return this.model(COLLECTION)
-    .find({})
+    .find({ organizationId: organizationId })
     .exec(callback)
 }
 
-roleSchema.statics.getRolesLean = function (callback) {
+roleSchema.statics.getRolesLean = function (callback, organizationId) {
   return this.model(COLLECTION)
-    .find({})
+    .find({ organizationId: organizationId })
     .lean({ virtuals: true })
     .exec(callback)
 }
 
-roleSchema.statics.getRole = function (id, callback) {
-  var q = this.model(COLLECTION).findOne({ _id: id })
+roleSchema.statics.getRole = function (id, callback, organizationId) {
+  var q = this.model(COLLECTION).findOne({ _id: id, organizationId })
 
   return q.exec(callback)
 }
 
-roleSchema.statics.getRoleByName = function (name, callback) {
-  var q = this.model(COLLECTION).findOne({ normalized: new RegExp('^' + name.trim() + '$', 'i') })
+roleSchema.statics.getRoleByName = function (name, callback, organizationId) {
+  var q = this.model(COLLECTION).findOne({ normalized: new RegExp('^' + name.trim() + '$', 'i'), organizationId })
 
   return q.exec(callback)
 }

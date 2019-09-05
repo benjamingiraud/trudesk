@@ -20,6 +20,7 @@ describe('ticketType.js', function () {
 
   it('should get all ticket types.', function (done) {
     ticketTypeSchema.getTypes(function (err, types) {
+      console.log('hey')
       expect(err).to.not.exist
       expect(types).to.be.a('array')
       expect(types).to.have.length(3) // Has default ticket types already

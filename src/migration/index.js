@@ -23,50 +23,62 @@ var roleSchema = require('../models/role')
 
 var migrations = {}
 
-function saveVersion (callback) {
-  SettingsSchema.getSettingByName('gen:version', function (err, setting) {
-    if (err) {
-      winston.warn(err)
-      if (_.isFunction(callback)) return callback(err)
-      return false
-    }
+function saveVersion (callback, organizationId) {
+  SettingsSchema.getSettingByName(
+    'gen:version',
+    function (err, setting) {
+      if (err) {
+        winston.warn(err)
+        if (_.isFunction(callback)) return callback(err)
+        return false
+      }
 
-    if (!setting) {
-      var s = new SettingsSchema({
-        name: 'gen:version',
-        value: require('../../package.json').version
-      })
-      s.save(function (err) {
-        if (err) {
-          if (_.isFunction(callback)) return callback(err)
-          return false
-        }
+      if (!setting) {
+        var s = new SettingsSchema({
+          name: 'gen:version',
+          value: require('../../package.json').version,
+          organizationId: organizationId
+        })
+        s.save(function (err) {
+          if (err) {
+            if (_.isFunction(callback)) return callback(err)
+            return false
+          }
 
-        if (_.isFunction(callback)) return callback()
-      })
-    } else {
-      if (setting.value) setting.value = require('../../package').version
-      setting.save(function (err) {
-        if (err) {
-          if (_.isFunction(callback)) return callback(err)
-          return false
-        }
+          if (_.isFunction(callback)) return callback()
+        })
+      } else {
+        if (setting.value) setting.value = require('../../package').version
+        setting.save(function (err) {
+          if (err) {
+            if (_.isFunction(callback)) return callback(err)
+            return false
+          }
 
-        if (_.isFunction(callback)) return callback()
-        return true
-      })
-    }
-  })
+          if (_.isFunction(callback)) return callback()
+          return true
+        })
+      }
+    },
+    organizationId
+  )
 }
 
-function getDatabaseVersion (callback) {
-  SettingsSchema.getSettingByName('gen:version', function (err, setting) {
-    if (err) return callback(err)
+function getDatabaseVersion (callback, organizationId) {
+  console.log(organizationId)
+  SettingsSchema.getSettingByName(
+    'gen:version',
+    function (err, setting) {
+      if (err) return callback(err)
 
-    if (!setting) throw new Error('Please upgrade to v1.0.7 Exiting...')
+      if (!setting) throw new Error('Please upgrade to v1.0.7 Exiting...')
 
-    return callback(null, setting.value)
-  })
+      console.log(setting, setting.value)
+
+      return callback(null, setting.value)
+    },
+    organizationId
+  )
 }
 
 function migrateUserRoles (callback) {
@@ -138,7 +150,7 @@ function migrateUserRoles (callback) {
   )
 }
 
-function createAdminTeamDepartment (callback) {
+function createAdminTeamDepartment (callback, organizationId) {
   var Team = require('../models/team')
   var Department = require('../models/department')
   var Account = require('../models/user')
@@ -146,7 +158,7 @@ function createAdminTeamDepartment (callback) {
   async.waterfall(
     [
       function (next) {
-        Account.getAdmins({}, next)
+        Account.getAdmins({ organizationId: organizationId }, next)
       },
       function (admins, next) {
         var adminsIds = admins.map(function (admin) {
@@ -156,7 +168,8 @@ function createAdminTeamDepartment (callback) {
         Team.create(
           {
             name: 'Support (Default)',
-            members: adminsIds
+            members: adminsIds,
+            organizationId: organizationId
           },
           next
         )
@@ -167,7 +180,8 @@ function createAdminTeamDepartment (callback) {
             name: 'Support - All Groups (Default)',
             teams: adminTeam._id,
             allGroups: true,
-            groups: []
+            groups: [],
+            organizationId: organizationId
           },
           next
         )
@@ -177,7 +191,7 @@ function createAdminTeamDepartment (callback) {
   )
 }
 
-function removeAgentsFromGroups (callback) {
+function removeAgentsFromGroups (callback, organizationId) {
   // winston.debug('Migrating Agents from Groups...')
   var groupSchema = require('../models/group')
   groupSchema.getAllGroups(function (err, groups) {
@@ -193,10 +207,10 @@ function removeAgentsFromGroups (callback) {
       },
       callback
     )
-  })
+  }, organizationId)
 }
 
-migrations.run = function (callback) {
+migrations.run = function (callback, organizationId) {
   var databaseVersion
 
   async.series(
@@ -205,22 +219,23 @@ migrations.run = function (callback) {
         getDatabaseVersion(function (err, dbVer) {
           if (err) return next(err)
           databaseVersion = dbVer
+          console.log(databaseVersion)
 
           if (semver.satisfies(databaseVersion, '<1.0.10')) {
             throw new Error('Please upgrade to v1.0.10 Exiting...')
           }
           return next()
-        })
+        }, organizationId)
       },
       function (next) {
         if (semver.satisfies(semver.coerce(databaseVersion).version, '<1.0.11')) {
           async.parallel(
             [
               function (done) {
-                removeAgentsFromGroups(done)
+                removeAgentsFromGroups(done, organizationId)
               },
               function (done) {
-                createAdminTeamDepartment(done)
+                createAdminTeamDepartment(done, organizationId)
               }
             ],
             next
@@ -233,7 +248,7 @@ migrations.run = function (callback) {
     function (err) {
       if (err) return callback(err)
       //  Update DB Version Num
-      return saveVersion(callback)
+      return saveVersion(callback, organizationId)
     }
   )
 }

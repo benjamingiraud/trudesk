@@ -17,7 +17,7 @@ var winston = require('winston')
 var roleSchema = require('../models/role')
 var roleOrder = require('../models/roleorder')
 
-var register = function (callback) {
+var register = function (callback, baseOrganizationId) {
   // Register Roles
   roleSchema.getRolesLean(function (err, roles) {
     if (err) return callback(err)
@@ -30,8 +30,8 @@ var register = function (callback) {
       global.roles = roles
 
       return callback()
-    })
-  })
+    }, baseOrganizationId)
+  }, baseOrganizationId)
 }
 
 /***

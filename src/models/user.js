@@ -50,10 +50,11 @@ var COLLECTION = 'accounts'
  * @property {Boolean} deleted Account Deleted
  */
 var userSchema = mongoose.Schema({
-  username: { type: String, required: true, unique: true, lowercase: true },
+  username: { type: String, required: true, lowercase: true },
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
   password: { type: String, required: true, select: false },
   fullname: { type: String, required: true, index: true },
-  email: { type: String, required: true, unique: true, lowercase: true },
+  email: { type: String, required: true, lowercase: true },
   role: { type: mongoose.Schema.Types.ObjectId, ref: 'roles', required: true },
   lastOnline: Date,
   title: String,
@@ -78,6 +79,7 @@ var userSchema = mongoose.Schema({
 })
 
 userSchema.set('toObject', { getters: true })
+userSchema.index({ name: 1, organizationId: 1 }, { unique: true })
 
 var autoPopulateRole = function (next) {
   this.populate('role', 'name description normalized _id')
@@ -323,13 +325,16 @@ userSchema.statics.getUser = function (oId, callback) {
  * @param {String} user Username to Query MongoDB
  * @param {QueryCallback} callback MongoDB Query Callback
  */
-userSchema.statics.getUserByUsername = function (user, callback) {
+userSchema.statics.getUserByUsername = function (user, callback, organizationId) {
   if (_.isUndefined(user)) {
     return callback('Invalid Username - UserSchema.GetUserByUsername()', null)
   }
+  if (_.isUndefined(organizationId)) {
+    return callback('Invalid Organization Id - UserSchema.GetUserByUsername()', null)
+  }
 
   return this.model(COLLECTION)
-    .findOne({ username: new RegExp('^' + user + '$', 'i') })
+    .findOne({ organizationId: organizationId, username: new RegExp('^' + user + '$', 'i') })
     .select('+password +accessToken')
     .exec(callback)
 }
@@ -346,12 +351,15 @@ userSchema.statics.getByUsername = userSchema.statics.getUserByUsername
  * @param {String} email Email to Query MongoDB
  * @param {QueryCallback} callback MongoDB Query Callback
  */
-userSchema.statics.getUserByEmail = function (email, callback) {
+userSchema.statics.getUserByEmail = function (email, callback, organizationId) {
   if (_.isUndefined(email)) {
     return callback('Invalid Email - UserSchema.GetUserByEmail()', null)
   }
+  if (_.isUndefined(organizationId)) {
+    return callback('Invalid Organization Id - UserSchema.GetUserByEmail()', null)
+  }
 
-  return this.model(COLLECTION).findOne({ email: email.toLowerCase() }, callback)
+  return this.model(COLLECTION).findOne({ email: email.toLowerCase(), organizationId: organizationId }, callback)
 }
 
 /**
@@ -416,10 +424,11 @@ userSchema.statics.getUserWithObject = function (object, callback) {
   var limit = object.limit === null ? 10 : object.limit
   var page = object.page === null ? 0 : object.page
   var search = object.search === null ? '' : object.search
+  var organizationId = object.organizationId === null ? null : object.organizationId
 
   var q = self
     .model(COLLECTION)
-    .find({}, '-password -resetPassHash -resetPassExpire')
+    .find({ organizationId: organizationId }, '-password -resetPassHash -resetPassExpire')
     .sort({ fullname: 1 })
     .skip(page * limit)
   if (limit !== -1) {
@@ -444,7 +453,7 @@ userSchema.statics.getUserWithObject = function (object, callback) {
  *
  * @param {QueryCallback} callback MongoDB Query Callback
  */
-userSchema.statics.getAssigneeUsers = function (callback) {
+userSchema.statics.getAssigneeUsers = function (callback, organizationId) {
   var roles = global.roles
   if (_.isUndefined(roles)) return callback(null, [])
 
@@ -454,14 +463,17 @@ userSchema.statics.getAssigneeUsers = function (callback) {
   })
 
   assigneeRoles = _.uniq(assigneeRoles)
-  this.model(COLLECTION).find({ role: { $in: assigneeRoles }, deleted: false }, function (err, users) {
-    if (err) {
-      winston.warn(err)
-      return callback(err, null)
-    }
+  this.model(COLLECTION).find(
+    { role: { $in: assigneeRoles }, deleted: false, organizationId: organizationId },
+    function (err, users) {
+      if (err) {
+        winston.warn(err)
+        return callback(err, null)
+      }
 
-    return callback(null, _.sortBy(users, 'fullname'))
-  })
+      return callback(null, _.sortBy(users, 'fullname'))
+    }
+  )
 }
 
 /**
@@ -692,7 +704,7 @@ userSchema.statics.getAdmins = function (obj, callback) {
 
   return self
     .model(COLLECTION)
-    .find({})
+    .find({ organizationId: obj.organizationId })
     .exec(function (err, accounts) {
       if (err) return callback(err)
 

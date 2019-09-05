@@ -53,78 +53,126 @@ roleDefaults.adminGrants = [
 
 settingsDefaults.roleDefaults = roleDefaults
 
-function rolesDefault (callback) {
+function rolesDefault (callback, organizationId) {
   var roleSchema = require('../models/role')
-
+  var userGrants = ['tickets:create view update', 'comments:create view update']
+  var supportGrants = [
+    'tickets:*',
+    'agent:*',
+    'accounts:create update view import',
+    'teams:create update view',
+    'comments:create view update create delete',
+    'reports:view create',
+    'notices:*'
+  ]
+  var adminGrants = [
+    'admin:*',
+    'agent:*',
+    'chat:*',
+    'tickets:*',
+    'accounts:*',
+    'groups:*',
+    'teams:*',
+    'departments:*',
+    'comments:*',
+    'reports:*',
+    'notices:*',
+    'settings:*',
+    'api:*'
+  ]
   async.series(
     [
       function (done) {
-        roleSchema.getRoleByName('User', function (err, role) {
-          if (err) return done(err)
-          if (role) return done()
+        roleSchema.getRoleByName(
+          'User',
+          function (err, role) {
+            if (err) return done(err)
+            console.log(1, role ? 'roleOk' : 'role.pb')
+            if (role) return done()
 
-          roleSchema.create(
-            {
-              name: 'User',
-              description: 'Default role for users',
-              grants: roleDefaults.userGrants
-            },
-            function (err, userRole) {
-              if (err) return done(err)
-              SettingsSchema.getSetting('role:user:default', function (err, roleUserDefault) {
+            roleSchema.create(
+              {
+                name: 'User',
+                description: 'Default role for users',
+                grants: userGrants,
+                organizationId: organizationId
+              },
+              function (err, userRole) {
                 if (err) return done(err)
-                if (roleUserDefault) return done()
+                SettingsSchema.getSetting(
+                  'role:user:default',
+                  function (err, roleUserDefault) {
+                    if (err) return done(err)
+                    if (roleUserDefault) return done()
 
-                SettingsSchema.create(
-                  {
-                    name: 'role:user:default',
-                    value: userRole._id
+                    SettingsSchema.create(
+                      {
+                        name: 'role:user:default',
+                        value: userRole._id,
+                        organizationId: organizationId
+                      },
+                      done
+                    )
                   },
-                  done
+                  organizationId
                 )
-              })
+              }
+            )
+          },
+          organizationId
+        )
+      },
+      function (done) {
+        roleSchema.getRoleByName(
+          'Support',
+          function (err, role) {
+            if (err) return done(err)
+            console.log(2, role ? 'roleOk' : 'role.pb')
+            if (role) {
+              return done()
+              // role.updateGrants(supportGrants, done);
+            } else
+              roleSchema.create(
+                {
+                  name: 'Support',
+                  description: 'Default role for agents',
+                  grants: supportGrants,
+                  organizationId: organizationId
+                },
+                done
+              )
+          },
+          organizationId
+        )
+      },
+      function (done) {
+        roleSchema.getRoleByName(
+          'Admin',
+          function (err, role) {
+            if (err) return done(err)
+            console.log(3, role ? 'roleOk' : 'role.pb')
+            if (role) return done()
+            // role.updateGrants(adminGrants, done);
+            else {
+              roleSchema.create(
+                {
+                  name: 'Admin',
+                  description: 'Default role for admins',
+                  grants: adminGrants,
+                  organizationId: organizationId
+                },
+                done
+              )
             }
-          )
-        })
-      },
-      function (done) {
-        roleSchema.getRoleByName('Support', function (err, role) {
-          if (err) return done(err)
-          if (role) {
-            return done()
-            // role.updateGrants(supportGrants, done);
-          } else
-            roleSchema.create(
-              {
-                name: 'Support',
-                description: 'Default role for agents',
-                grants: roleDefaults.supportGrants
-              },
-              done
-            )
-        })
-      },
-      function (done) {
-        roleSchema.getRoleByName('Admin', function (err, role) {
-          if (err) return done(err)
-          if (role) return done()
-          // role.updateGrants(adminGrants, done);
-          else {
-            roleSchema.create(
-              {
-                name: 'Admin',
-                description: 'Default role for admins',
-                grants: roleDefaults.adminGrants
-              },
-              done
-            )
-          }
-        })
+          },
+          organizationId
+        )
       },
       function (done) {
         var roleOrderSchema = require('../models/roleorder')
         roleOrderSchema.getOrder(function (err, roleOrder) {
           if (err) return done(err)
+          console.log(4, roleOrder ? 'roleOrderOk' : 'roleOrder.pb')
           if (roleOrder) return done()
 
           roleSchema.getRoles(function (err, roles) {
@@ -137,12 +185,13 @@ function rolesDefault (callback) {
 
             roleOrderSchema.create(
               {
-                order: roleOrder
+                order: roleOrder,
+                organizationId: organizationId
               },
               done
             )
-          })
-        })
+          }, organizationId)
+        }, organizationId)
       }
     ],
     function (err) {
@@ -155,26 +204,34 @@ function rolesDefault (callback) {
   )
 }
 
-function defaultUserRole (callback) {
+function defaultUserRole (callback, organizationId) {
   var roleOrderSchema = require('../models/roleorder')
   roleOrderSchema.getOrderLean(function (err, roleOrder) {
+    console.log(5, roleOrder ? 'roleOrderOk' : 'roleOrder.pb')
     if (err) return callback(err)
     if (!roleOrder) return callback()
 
-    SettingsSchema.getSetting('role:user:default', function (err, roleDefault) {
-      if (err) return callback(err)
-      if (roleDefault) return callback()
+    SettingsSchema.getSetting(
+      'role:user:default',
+      function (err, roleDefault) {
+        if (err) return callback(err)
+        console.log(6, roleDefault ? 'roleDefaultOk' : 'roleOrder.pb')
 
-      var lastId = _.last(roleOrder.order)
-      SettingsSchema.create(
-        {
-          name: 'role:user:default',
-          value: lastId
-        },
-        callback
-      )
-    })
-  })
+        if (roleDefault) return callback()
+
+        var lastId = _.last(roleOrder.order)
+        SettingsSchema.create(
+          {
+            name: 'role:user:default',
+            value: lastId,
+            organizationId: organizationId
+          },
+          callback
+        )
+      },
+      organizationId
+    )
+  }, organizationId)
 }
 
 function createDirectories (callback) {
@@ -239,42 +296,50 @@ function downloadWin32MongoDBTools (callback) {
   }
 }
 
-function timezoneDefault (callback) {
-  SettingsSchema.getSettingByName('gen:timezone', function (err, setting) {
-    if (err) {
-      winston.warn(err)
-      if (_.isFunction(callback)) return callback(err)
-      return false
-    }
+function timezoneDefault (callback, organizationId) {
+  SettingsSchema.getSettingByName(
+    'gen:timezone',
+    function (err, setting) {
+      if (err) {
+        winston.warn(err)
+        if (_.isFunction(callback)) return callback(err)
+        return false
+      }
 
-    if (!setting) {
-      var defaultTimezone = new SettingsSchema({
-        name: 'gen:timezone',
-        value: 'America/New_York'
-      })
+      if (!setting) {
+        var defaultTimezone = new SettingsSchema({
+          name: 'gen:timezone',
+          value: 'America/New_York',
+          organizationId: organizationId
+        })
 
-      defaultTimezone.save(function (err, setting) {
-        if (err) {
-          winston.warn(err)
-          if (_.isFunction(callback)) return callback(err)
-        }
+        defaultTimezone.save(function (err, setting) {
+          if (err) {
+            winston.warn(err)
+            if (_.isFunction(callback)) return callback(err)
+          }
 
+          winston.debug('Timezone set to ' + setting.value)
+          winston.debug('Timezone created set to ' + setting.value)
+
+          moment.tz.setDefault(setting.value)
+
+          global.timezone = setting.value
+
+          if (_.isFunction(callback)) return callback()
+        })
+      } else {
         winston.debug('Timezone set to ' + setting.value)
+        winston.debug('Timezone already set to ' + setting.value)
         moment.tz.setDefault(setting.value)
 
         global.timezone = setting.value
 
         if (_.isFunction(callback)) return callback()
-      })
-    } else {
-      winston.debug('Timezone set to ' + setting.value)
-      moment.tz.setDefault(setting.value)
-
-      global.timezone = setting.value
-
-      if (_.isFunction(callback)) return callback()
-    }
-  })
+      }
+    },
+    organizationId
+  )
 }
 
 function showTourSettingDefault (callback) {
@@ -303,78 +368,91 @@ function showTourSettingDefault (callback) {
   })
 }
 
-function ticketTypeSettingDefault (callback) {
-  SettingsSchema.getSettingByName('ticket:type:default', function (err, setting) {
-    if (err) {
-      winston.warn(err)
-      if (_.isFunction(callback)) {
-        return callback(err)
-      }
-    }
-
-    if (!setting) {
-      var ticketTypeSchema = require('../models/tickettype')
-      ticketTypeSchema.getTypes(function (err, types) {
-        if (err) {
-          winston.warn(err)
-          if (_.isFunction(callback)) {
-            return callback(err)
-          }
-          return false
+function ticketTypeSettingDefault (callback, organizationId) {
+  SettingsSchema.getSettingByName(
+    'ticket:type:default',
+    function (err, setting) {
+      if (err) {
+        winston.warn(err)
+        if (_.isFunction(callback)) {
+          return callback(err)
         }
+      }
 
-        var type = _.first(types)
-        if (!type) return callback('No Types Defined!')
-        if (!_.isObject(type) || _.isUndefined(type._id)) return callback('Invalid Type. Skipping.')
-
-        // Save default ticket type
-        var defaultTicketType = new SettingsSchema({
-          name: 'ticket:type:default',
-          value: type._id
-        })
-
-        defaultTicketType.save(function (err) {
+      if (!setting) {
+        winston.warn('no settings')
+        var ticketTypeSchema = require('../models/tickettype')
+        ticketTypeSchema.getTypes(function (err, types) {
           if (err) {
             winston.warn(err)
             if (_.isFunction(callback)) {
               return callback(err)
             }
+            return false
           }
+          winston.warn(JSON.stringify(types))
 
-          if (_.isFunction(callback)) {
-            return callback()
-          }
-        })
-      })
-    } else {
-      if (_.isFunction(callback)) {
-        return callback()
+          var type = _.first(types)
+          winston.warn(JSON.stringify(type))
+
+          if (!type) return callback('No Types Defined!')
+          if (!_.isObject(type) || _.isUndefined(type._id)) return callback('Invalid Type. Skipping.')
+
+          // Save default ticket type
+          var defaultTicketType = new SettingsSchema({
+            name: 'ticket:type:default',
+            value: type._id,
+            organizationId: organizationId
+          })
+          winston.warn(JSON.stringify(defaultTicketType))
+          defaultTicketType.save(function (err) {
+            if (err) {
+              winston.warn(err)
+              if (_.isFunction(callback)) {
+                return callback(err)
+              }
+            }
+
+            if (_.isFunction(callback)) {
+              winston.warn('will return callback()')
+              return callback()
+            }
+          })
+        }, organizationId)
+      } else {
+        if (_.isFunction(callback)) {
+          return callback()
+        }
       }
-    }
-  })
+    },
+    organizationId
+  )
 }
 
-function ticketPriorityDefaults (callback) {
+function ticketPriorityDefaults (callback, organizationId) {
   var priorities = []
 
   var normal = new PrioritySchema({
     name: 'Normal',
     migrationNum: 1,
-    default: true
+    default: true,
+    organizationId: organizationId
   })
 
   var urgent = new PrioritySchema({
     name: 'Urgent',
     migrationNum: 2,
     htmlColor: '#8e24aa',
-    default: true
+    default: true,
+    organizationId: organizationId
   })
 
   var critical = new PrioritySchema({
     name: 'Critical',
     migrationNum: 3,
     htmlColor: '#e65100',
-    default: true
+    default: true,
+    organizationId: organizationId
   })
 
   priorities.push(normal)
@@ -383,7 +461,12 @@ function ticketPriorityDefaults (callback) {
   async.each(
     priorities,
     function (item, next) {
-      PrioritySchema.findOne({ migrationNum: item.migrationNum }, function (err, priority) {
+      winston.warn(JSON.stringify(item))
+      PrioritySchema.findOne({ migrationNum: item.migrationNum, organizationId: organizationId }, function (
+        err,
+        priority
+      ) {
+        winston.warn(JSON.stringify(err), JSON.stringify(priority))
         if (!err && (_.isUndefined(priority) || _.isNull(priority))) {
           return item.save(next)
         }
@@ -395,9 +478,9 @@ function ticketPriorityDefaults (callback) {
   )
 }
 
-function normalizeTags (callback) {
+function normalizeTags (callback, organizationId) {
   var tagSchema = require('../models/tag')
-  tagSchema.find({}, function (err, tags) {
+  tagSchema.find({ organizationId: organizationId }, function (err, tags) {
     if (err) return callback(err)
     async.each(
       tags,
@@ -515,11 +598,11 @@ function checkPriorities (callback) {
   )
 }
 
-function addedDefaultPrioritesToTicketTypes (callback) {
+function addedDefaultPrioritesToTicketTypes (callback, organizationId) {
   async.waterfall(
     [
       function (next) {
-        PrioritySchema.find({ default: true })
+        PrioritySchema.find({ default: true, organizationId: organizationId })
           .then(function (results) {
             return next(null, results)
           })
@@ -551,23 +634,24 @@ function addedDefaultPrioritesToTicketTypes (callback) {
               next(null)
             }
           )
-        })
+        }, organizationId)
       }
     ],
     callback
   )
 }
 
-function mailTemplates (callback) {
+function mailTemplates (callback, organizationId) {
   var newTicket = require('./json/mailer-new-ticket')
   var passwordReset = require('./json/mailer-password-reset')
   var templateSchema = require('../models/template')
   async.parallel(
     [
       function (done) {
-        templateSchema.findOne({ name: newTicket.name }, function (err, templates) {
+        templateSchema.findOne({ name: newTicket.name, organizationId: organizationId }, function (err, templates) {
           if (err) return done(err)
           if (!templates || templates.length < 1) {
+            newTicket.organizationId = organizationId
             return templateSchema.create(newTicket, done)
           }
 
@@ -575,9 +659,10 @@ function mailTemplates (callback) {
         })
       },
       function (done) {
-        templateSchema.findOne({ name: passwordReset.name }, function (err, templates) {
+        templateSchema.findOne({ name: passwordReset.name, organizationId: organizationId }, function (err, templates) {
           if (err) return done(err)
           if (!templates || templates.length < 1) {
+            passwordReset.organizationId = organizationId
             return templateSchema.create(passwordReset, done)
           }
 
@@ -589,7 +674,7 @@ function mailTemplates (callback) {
   )
 }
 
-function elasticSearchConfToDB (callback) {
+function elasticSearchConfToDB (callback, organizationId) {
   var nconf = require('nconf')
   var elasticsearch = {
     enable: nconf.get('elasticsearch:enable'),
@@ -606,74 +691,94 @@ function elasticSearchConfToDB (callback) {
       },
       function (done) {
         if (!elasticsearch.enable) return done()
-        SettingsSchema.getSettingByName('es:enable', function (err, setting) {
-          if (err) return done(err)
-          if (!setting) {
-            SettingsSchema.create(
-              {
-                name: 'es:enable',
-                value: elasticsearch.enable
-              },
-              done
-            )
-          }
-        })
+        SettingsSchema.getSettingByName(
+          'es:enable',
+          function (err, setting) {
+            if (err) return done(err)
+            if (!setting) {
+              SettingsSchema.create(
+                {
+                  name: 'es:enable',
+                  value: elasticsearch.enable,
+                  organizationId: organizationId
+                },
+                done
+              )
+            }
+          },
+          organizationId
+        )
       },
       function (done) {
         if (!elasticsearch.host) return done()
-        SettingsSchema.getSettingByName('es:host', function (err, setting) {
-          if (err) return done(err)
-          if (!setting) {
-            SettingsSchema.create(
-              {
-                name: 'es:host',
-                value: elasticsearch.host
-              },
-              done
-            )
-          }
-        })
+        SettingsSchema.getSettingByName(
+          'es:host',
+          function (err, setting) {
+            if (err) return done(err)
+            if (!setting) {
+              SettingsSchema.create(
+                {
+                  name: 'es:host',
+                  value: elasticsearch.host,
+                  organizationId: organizationId
+                },
+                done
+              )
+            }
+          },
+          organizationId
+        )
       },
       function (done) {
         if (!elasticsearch.port) return done()
-        SettingsSchema.getSettingByName('es:port', function (err, setting) {
-          if (err) return done(err)
-          if (!setting) {
-            SettingsSchema.create(
-              {
-                name: 'es:port',
-                value: elasticsearch.port
-              },
-              done
-            )
-          }
-        })
+        SettingsSchema.getSettingByName(
+          'es:port',
+          function (err, setting) {
+            if (err) return done(err)
+            if (!setting) {
+              SettingsSchema.create(
+                {
+                  name: 'es:port',
+                  value: elasticsearch.port,
+                  organizationId: organizationId
+                },
+                done
+              )
+            }
+          },
+          organizationId
+        )
       }
     ],
     callback
   )
 }
 
-function installationID (callback) {
+function installationID (callback, organizationId) {
   var Chance = require('chance')
   var chance = new Chance()
-  SettingsSchema.getSettingByName('gen:installid', function (err, setting) {
-    if (err) return callback(err)
-    if (!setting) {
-      SettingsSchema.create(
-        {
-          name: 'gen:installid',
-          value: chance.guid()
-        },
-        callback
-      )
-    } else {
-      return callback()
-    }
-  })
+  SettingsSchema.getSettingByName(
+    'gen:installid',
+    function (err, setting) {
+      if (err) return callback(err)
+      if (!setting) {
+        SettingsSchema.create(
+          {
+            name: 'gen:installid',
+            value: chance.guid(),
+            organizationId: organizationId
+          },
+          callback
+        )
+      } else {
+        return callback()
+      }
+    },
+    organizationId
+  )
 }
 
-settingsDefaults.init = function (callback) {
+settingsDefaults.init = function (callback, organizationId) {
   winston.debug('Checking Default Settings...')
   async.series(
     [
@@ -684,41 +789,52 @@ settingsDefaults.init = function (callback) {
         return downloadWin32MongoDBTools(done)
       },
       function (done) {
-        return rolesDefault(done)
+        return rolesDefault(done, organizationId)
       },
       function (done) {
-        return defaultUserRole(done)
+        return defaultUserRole(done, organizationId)
       },
       function (done) {
-        return timezoneDefault(done)
+        return timezoneDefault(done, organizationId)
       },
       function (done) {
-        return ticketTypeSettingDefault(done)
+        return ticketTypeSettingDefault(done, organizationId)
       },
       function (done) {
-        return ticketPriorityDefaults(done)
+        winston.warn('starting ticketPriorityDefaults')
+        return ticketPriorityDefaults(done, organizationId)
       },
       function (done) {
-        return addedDefaultPrioritesToTicketTypes(done)
+        winston.warn('starting addedDefaultPrioritesToTicketTypes')
+        return addedDefaultPrioritesToTicketTypes(done, organizationId)
       },
       function (done) {
+        winston.warn('starting checkPriorities')
+
         return checkPriorities(done)
       },
       function (done) {
-        return normalizeTags(done)
+        winston.warn('starting normalizeTags')
+
+        return normalizeTags(done, organizationId)
       },
       function (done) {
-        return mailTemplates(done)
+        winston.warn('starting mailTemplates')
+
+        return mailTemplates(done, organizationId)
       },
       function (done) {
-        return elasticSearchConfToDB(done)
+        winston.warn('starting elasticSearchConfToDB')
+        return elasticSearchConfToDB(done, organizationId)
       },
       function (done) {
-        return installationID(done)
+        winston.warn('starting installationID')
+        return installationID(done, organizationId)
       }
     ],
     function (err) {
       if (err) winston.warn(err)
+      winston.warn(JSON.stringify(callback))
       if (_.isFunction(callback)) return callback()
     }
   )

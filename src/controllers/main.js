@@ -30,6 +30,7 @@ mainController.index = function (req, res) {
   content.flash = req.flash('loginMessage')
 
   var settingsUtil = require('../settings/settingsUtil')
+
   settingsUtil.getSettings(function (err, s) {
     if (err) throw new Error(err)
     var settings = s.data.settings
@@ -86,7 +87,7 @@ mainController.about = function (req, res) {
 
 mainController.dashboard = function (req, res) {
   var content = {}
-  content.title = 'Dashboard'
+  content.title = global.i18next.t('common:Dashboard')
   content.nav = 'dashboard'
 
   content.data = {}

@@ -46,39 +46,45 @@ commonV1.login = function (req, res) {
   var userModel = require('../../../models/user')
   var username = req.body.username
   var password = req.body.password
+  var organizationId = req.params.organizationId
 
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
   if (_.isUndefined(username) || _.isUndefined(password)) {
     return res.sendStatus(403)
   }
 
-  userModel.getUserByUsername(username, function (err, user) {
-    if (err) return res.status(401).json({ success: false, error: err.message })
-    if (!user) return res.status(401).json({ success: false, error: 'Invalid User' })
+  userModel.getUserByUsername(
+    username,
+    function (err, user) {
+      if (err) return res.status(401).json({ success: false, error: err.message })
+      if (!user) return res.status(401).json({ success: false, error: 'Invalid User' })
 
-    if (!userModel.validate(password, user.password))
-      return res.status(401).json({ success: false, error: 'Invalid Password' })
+      if (!userModel.validate(password, user.password))
+        return res.status(401).json({ success: false, error: 'Invalid Password' })
 
-    var resUser = _.clone(user._doc)
-    delete resUser.resetPassExpire
-    delete resUser.resetPassHash
-    delete resUser.password
-    delete resUser.iOSDeviceTokens
-    delete resUser.tOTPKey
-    delete resUser.__v
-    delete resUser.preferences
+      var resUser = _.clone(user._doc)
+      delete resUser.resetPassExpire
+      delete resUser.resetPassHash
+      delete resUser.password
+      delete resUser.iOSDeviceTokens
+      delete resUser.tOTPKey
+      delete resUser.__v
+      delete resUser.preferences
 
-    if (_.isUndefined(resUser.accessToken) || _.isNull(resUser.accessToken)) {
-      return res.status(200).json({ success: false, error: 'No API Key assigned to this User.' })
-    }
+      if (_.isUndefined(resUser.accessToken) || _.isNull(resUser.accessToken)) {
+        return res.status(200).json({ success: false, error: 'No API Key assigned to this User.' })
+      }
 
-    req.user = resUser
-    res.header('X-Subject-Token', resUser.accessToken)
-    return res.json({
-      success: true,
-      accessToken: resUser.accessToken,
-      user: resUser
-    })
-  })
+      req.user = resUser
+      res.header('X-Subject-Token', resUser.accessToken)
+      return res.json({
+        success: true,
+        accessToken: resUser.accessToken,
+        user: resUser
+      })
+    },
+    organizationId
+  )
 }
 
 commonV1.getLoggedInUser = function (req, res) {
@@ -115,6 +121,9 @@ commonV1.getLoggedInUser = function (req, res) {
 commonV1.logout = function (req, res) {
   var deviceToken = req.headers.devicetoken
   var user = req.user
+  var organizationId = req.params.organizationId
+
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   async.series(
     [

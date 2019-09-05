@@ -24,6 +24,7 @@ var COLLECTION = 'notification'
 
 var notificationSchema = mongoose.Schema({
   created: { type: Date, default: Date.now },
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'accounts' },
   title: { type: String, required: true },
   message: { type: String, required: true },
@@ -46,13 +47,16 @@ notificationSchema.statics.getNotification = function (id, callback) {
   return this.model(COLLECTION).findOne({ _id: id }, callback)
 }
 
-notificationSchema.statics.findAllForUser = function (oId, callback) {
+notificationSchema.statics.findAllForUser = function (oId, callback, organizationId) {
   if (_.isUndefined(oId)) {
     return callback('Invalid ObjectId - NotificationSchema.FindAllForUser()', null)
   }
+  if (_.isUndefined(organizationId)) {
+    return callback('Invalid Organization Id - NotificationSchema.FindAllForUser()', null)
+  }
 
   var q = this.model(COLLECTION)
-    .find({ owner: oId })
+    .find({ owner: oId, organizationId: organizationId })
     .sort({ created: -1 })
     .limit(100)
 
@@ -77,12 +81,15 @@ notificationSchema.statics.getCount = function (oId, callback) {
   return this.model(COLLECTION).countDocuments({ owner: oId }, callback)
 }
 
-notificationSchema.statics.getUnreadCount = function (oId, callback) {
+notificationSchema.statics.getUnreadCount = function (oId, callback, organizationId) {
   if (_.isUndefined(oId)) {
     return callback('Invalid ObjectId - NotificationSchema.GetUnreadCount()', null)
   }
+  if (_.isUndefined(organizationId)) {
+    return callback('Invalid Organization Id - NotificationSchema.GetUnreadCount()', null)
+  }
 
-  return this.model(COLLECTION).countDocuments({ owner: oId, unread: true }, callback)
+  return this.model(COLLECTION).countDocuments({ owner: oId, unread: true, organizationId: organizationId }, callback)
 }
 
 notificationSchema.statics.clearNotifications = function (oId, callback) {

@@ -31,6 +31,7 @@ apiController.index = function (req, res) {
 
 apiController.v1 = {}
 apiController.v1.common = require('./api/v1/common')
+apiController.v1.organization = require('./api/v1/organizations')
 apiController.v1.tickets = apiTicketsV1
 apiController.v1.tags = apiTagsV1
 apiController.v1.notices = apiNoticesV1

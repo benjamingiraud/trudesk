@@ -30,9 +30,11 @@ require('./ticketpriority')
  * @property {String} name ```Required``` ```unique``` Name of Ticket Type
  */
 var ticketTypeSchema = mongoose.Schema({
-  name: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
   priorities: [{ type: mongoose.Schema.Types.ObjectId, ref: 'priorities' }]
 })
+ticketTypeSchema.index({ name: 1, organizationId: 1 }, { unique: true })
 
 var autoPopulatePriorities = function (next) {
   this.populate('priorities')
@@ -55,12 +57,18 @@ ticketTypeSchema.pre('save', function (next) {
  * @static
  * @method getTypes
  *
+ * @param {String} organizationId Object Id of organizationId
  * @param {QueryCallback} callback MongoDB Query Callback
  */
-ticketTypeSchema.statics.getTypes = function (callback) {
-  var q = this.model(COLLECTION).find({})
-
-  return q.exec(callback)
+ticketTypeSchema.statics.getTypes = function (callback, organizationId) {
+  var q
+  if (organizationId) {
+    q = this.model(COLLECTION).find({ organizationId: organizationId })
+    return q.exec(callback)
+  } else {
+    q = this.model(COLLECTION).find({})
+    return q.exec(callback)
+  }
 }
 
 /**
@@ -70,11 +78,12 @@ ticketTypeSchema.statics.getTypes = function (callback) {
  * @static
  * @method getType
  *
+ * @param {String} organizationId Object Id of organizationId
  * @param {String} id Object Id of ticket type
  * @param {QueryCallback} callback MongoDB Query Callback
  */
-ticketTypeSchema.statics.getType = function (id, callback) {
-  var q = this.model(COLLECTION).findOne({ _id: id })
+ticketTypeSchema.statics.getType = function (id, callback, organizationId) {
+  var q = this.model(COLLECTION).findOne({ organizationId: organizationId, _id: id })
 
   return q.exec(callback)
 }

@@ -21,8 +21,9 @@ require('./user')
 var COLLECTION = 'teams'
 
 var teamSchema = mongoose.Schema({
-  name: { type: String, required: true, unique: true },
-  normalized: { type: String, required: true, unique: true, lowercase: true },
+  name: { type: String, required: true },
+  normalized: { type: String, required: true, lowercase: true },
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
   members: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -31,6 +32,7 @@ var teamSchema = mongoose.Schema({
     }
   ]
 })
+teamSchema.index({ normalized: 1, organizationId: 1 }, { unique: true })
 
 teamSchema.plugin(require('mongoose-autopopulate'))
 
@@ -116,11 +118,12 @@ teamSchema.statics.getTeamsNoPopulate = function (callback) {
   return q.exec(callback)
 }
 
-teamSchema.statics.getTeamsOfUser = function (userId, callback) {
+teamSchema.statics.getTeamsOfUser = function (userId, callback, organizationId) {
   if (_.isUndefined(userId)) return callback('Invalid UserId - TeamSchema.GetTeamsOfUser()')
+  if (_.isUndefined(organizationId)) return callback('Invalid Organization Id - TeamSchema.GetTeamsOfUser()')
 
   var q = this.model(COLLECTION)
-    .find({ members: userId })
+    .find({ members: userId, organizationId: organizationId })
     .sort('name')
 
   return q.exec(callback)

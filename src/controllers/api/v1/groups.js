@@ -42,6 +42,9 @@ apiGroups.get = function (req, res) {
   var permissions = require('../../../permissions')
   var hasPublic = permissions.canThis(user.role, 'tickets:public')
 
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   if (user.role.isAgent || user.role.isAdmin) {
     GroupSchema.getAllGroups(function (err, groups) {
       if (err) return res.status(400).json({ success: false, error: err.message })
@@ -52,23 +55,27 @@ apiGroups.get = function (req, res) {
         })
 
       return res.json({ success: true, groups: groups })
-    })
+    }, organizationId)
   } else {
-    GroupSchema.getAllGroupsOfUser(user._id, function (err, groups) {
-      if (err) return res.status(400).json({ success: false, error: err.message })
+    GroupSchema.getAllGroupsOfUser(
+      user._id,
+      function (err, groups) {
+        if (err) return res.status(400).json({ success: false, error: err.message })
 
-      if (hasPublic) {
-        GroupSchema.getAllPublicGroups(function (err, grps) {
-          if (err) return res.status(400).json({ success: false, error: err })
+        if (hasPublic) {
+          GroupSchema.getAllPublicGroups(function (err, grps) {
+            if (err) return res.status(400).json({ success: false, error: err })
 
-          groups = groups.concat(grps)
+            groups = groups.concat(grps)
 
+            return res.json({ success: true, groups: groups })
+          }, organizationId)
+        } else {
           return res.json({ success: true, groups: groups })
-        })
-      } else {
-        return res.json({ success: true, groups: groups })
-      }
-    })
+        }
+      },
+      organizationId
+    )
   }
 }
 
@@ -92,11 +99,14 @@ apiGroups.get = function (req, res) {
  */
 
 apiGroups.getAll = function (req, res) {
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   GroupSchema.getAllGroups(function (err, groups) {
     if (err) return res.status(400).json({ success: false, error: err.message })
 
     return res.json({ success: true, groups: groups })
-  })
+  }, organizationId)
 }
 
 /**
@@ -118,14 +128,21 @@ apiGroups.getAll = function (req, res) {
  *
  */
 apiGroups.getSingleGroup = function (req, res) {
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   var id = req.params.id
   if (_.isUndefined(id)) return res.status(400).json({ error: 'Invalid Request' })
 
-  GroupSchema.getGroupById(id, function (err, group) {
-    if (err) return res.status(400).json({ error: err.message })
+  GroupSchema.getGroupById(
+    id,
+    function (err, group) {
+      if (err) return res.status(400).json({ error: err.message })
 
-    return res.status(200).json({ success: true, group: group })
-  })
+      return res.status(200).json({ success: true, group: group })
+    },
+    organizationId
+  )
 }
 
 /**
@@ -164,9 +181,13 @@ apiGroups.getSingleGroup = function (req, res) {
 apiGroups.create = function (req, res) {
   var Group = new GroupSchema()
 
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   Group.name = req.body.name
   Group.members = req.body.members
   Group.sendMailTo = req.body.sendMailTo
+  Group.organizationId = organizationId
 
   Group.save(function (err, group) {
     if (err) return res.status(400).json({ success: false, error: 'Error: ' + err.message })
@@ -209,6 +230,9 @@ apiGroups.create = function (req, res) {
  }
  */
 apiGroups.updateGroup = function (req, res) {
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   var id = req.params.id
   var data = req.body
   if (_.isUndefined(id) || _.isUndefined(data) || !_.isObject(data))
@@ -221,22 +245,26 @@ apiGroups.updateGroup = function (req, res) {
     data.sendMailTo = [data.sendMailTo]
   }
 
-  GroupSchema.getGroupById(id, function (err, group) {
-    if (err) return res.status(400).json({ error: err.message })
-
-    var members = _.compact(data.members)
-    var sendMailTo = _.compact(data.sendMailTo)
-
-    group.name = data.name
-    group.members = members
-    group.sendMailTo = sendMailTo
-
-    group.save(function (err, savedGroup) {
+  GroupSchema.getGroupById(
+    id,
+    function (err, group) {
       if (err) return res.status(400).json({ error: err.message })
 
-      return res.json({ success: true, group: savedGroup })
-    })
-  })
+      var members = _.compact(data.members)
+      var sendMailTo = _.compact(data.sendMailTo)
+
+      group.name = data.name
+      group.members = members
+      group.sendMailTo = sendMailTo
+
+      group.save(function (err, savedGroup) {
+        if (err) return res.status(400).json({ error: err.message })
+
+        return res.json({ success: true, group: savedGroup })
+      })
+    },
+    organizationId
+  )
 }
 
 /**
@@ -261,6 +289,9 @@ apiGroups.updateGroup = function (req, res) {
  }
  */
 apiGroups.deleteGroup = function (req, res) {
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   var id = req.params.id
   if (_.isUndefined(id)) return res.status(400).json({ success: false, error: 'Error: Invalid Group Id.' })
 
@@ -268,31 +299,39 @@ apiGroups.deleteGroup = function (req, res) {
     [
       function (next) {
         var grps = [id]
-        ticketSchema.getTickets(grps, function (err, tickets) {
-          if (err) {
-            return next('Error: ' + err.message)
-          }
+        ticketSchema.getTickets(
+          grps,
+          function (err, tickets) {
+            if (err) {
+              return next('Error: ' + err.message)
+            }
 
-          if (_.size(tickets) > 0) {
-            return next('Error: Cannot delete a group with tickets.')
-          }
+            if (_.size(tickets) > 0) {
+              return next('Error: Cannot delete a group with tickets.')
+            }
 
-          return next()
-        })
+            return next()
+          },
+          organizationId
+        )
       },
       function (next) {
-        GroupSchema.getGroupById(id, function (err, group) {
-          if (err) return next('Error: ' + err.message)
-
-          if (group.name.toLowerCase() === 'administrators')
-            return next('Error: Unable to delete default Administrators group.')
-
-          group.remove(function (err, success) {
+        GroupSchema.getGroupById(
+          id,
+          function (err, group) {
             if (err) return next('Error: ' + err.message)
 
-            return next(null, success)
-          })
-        })
+            if (group.name.toLowerCase() === 'administrators')
+              return next('Error: Unable to delete default Administrators group.')
+
+            group.remove(function (err, success) {
+              if (err) return next('Error: ' + err.message)
+
+              return next(null, success)
+            })
+          },
+          organizationId
+        )
       }
     ],
     function (err) {

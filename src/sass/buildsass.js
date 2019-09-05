@@ -70,7 +70,7 @@ buildsass.buildDefault = function (callback) {
   )
 }
 
-buildsass.build = function (callback) {
+buildsass.build = function (callback, organizationId) {
   settingUtil.getSettings(function (err, s) {
     if (!err && s) {
       var settings = s.data.settings
@@ -103,7 +103,7 @@ buildsass.build = function (callback) {
         callback
       )
     }
-  })
+  }, organizationId)
 }
 
 module.exports = buildsass

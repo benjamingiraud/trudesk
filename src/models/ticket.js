@@ -67,6 +67,7 @@ var COLLECTION = 'tickets'
  */
 var ticketSchema = mongoose.Schema({
   uid: { type: Number, unique: true, index: true },
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
@@ -746,11 +747,13 @@ ticketSchema.statics.getAllByStatus = function (status, callback) {
  * @param {Array} grpIds Group Id to retrieve tickets for.
  * @param {QueryCallback} callback MongoDB Query Callback
  */
-ticketSchema.statics.getTickets = function (grpIds, callback) {
+ticketSchema.statics.getTickets = function (grpIds, callback, organizationId) {
   if (_.isUndefined(grpIds)) {
     return callback('Invalid GroupId - TicketSchema.GetTickets()', null)
   }
-
+  if (!_.isUndefined(organizationId)) {
+    return callback('Invalid Organization Id - TicketSchema.GetTickets()', null)
+  }
   if (!_.isArray(grpIds)) {
     return callback('Invalid GroupId (Must be of type Array) - TicketSchema.GetTickets()', null)
   }
@@ -759,7 +762,7 @@ ticketSchema.statics.getTickets = function (grpIds, callback) {
 
   var q = self
     .model(COLLECTION)
-    .find({ group: { $in: grpIds }, deleted: false })
+    .find({ group: { $in: grpIds }, deleted: false, organizationId: organizationId })
     .populate(
       'owner assignee comments.owner notes.owner subscribers history.owner',
       'username fullname email role image title'
@@ -840,7 +843,7 @@ ticketSchema.statics.getTicketsWithObject = function (grpId, object, callback) {
 
   var q = self
     .model(COLLECTION)
-    .find({ group: { $in: grpId }, deleted: false })
+    .find({ organizationId: object.organizationId, group: { $in: grpId }, deleted: false })
     .populate(
       'owner assignee subscribers comments.owner notes.owner history.owner',
       'username fullname email role image title'
@@ -937,7 +940,9 @@ ticketSchema.statics.getCountWithObject = function (grpId, object, callback) {
     grpId = _.intersection(object.filter.groups, g)
   }
 
-  var q = self.model(COLLECTION).countDocuments({ group: { $in: grpId }, deleted: false })
+  var q = self
+    .model(COLLECTION)
+    .countDocuments({ organizationId: object.organizationId, group: { $in: grpId }, deleted: false })
   if (!_.isUndefined(object.status) && _.isArray(object.status)) {
     var status = object.status.map(Number)
     q.where({ status: { $in: status } })
@@ -1014,14 +1019,14 @@ ticketSchema.statics.getTicketsByStatus = function (grpId, status, callback) {
  * @param {Number} uid Unique Id for ticket.
  * @param {QueryCallback} callback MongoDB Query Callback
  */
-ticketSchema.statics.getTicketByUid = function (uid, callback) {
+ticketSchema.statics.getTicketByUid = function (organizationId, uid, callback) {
   if (_.isUndefined(uid)) return callback('Invalid Uid - TicketSchema.GetTicketByUid()', null)
 
   var self = this
 
   var q = self
     .model(COLLECTION)
-    .findOne({ uid: uid, deleted: false })
+    .findOne({ organizationId: organizationId, uid: uid, deleted: false })
     .populate(
       'owner assignee comments.owner notes.owner subscribers history.owner',
       'username fullname email role image title'
@@ -1040,14 +1045,14 @@ ticketSchema.statics.getTicketByUid = function (uid, callback) {
  * @param {Object} id MongoDb _id.
  * @param {QueryCallback} callback MongoDB Query Callback
  */
-ticketSchema.statics.getTicketById = function (id, callback) {
+ticketSchema.statics.getTicketById = function (organizationId, id, callback) {
   if (_.isUndefined(id)) return callback('Invalid Id - TicketSchema.GetTicketById()', null)
 
   var self = this
 
   var q = self
     .model(COLLECTION)
-    .findOne({ _id: id, deleted: false })
+    .findOne({ organizationId: organizationId, _id: id, deleted: false })
     .populate(
       'owner assignee comments.owner notes.owner subscribers history.owner',
       'username fullname email role image title'
@@ -1082,14 +1087,16 @@ ticketSchema.statics.getTicketById = function (id, callback) {
  * @param {Object} userId MongoDb _id of user.
  * @param {QueryCallback} callback MongoDB Query Callback
  */
-ticketSchema.statics.getTicketsByRequester = function (userId, callback) {
+ticketSchema.statics.getTicketsByRequester = function (userId, callback, organizationId) {
   if (_.isUndefined(userId)) return callback('Invalid Requester Id - TicketSchema.GetTicketsByRequester()', null)
+  if (_.isUndefined(organizationId))
+    return callback('Invalid Organization Id - TicketSchema.GetTicketsByRequester()', null)
 
   var self = this
 
   var q = self
     .model(COLLECTION)
-    .find({ owner: userId, deleted: false })
+    .find({ owner: userId, deleted: false, organizationId: organizationId })
     .limit(10000)
     .populate(
       'owner assignee comments.owner notes.owner subscribers history.owner',
@@ -1116,7 +1123,7 @@ ticketSchema.statics.getTicketsByRequester = function (userId, callback) {
   return q.exec(callback)
 }
 
-ticketSchema.statics.getTicketsWithSearchString = function (grps, search, callback) {
+ticketSchema.statics.getTicketsWithSearchString = function (organizationId, grps, search, callback) {
   if (_.isUndefined(grps) || _.isUndefined(search))
     return callback('Invalid Post Data - TicketSchema.GetTicketsWithSearchString()', null)
 
@@ -1130,6 +1137,7 @@ ticketSchema.statics.getTicketsWithSearchString = function (grps, search, callba
         var q = self
           .model(COLLECTION)
           .find({
+            organizationId: organizationId,
             group: { $in: grps },
             deleted: false,
             $where: '/^' + search + '.*/.test(this.uid)'
@@ -1152,6 +1160,7 @@ ticketSchema.statics.getTicketsWithSearchString = function (grps, search, callba
         var q = self
           .model(COLLECTION)
           .find({
+            organizationId: organizationId,
             group: { $in: grps },
             deleted: false,
             subject: { $regex: search, $options: 'i' }
@@ -1174,6 +1183,7 @@ ticketSchema.statics.getTicketsWithSearchString = function (grps, search, callba
         var q = self
           .model(COLLECTION)
           .find({
+            organizationI: organizationId,
             group: { $in: grps },
             deleted: false,
             issue: { $regex: search, $options: 'i' }
@@ -1214,8 +1224,9 @@ ticketSchema.statics.getTicketsWithSearchString = function (grps, search, callba
  * @param {Array} grpId Group Array of User
  * @param {QueryCallback} callback MongoDB Query Callback
  */
-ticketSchema.statics.getOverdue = function (grpId, callback) {
+ticketSchema.statics.getOverdue = function (grpId, callback, organizationId) {
   if (_.isUndefined(grpId)) return callback('Invalid Group Ids - TicketSchema.GetOverdue()', null)
+  if (_.isUndefined(organizationId)) return callback('Invalid Organization Id - TicketSchema.GetOverdue()', null)
 
   var self = this
 
@@ -1236,7 +1247,8 @@ ticketSchema.statics.getOverdue = function (grpId, callback) {
           .find({
             group: { $in: grpId },
             status: { $in: [0, 1] },
-            deleted: false
+            deleted: false,
+            organizationId: organizationId
           })
           .select('_id date updated')
           .lean()
@@ -1286,7 +1298,7 @@ ticketSchema.statics.getOverdue = function (grpId, callback) {
       function (ids, next) {
         return self
           .model(COLLECTION)
-          .find({ _id: { $in: ids } })
+          .find({ _id: { $in: ids }, organizationId: organizationId })
           .limit(50)
           .select('_id uid subject updated date')
           .lean()
@@ -1384,12 +1396,14 @@ ticketSchema.statics.getTicketsByTag = function (grpId, tagId, callback) {
  * @param {string} tagId Tag Id
  * @param {QueryCallback} callback MongoDB Query Callback
  */
-ticketSchema.statics.getAllTicketsByTag = function (tagId, callback) {
+ticketSchema.statics.getAllTicketsByTag = function (tagId, callback, organizationId) {
   if (_.isUndefined(tagId)) return callback('Invalid Tag Id - TicketSchema.GetAllTicketsByTag()', null)
+  if (_.isUndefined(organizationId))
+    return callback('Invalid Organization Id - TicketSchema.GetAllTicketsByTag()', null)
 
   var self = this
 
-  var q = self.model(COLLECTION).find({ tags: tagId, deleted: false })
+  var q = self.model(COLLECTION).find({ tags: tagId, deleted: false, organizationId: organizationId })
 
   return q.exec(callback)
 }
@@ -1437,13 +1451,15 @@ ticketSchema.statics.getAllTicketsByType = function (typeId, callback) {
   return q.lean().exec(callback)
 }
 
-ticketSchema.statics.updateType = function (oldTypeId, newTypeId, callback) {
-  if (_.isUndefined(oldTypeId) || _.isUndefined(newTypeId)) {
+ticketSchema.statics.updateType = function (oldTypeId, newTypeId, callback, organizationId) {
+  if (_.isUndefined(oldTypeId) || _.isUndefined(newTypeId) || _.isUndefined(organizationId)) {
     return callback('Invalid IDs - TicketSchema.UpdateType()', null)
   }
 
   var self = this
-  return self.model(COLLECTION).updateMany({ type: oldTypeId }, { $set: { type: newTypeId } }, callback)
+  return self
+    .model(COLLECTION)
+    .updateMany({ type: oldTypeId, organizationId: organizationId }, { $set: { type: newTypeId } }, callback)
 }
 
 ticketSchema.statics.getAssigned = function (userId, callback) {
@@ -1482,9 +1498,11 @@ ticketSchema.statics.getAssigned = function (userId, callback) {
  *    results[x].count
  * });
  */
-ticketSchema.statics.getTopTicketGroups = function (timespan, top, callback) {
+ticketSchema.statics.getTopTicketGroups = function (timespan, top, callback, organizationId) {
   if (_.isUndefined(timespan) || _.isNaN(timespan) || timespan === 0) timespan = -1
   if (_.isUndefined(top) || _.isNaN(top)) top = 5
+  if (_.isUndefined(organizationId))
+    return callback('Invalid Organization Id - TicketSchema.getTopTicketGroups()', null)
 
   var self = this
 
@@ -1496,7 +1514,8 @@ ticketSchema.statics.getTopTicketGroups = function (timespan, top, callback) {
   var tsDate = today.clone().subtract(timespan, 'd')
   var query = {
     date: { $gte: tsDate.toDate(), $lte: today.toDate() },
-    deleted: false
+    deleted: false,
+    organizationId: organizationId
   }
   if (timespan === -1) {
     query = { deleted: false }
@@ -1608,12 +1627,14 @@ ticketSchema.statics.getCount = function (callback) {
  * @param {Object} oId Ticket Object _id
  * @param {QueryCallback} callback MongoDB Query Callback
  */
-ticketSchema.statics.softDelete = function (oId, callback) {
+ticketSchema.statics.softDelete = function (organizationId, oId, callback) {
   if (_.isUndefined(oId)) return callback('Invalid ObjectID - TicketSchema.SoftDelete()', null)
 
   var self = this
 
-  return self.model(COLLECTION).findOneAndUpdate({ _id: oId }, { deleted: true }, { new: true }, callback)
+  return self
+    .model(COLLECTION)
+    .findOneAndUpdate({ organizationId: organizationId, _id: oId }, { deleted: true }, { new: true }, callback)
 }
 
 ticketSchema.statics.softDeleteUid = function (uid, callback) {
@@ -1622,17 +1643,23 @@ ticketSchema.statics.softDeleteUid = function (uid, callback) {
   return this.model(COLLECTION).findOneAndUpdate({ uid: uid }, { deleted: true }, { new: true }, callback)
 }
 
-ticketSchema.statics.restoreDeleted = function (oId, callback) {
+ticketSchema.statics.restoreDeleted = function (oId, callback, organizationId) {
   if (_.isUndefined(oId)) return callback('Invalid ObjectID - TicketSchema.RestoreDeleted()', null)
+  if (_.isUndefined(organizationId)) return callback('Invalid OrganizationId - TicketSchema.RestoreDeleted()', null)
 
   var self = this
 
-  return self.model(COLLECTION).findOneAndUpdate({ _id: oId }, { deleted: false }, { new: true }, callback)
+  return self
+    .model(COLLECTION)
+    .findOneAndUpdate({ _id: oId, organizationId: organizationId }, { deleted: false }, { new: true }, callback)
 }
 
-ticketSchema.statics.getDeleted = function (callback) {
+ticketSchema.statics.getDeleted = function (callback, organizationId) {
+  if (_.isUndefined(organizationId))
+    return callback({ message: 'Invalid Organization Id - TicketSchema.SoftDeleteUid()' })
+
   return this.model(COLLECTION)
-    .find({ deleted: true })
+    .find({ deleted: true, organizationId: organizationId })
     .populate('group')
     .sort({ uid: -1 })
     .limit(1000)
