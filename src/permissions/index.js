@@ -26,6 +26,7 @@ var register = function (callback, baseOrganizationId) {
       if (err) return callback(err)
 
       winston.debug('Registering Permissions...')
+      console.log(ro, roles)
       global.roleOrder = ro
       global.roles = roles
 

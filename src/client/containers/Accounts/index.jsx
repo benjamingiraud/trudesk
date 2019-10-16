@@ -33,6 +33,8 @@ import Dropdown from 'components/Dropdown'
 import ButtonGroup from 'components/ButtonGroup'
 import Button from 'components/Button'
 import InfiniteScroll from 'react-infinite-scroller'
+import { withTranslation } from 'react-i18next';
+
 
 import helpers from 'lib/helpers'
 
@@ -83,7 +85,7 @@ class AccountsContainer extends React.Component {
 
   getUsersWithPage (page) {
     this.hasMore = false
-    this.props.fetchAccounts({ page, limit: 25, type: this.props.view, showDeleted: true }).then(({ response }) => {
+    this.props.fetchAccounts({ page, limit: 25, type: this.props.view, showDeleted: true, organizationId: this.props.common.organizationId }).then(({ response }) => {
       this.hasMore = response.count >= 25
     })
   }
@@ -95,7 +97,7 @@ class AccountsContainer extends React.Component {
       if (search.length > 2) {
         this.props.unloadAccounts().then(() => {
           this.hasMore = false
-          this.props.fetchAccounts({ limit: -1, search: search }).then(({ response }) => {
+          this.props.fetchAccounts({ limit: -1, search: search, organizationId: this.props.common.organizationId  }).then(({ response }) => {
             this.pageStart = -1
             this.hasMore = response.count >= 25
           })
@@ -110,6 +112,7 @@ class AccountsContainer extends React.Component {
   }
 
   render () {
+    const {t} = this.props
     const items =
       this.props.accountsState.accounts &&
       this.props.accountsState.accounts.map(user => {
@@ -174,7 +177,7 @@ class AccountsContainer extends React.Component {
                   <li>
                     {customer && user.get('groups') && (
                       <div className='tru-list-content'>
-                        <span className='tru-list-heading'>Groups</span>
+                        <span className='tru-list-heading'>{t('Groups')}</span>
                         <span className='uk-text-small uk-text-muted uk-text-truncate'>
                           {user.get('groups').map(group => {
                             return group.get('name') + (user.get('groups').toArray().length > 1 ? ', ' : '')
@@ -184,7 +187,7 @@ class AccountsContainer extends React.Component {
                     )}
                     {!customer && user.get('teams') && (
                       <div className='tru-list-content'>
-                        <span className='tru-list-heading'>Teams</span>
+                        <span className='tru-list-heading'>{t('Teams')}</span>
                         <span className='uk-text-small uk-text-muted uk-text-truncate'>
                           {user.get('teams').map(team => {
                             return team.get('name') + (user.get('teams').toArray().length > 1 ? ', ' : '')
@@ -196,7 +199,7 @@ class AccountsContainer extends React.Component {
                   {!customer && user.get('departments') && (
                     <li>
                       <div className='tru-list-content'>
-                        <span className='tru-list-heading'>Departments</span>
+                        <span className='tru-list-heading'>{t('Departments')}</span>
                         <span className='uk-text-small uk-text-muted uk-text-truncate'>
                           {user.get('departments').map(department => {
                             return department.get('name') + (user.get('departments').toArray().length > 1 ? ', ' : '')
@@ -248,7 +251,7 @@ class AccountsContainer extends React.Component {
                       />
                       <Dropdown small={true}>
                         <DropdownHeader text={'Account Actions'} />
-                        <DropdownItem text={'Import'} href={'/accounts/import'} />
+                        <DropdownItem text={'Import'} href={'accounts/import'} />
                       </Dropdown>
                     </DropdownTrigger>
                   )}
@@ -304,7 +307,7 @@ const mapStateToProps = state => ({
   common: state.common
 })
 
-export default connect(
+export default withTranslation('common')(connect(
   mapStateToProps,
   { fetchAccounts, deleteAccount, enableAccount, unloadAccounts, showModal }
-)(AccountsContainer)
+)(AccountsContainer))

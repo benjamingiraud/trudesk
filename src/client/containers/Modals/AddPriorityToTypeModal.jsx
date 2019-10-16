@@ -27,6 +27,7 @@ import Log from '../../logger'
 import api from 'api/index'
 
 import helpers from 'lib/helpers'
+import { withTranslation } from 'react-i18next';
 
 class AddPriorityToTypeModal extends React.Component {
   constructor (props) {
@@ -81,13 +82,13 @@ class AddPriorityToTypeModal extends React.Component {
   }
 
   render () {
-    const { type } = this.props
+    const { type, t } = this.props
     return (
       <BaseModal>
         <form className='uk-form-stacked'>
           <div className='uk-margin-medium-bottom uk-clearfix'>
-            <h2>Add Priorities</h2>
-            <span>Please select the priorities you wish to add to type: {type.get('name')}</span>
+            <h2>{t('Add Priorities')}</h2>
+            <span>{t('Select Priorities')}: {type.get('name')}</span>
           </div>
           <div className='priority-loop zone'>
             {this.getPriorities().map(priority => {
@@ -97,7 +98,7 @@ class AddPriorityToTypeModal extends React.Component {
                     <div className='uk-float-left'>
                       <h5 style={{ color: priority.get('htmlColor'), fontWeight: 'bold' }}>{priority.get('name')}</h5>
                       <p className={'uk-text-muted'}>
-                        SLA Overdue: <strong>{priority.get('durationFormatted')}</strong>
+                        {t('SLA Overdue')}: <strong>{priority.get('durationFormatted')}</strong>
                       </p>
                     </div>
                     <div className='uk-float-right'>
@@ -113,7 +114,7 @@ class AddPriorityToTypeModal extends React.Component {
                     <div className='uk-float-left'>
                       <h5 style={{ color: priority.get('htmlColor'), fontWeight: 'bold' }}>{priority.get('name')}</h5>
                       <p className={'uk-text-muted'}>
-                        SLA Overdue: <strong>{priority.get('durationFormatted')}</strong>
+                      {t('SLA Overdue')}: <strong>{priority.get('durationFormatted')}</strong>
                       </p>
                     </div>
                     <div className='uk-float-right'>
@@ -122,7 +123,7 @@ class AddPriorityToTypeModal extends React.Component {
                         className='uk-button uk-button-success mt-10 mr-10 no-ajaxy'
                         onClick={e => this.onAddClick(e, type, priority)}
                       >
-                        Add
+                        {t('Add')}
                       </a>
                       <i
                         className='material-icons uk-text-success mt-10 mr-15'
@@ -137,7 +138,7 @@ class AddPriorityToTypeModal extends React.Component {
             })}
           </div>
           <div className='uk-modal-footer uk-text-right'>
-            <Button type={'button'} flat={true} waves={true} text={'Close'} extraClass={'uk-modal-close'} />
+            <Button type={'button'} flat={true} waves={true} text={t('Close')} extraClass={'uk-modal-close'} />
           </div>
         </form>
       </BaseModal>
@@ -155,7 +156,7 @@ const mapStateToProps = state => ({
   settings: state.settings.settings
 })
 
-export default connect(
+export default withTranslation('common')(connect(
   mapStateToProps,
   { fetchSettings }
-)(AddPriorityToTypeModal)
+)(AddPriorityToTypeModal))

@@ -127,6 +127,7 @@ var socketServer = function (ws) {
 }
 
 function onAuthorizeSuccess (data, accept) {
+  winston.debug(data.user.preferences)
   winston.debug('User successfully connected: ' + data.user.username)
 
   accept()

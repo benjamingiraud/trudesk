@@ -35,18 +35,35 @@ middleware.db = function (req, res, next) {
 
   return next()
 }
+middleware.checkOrganization = function (req, res, next) {
+  var organizationId = req.params.organizationId
 
+  if (_.isUndefined(organizationId) || _.isNil(organizationId)) return res.redirect(404)
+
+  var organizationSchema = require('../models/organization')
+
+  organizationSchema.getById(organizationId, function (err, organization) {
+    if (err) return res.redirect(404)
+    if (!organization) return res.redirect(404)
+
+    req.organization = organization
+
+    return next()
+  })
+}
 middleware.redirectToDashboardIfLoggedIn = function (req, res, next) {
-  if (req.user) {
+  if (!req.organization) return res.redirect(404)
+  let organizationId = req.organization._id
+  if (req.user && req.user.organizationId === organizationId) {
     if (req.user.hasL2Auth) {
       return middleware.ensurel2Auth(req, res, next)
     }
 
     if (req.user.role === 'user') {
-      return res.redirect('/tickets')
+      return res.redirect(`/${organizationId}/tickets`)
     }
 
-    return res.redirect('/dashboard')
+    return res.redirect(`/${organizationId}/dashboard`)
   }
 
   return next()
@@ -58,7 +75,8 @@ middleware.redirectToLogin = function (req, res, next) {
       req.session.redirectUrl = req.url
     }
 
-    return res.redirect('/')
+    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    return res.redirect(404)
   }
 
   if (req.user.deleted) {
@@ -78,16 +96,19 @@ middleware.redirectToLogin = function (req, res, next) {
 }
 
 middleware.redirectIfUser = function (req, res, next) {
+  if (!req.organization) {
+    res.redirect(404)
+  }
   if (!req.user) {
     if (!_.isUndefined(req.session)) {
       res.session.redirectUrl = req.url
     }
 
-    return res.redirect('/')
+    return res.redirect(`/${req.organization._id}`)
   }
 
   if (!req.user.role.isAdmin && !req.user.role.isAgent) {
-    return res.redirect(301, '/tickets')
+    return res.redirect(301, `/${req.organization._id}/tickets`)
   }
 
   return next()
@@ -112,9 +133,9 @@ middleware.ensurel2Auth = function (req, res, next) {
 // Common
 middleware.loadCommonData = function (req, res, next) {
   var viewdata = require('../helpers/viewdata')
+  console.log(req.organization)
   viewdata.getData(req, function (data) {
     req.viewdata = data
-
     return next()
   })
 }
@@ -169,48 +190,44 @@ middleware.checkOrigin = function (req, res, next) {
 
 // API
 middleware.api = function (req, res, next) {
-  console.log('heyyyyy middleware')
   var accessToken = req.headers.accesstoken
-  var organizationId = req.params.organizationId
-
-  if (_.isUndefined(organizationId) || _.isNil(organizationId))
-    return res.status(401).json({ error: 'organizationId must be provided' })
 
   if (_.isUndefined(accessToken) || _.isNull(accessToken)) {
     var user = req.user
+
     if (_.isUndefined(user) || _.isNull(user)) return res.status(401).json({ error: 'Invalid Access Token' })
 
-    return next()
+    var organizationId = req.user.organizationId
+    var organizationSchema = require('../models/organization')
+    organizationSchema.getById(organizationId, function (err, organization) {
+      if (err) return res.status(401).json({ error: err.message })
+      if (!organization) return res.status(401).json({ error: 'Organization not found' })
+      req.organization = organization
+      return next()
+    })
+  } else {
+    var userSchema = require('../models/user')
+
+    userSchema.getUserByAccessToken(accessToken, function (err, user) {
+      if (err) return res.status(401).json({ error: err.message })
+      if (!user) return res.status(401).json({ error: 'Invalid Access Token' })
+      var organizationSchema = require('../models/organization')
+      organizationSchema.getById(user.organizationId, function (err, organization) {
+        if (err) return res.status(401).json({ error: err.message })
+        if (!organization) return res.status(401).json({ error: 'Organization not found' })
+        req.user = user
+        req.organization = organization
+        return next()
+      })
+    })
   }
-
-  var userSchema = require('../models/user')
-  var organizationSchema = require('../models/organization')
-
-  organizationSchema.getById(organizationId, function (err, organization) {
-    if (err) return res.status(401).json({ error: err.message })
-    if (!organization) return res.status(401).json({ error: 'Organization not found' })
-
-    req.organization = organization
-
-    console.log(organization)
-  })
-
-  userSchema.getUserByAccessToken(accessToken, function (err, user) {
-    if (err) return res.status(401).json({ error: err.message })
-    if (!user) return res.status(401).json({ error: 'Invalid Access Token' })
-    if ('' + user.organizationId !== '' + req.organization._id)
-      return res.status(401).json({ error: "User doesn't have access to this organization" })
-
-    req.user = user
-
-    return next()
-  })
 }
 
 middleware.hasAuth = middleware.api
 
 middleware.apiv2 = function (req, res, next) {
   // ByPass auth for now if user is set through session
+  winston.warn('IN APIV2 MIDDLERWARE OHOHOHOH')
   if (req.user) return next()
 
   var passport = require('passport')
@@ -238,6 +255,7 @@ middleware.canUser = function (action) {
 
 middleware.isAdmin = function (req, res, next) {
   var roles = global.roles
+  console.log(roles)
   var role = _.find(roles, { _id: req.user.role._id })
   role.isAdmin = role.grants.indexOf('admin:*') !== -1
 

@@ -32,7 +32,8 @@ noticesController.get = function (req, res) {
   var user = req.user
   if (_.isUndefined(user) || !permissions.canThis(user.role, 'notices:create')) {
     req.flash('message', 'Permission Denied.')
-    return res.redirect('/')
+    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    return res.redirect(404)
   }
 
   var content = {}
@@ -49,14 +50,15 @@ noticesController.get = function (req, res) {
     content.data.notices = notices
 
     res.render('notices', content)
-  })
+  }, req.organization._id)
 }
 
 noticesController.create = function (req, res) {
   var user = req.user
   if (_.isUndefined(user) || !permissions.canThis(user.role, 'notices:create')) {
     req.flash('message', 'Permission Denied.')
-    return res.redirect('/')
+    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    return res.redirect(404)
   }
 
   var content = {}
@@ -74,7 +76,8 @@ noticesController.edit = function (req, res) {
   var user = req.user
   if (_.isUndefined(user) || !permissions.canThis(user.role, 'notices:update')) {
     req.flash('message', 'Permission Denied.')
-    return res.redirect('/')
+    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    return res.redirect(404)
   }
 
   var content = {}
@@ -84,12 +87,16 @@ noticesController.edit = function (req, res) {
   content.data = {}
   content.data.user = req.user
   content.data.common = req.viewdata
-  noticeSchema.getNotice(req.params.id, function (err, notice) {
-    if (err) return handleError(res, err)
-    content.data.notice = notice
+  noticeSchema.getNotice(
+    req.params.id,
+    function (err, notice) {
+      if (err) return handleError(res, err)
+      content.data.notice = notice
 
-    res.render('subviews/editNotice', content)
-  })
+      res.render('subviews/editNotice', content)
+    },
+    req.organization._id
+  )
 }
 
 module.exports = noticesController

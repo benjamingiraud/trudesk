@@ -28,6 +28,8 @@ import $ from 'jquery'
 import Button from 'components/Button'
 import MultiSelect from 'components/MultiSelect'
 
+import { withTranslation } from 'react-i18next'
+
 @observer
 class CreateTeamModal extends React.Component {
   @observable name = ''
@@ -66,6 +68,8 @@ class CreateTeamModal extends React.Component {
   }
 
   render () {
+    const { t } = this.props
+
     const mappedAccounts = this.props.accounts
       .filter(account => {
         return account.getIn(['role', 'isAgent']) === true && !account.get('deleted')
@@ -78,11 +82,11 @@ class CreateTeamModal extends React.Component {
     return (
       <BaseModal {...this.props} options={{ bgclose: false }}>
         <div className={'mb-25'}>
-          <h2>Create Team</h2>
+          <h2>{t('Create Team')}</h2>
         </div>
         <form className={'uk-form-stacked'} onSubmit={e => this.onFormSubmit(e)}>
           <div className={'uk-margin-medium-bottom'}>
-            <label>Team Name</label>
+            <label>{t('Team Name')}</label>
             <input
               type='text'
               className={'md-input'}
@@ -94,12 +98,12 @@ class CreateTeamModal extends React.Component {
             />
           </div>
           <div className={'uk-margin-medium-bottom'}>
-            <label style={{ marginBottom: 5 }}>Team Members</label>
+            <label style={{ marginBottom: 5 }}>{t('Team Members')}</label>
             <MultiSelect items={mappedAccounts} onChange={() => {}} ref={r => (this.membersSelect = r)} />
           </div>
           <div className='uk-modal-footer uk-text-right'>
-            <Button text={'Close'} flat={true} waves={true} extraClass={'uk-modal-close'} />
-            <Button text={'Create Team'} flat={true} waves={true} style={'primary'} type={'submit'} />
+            <Button text={t('Close')} flat={true} waves={true} extraClass={'uk-modal-close'} />
+            <Button text={t('Create Team')} flat={true} waves={true} style={'primary'} type={'submit'} />
           </div>
         </form>
       </BaseModal>
@@ -118,7 +122,7 @@ const mapStateToProps = state => ({
   accounts: state.accountsState.accounts
 })
 
-export default connect(
+export default withTranslation('common')(connect(
   mapStateToProps,
   { fetchAccounts, unloadAccounts, createTeam }
-)(CreateTeamModal)
+)(CreateTeamModal))

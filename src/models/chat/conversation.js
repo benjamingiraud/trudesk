@@ -78,11 +78,11 @@ conversationSchema.statics.getConversation = function (convoId, callback) {
     .exec(callback)
 }
 
-conversationSchema.statics.getConversationsWithLimit = function (userId, limit, callback) {
+conversationSchema.statics.getConversationsWithLimit = function (userId, limit, callback, organizationId) {
   // if (!_.isArray(userId)) userId = [userId];
   var l = !_.isUndefined(limit) ? limit : 1000
   return this.model(COLLECTION)
-    .find({ participants: userId })
+    .find({ participants: userId, organizationId: organizationId })
     .sort('-updatedAt')
     .limit(l)
     .populate({

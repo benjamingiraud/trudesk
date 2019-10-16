@@ -22,34 +22,52 @@ commonV2.login = function (req, res) {
   var username = req.body.username
   var password = req.body.password
 
+  console.log(username, password)
+
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   if (!username || !password) return apiUtils.sendApiError_InvalidPostData(res)
 
-  User.getUserByUsername(username, function (err, user) {
-    if (err) return apiUtils.sendApiError(res, 401, err.message)
-    if (!user) return apiUtils.sendApiError(res, 401, 'Invalid Username/Password')
+  User.getUserByUsername(
+    username,
+    function (err, user) {
+      if (err) return apiUtils.sendApiError(res, 401, err.message)
+      if (!user) return apiUtils.sendApiError(res, 401, 'Invalid Username/Password')
 
-    if (!User.validate(password, user.password))
-      return res.status(401).json({ success: false, error: 'Invalid Username/Password' })
+      if (!User.validate(password, user.password))
+        return res.status(401).json({ success: false, error: 'Invalid Username/Password' })
 
-    apiUtils.generateJWTToken(user, function (err, tokens) {
-      if (err) return apiUtils.sendApiError(res, 500, err.message)
-      return apiUtils.sendApiSuccess(res, { token: tokens.token, refreshToken: tokens.refreshToken })
-    })
-  })
+      apiUtils.generateJWTToken(user, function (err, tokens) {
+        console.log(user, tokens)
+        if (err) return apiUtils.sendApiError(res, 500, err.message)
+        // res.setHeader('accesstoken', tokens.token)
+        return apiUtils.sendApiSuccess(res, { token: tokens.token, refreshToken: tokens.refreshToken })
+      })
+    },
+    organizationId
+  )
 }
 
 commonV2.token = function (req, res) {
   var refreshToken = req.body.refreshToken
   if (!refreshToken) return apiUtils.sendApiError_InvalidPostData(res)
 
-  User.getUserByAccessToken(refreshToken, function (err, user) {
-    if (err || !user) return apiUtils.sendApiError(res, 401)
+  var organizationId = req.params.organizationId
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
-    apiUtils.generateJWTToken(user, function (err, tokens) {
-      if (err) return apiUtils.sendApiError(res, 500, err.message)
-      return apiUtils.sendApiSuccess(res, { token: tokens.token, refreshToken: tokens.refreshToken })
-    })
-  })
+  User.getUserByAccessToken(
+    refreshToken,
+    function (err, user) {
+      if (err || !user) return apiUtils.sendApiError(res, 401)
+
+      apiUtils.generateJWTToken(user, function (err, tokens) {
+        if (err) return apiUtils.sendApiError(res, 500, err.message)
+        return apiUtils.sendApiSuccess(res, { token: tokens.token, refreshToken: tokens.refreshToken })
+      })
+    },
+    organizationId
+  )
 }
 
 module.exports = commonV2

@@ -28,6 +28,7 @@ import helpers from 'lib/helpers'
 import $ from 'jquery'
 import Button from 'components/Button'
 import MultiSelect from 'components/MultiSelect'
+import { withTranslation } from 'react-i18next';
 
 @observer
 class CreateDepartmentModal extends React.Component {
@@ -82,6 +83,8 @@ class CreateDepartmentModal extends React.Component {
   }
 
   render () {
+    const { t } = this.props
+
     const mappedTeams = this.props.teams
       .map(team => {
         return { text: team.get('name'), value: team.get('_id') }
@@ -97,11 +100,11 @@ class CreateDepartmentModal extends React.Component {
     return (
       <BaseModal {...this.props} options={{ bgclose: false }}>
         <div className={'mb-25'}>
-          <h2>Create Department</h2>
+          <h2>{t('Create Department')}</h2>
         </div>
         <form className={'uk-form-stacked'} onSubmit={e => this.onFormSubmit(e)}>
           <div className={'uk-margin-medium-bottom'}>
-            <label>Department Name</label>
+            <label>{t('Department Name')}</label>
             <input
               type='text'
               className={'md-input'}
@@ -113,17 +116,17 @@ class CreateDepartmentModal extends React.Component {
             />
           </div>
           <div className={'uk-margin-medium-bottom'}>
-            <label style={{ marginBottom: 5 }}>Teams</label>
+            <label style={{ marginBottom: 5 }}>{t('Teams')}</label>
             <MultiSelect items={mappedTeams} onChange={() => {}} ref={r => (this.teamsSelect = r)} />
           </div>
           <hr />
           <div className={'uk-margin-medium-bottom uk-clearfix'}>
             <div className='uk-float-left'>
-              <h4 style={{ paddingLeft: 2 }}>Access all current and new customer groups?</h4>
+              <h4 style={{ paddingLeft: 2 }}>{t('Access all current and new customer groups?')}</h4>
             </div>
             <div className='uk-float-right md-switch md-green' style={{ marginTop: 5 }}>
               <label>
-                Yes
+                {t('Yes')}
                 <input
                   type='checkbox'
                   value={this.allGroups}
@@ -138,7 +141,7 @@ class CreateDepartmentModal extends React.Component {
             </div>
           </div>
           <div className={'uk-margin-medium-bottom'}>
-            <label style={{ marginBottom: 5 }}>Customer Groups</label>
+            <label style={{ marginBottom: 5 }}>{t('Customer Groups')}</label>
             <MultiSelect
               items={mappedGroups}
               onChange={() => {}}
@@ -147,8 +150,8 @@ class CreateDepartmentModal extends React.Component {
             />
           </div>
           <div className='uk-modal-footer uk-text-right'>
-            <Button text={'Close'} flat={true} waves={true} extraClass={'uk-modal-close'} />
-            <Button text={'Create Department'} flat={true} waves={true} style={'primary'} type={'submit'} />
+            <Button text={t('Close')} flat={true} waves={true} extraClass={'uk-modal-close'} />
+            <Button text={t('Create Department')} flat={true} waves={true} style={'primary'} type={'submit'} />
           </div>
         </form>
       </BaseModal>
@@ -171,7 +174,7 @@ const mapStateToProps = state => ({
   groups: state.groupsState.groups
 })
 
-export default connect(
+export default withTranslation('common')(connect(
   mapStateToProps,
   { createDepartment, fetchTeams, unloadTeams, fetchGroups, unloadGroups }
-)(CreateDepartmentModal)
+)(CreateDepartmentModal))

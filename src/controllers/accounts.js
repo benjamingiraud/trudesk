@@ -57,7 +57,8 @@ accountsController.signup = function (req, res) {
         return res.render('pub_signup', content)
       })
     } else {
-      return res.redirect('/')
+      if (req.organization) return res.redirect(`/${req.organization._id}`)
+      return res.redirect(404)
     }
   })
 }
@@ -65,7 +66,8 @@ accountsController.signup = function (req, res) {
 accountsController.get = function (req, res) {
   var user = req.user
   if (_.isUndefined(user) || !permissions.canThis(user.role, 'accounts:view')) {
-    return res.redirect('/')
+    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    return res.redirect(404)
   }
 
   var content = {}
@@ -82,7 +84,8 @@ accountsController.get = function (req, res) {
 accountsController.getCustomers = function (req, res) {
   var user = req.user
   if (_.isUndefined(user) || !permissions.canThis(user.role, 'accounts:view')) {
-    return res.redirect('/')
+    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    return res.redirect(404)
   }
 
   var content = {}
@@ -101,7 +104,8 @@ accountsController.getCustomers = function (req, res) {
 accountsController.getAgents = function (req, res) {
   var user = req.user
   if (_.isUndefined(user) || !permissions.canThis(user.role, 'accounts:view')) {
-    return res.redirect('/')
+    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    return res.redirect(404)
   }
 
   var content = {}
@@ -119,8 +123,11 @@ accountsController.getAgents = function (req, res) {
 
 accountsController.getAdmins = function (req, res) {
   var user = req.user
+  console.log(permissions.canThis(user.role, 'accounts:view'))
+  console.log(req.organization)
   if (_.isUndefined(user) || !permissions.canThis(user.role, 'accounts:view')) {
-    return res.redirect('/')
+    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    return res.redirect(404)
   }
 
   var content = {}
@@ -139,7 +146,8 @@ accountsController.getAdmins = function (req, res) {
 accountsController.importPage = function (req, res) {
   var user = req.user
   if (_.isUndefined(user) || !permissions.canThis(user.role, 'accounts:import')) {
-    return res.redirect('/')
+    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    return res.redirect(404)
   }
 
   var content = {}

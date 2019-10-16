@@ -20,6 +20,9 @@ var apiUtils = require('../apiUtils')
 var apiTeams = {}
 
 apiTeams.get = function (req, res) {
+  var organizationId = req.user.organizationId
+  if (!organizationId) return apiUtils.sendApiError(res, 400, 'Invalid Organization Id')
+
   var limit = 10
   if (!_.isUndefined(req.query.limit)) {
     try {
@@ -40,7 +43,8 @@ apiTeams.get = function (req, res) {
 
   var obj = {
     limit: limit,
-    page: page
+    page: page,
+    organizationId: organizationId
   }
 
   Team.getWithObject(obj, function (err, results) {
@@ -53,6 +57,11 @@ apiTeams.get = function (req, res) {
 apiTeams.create = function (req, res) {
   var postData = req.body
   if (!postData) return apiUtils.sendApiError_InvalidPostData(res)
+
+  var organizationId = req.user.organizationId
+  if (!organizationId) return apiUtils.sendApiError(res, 400, 'Invalid Organization Id')
+
+  postData.organizationId = organizationId
 
   Team.create(postData, function (err, team) {
     if (err) return apiUtils.sendApiError(res, 500, err.message)
@@ -72,7 +81,10 @@ apiTeams.update = function (req, res) {
   var putData = req.body
   if (!putData) return apiUtils.sendApiError_InvalidPostData(res)
 
-  Team.findOne({ _id: id }, function (err, team) {
+  var organizationId = req.user.organizationId
+  if (!organizationId) return apiUtils.sendApiError(res, 400, 'Invalid Organization Id')
+
+  Team.findOne({ _id: id, organizationId: organizationId }, function (err, team) {
     if (err || !team) return apiUtils.sendApiError(res, 400, 'Invalid Team')
 
     if (putData.name) team.name = putData.name
@@ -94,7 +106,10 @@ apiTeams.delete = function (req, res) {
   var id = req.params.id
   if (!id) return apiUtils.sendApiError(res, 400, 'Invalid Team Id')
 
-  Team.deleteOne({ _id: id }, function (err, success) {
+  var organizationId = req.user.organizationId
+  if (!organizationId) return apiUtils.sendApiError(res, 400, 'Invalid Organization Id')
+
+  Team.deleteOne({ _id: id, organizationId: organizationId }, function (err, success) {
     if (err) return apiUtils.sendApiError(res, 500, err.message)
     if (!success) return apiUtils.sendApiError(res, 500, 'Unable to delete team. Contact your administrator.')
 

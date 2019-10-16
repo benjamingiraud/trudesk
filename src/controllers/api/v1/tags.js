@@ -40,7 +40,7 @@ var apiTags = {}
  */
 apiTags.createTag = function (req, res) {
   var data = req.body
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
   if (_.isUndefined(data.tag)) return res.status(400).json({ error: 'Invalid Post Data' })
@@ -61,7 +61,7 @@ apiTags.getTagsWithLimit = function (req, res) {
   var qs = req.query
   var limit = qs.limit ? qs.limit : 25
   var page = qs.page ? qs.page : 0
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
@@ -122,7 +122,7 @@ apiTags.getTagsWithLimit = function (req, res) {
 apiTags.updateTag = function (req, res) {
   var id = req.params.id
   var data = req.body
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
   if (_.isUndefined(id) || _.isNull(id) || _.isNull(data) || _.isUndefined(data)) {
@@ -163,7 +163,7 @@ apiTags.updateTag = function (req, res) {
  */
 apiTags.deleteTag = function (req, res) {
   var id = req.params.id
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
   if (_.isUndefined(id) || _.isNull(id)) return res.status(400).json({ success: false, error: 'Invalid Tag Id' })

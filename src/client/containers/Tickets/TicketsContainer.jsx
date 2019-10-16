@@ -50,22 +50,22 @@ class TicketsContainer extends React.Component {
   @observable searchTerm = ''
 
   selectedTickets = []
-  constructor (props) {
+  constructor(props) {
     super(props)
 
     this.onTicketCreated = this.onTicketCreated.bind(this)
     this.onTicketUpdated = this.onTicketUpdated.bind(this)
     this.onTicketDeleted = this.onTicketDeleted.bind(this)
   }
-  componentDidMount () {
+  componentDidMount() {
     socket.socket.on('$trudesk:client:ticket:created', this.onTicketCreated)
     socket.socket.on('$trudesk:client:ticket:updated', this.onTicketUpdated)
     socket.socket.on('$trudesk:client:ticket:deleted', this.onTicketDeleted)
 
-    this.props.fetchTickets({ limit: 50, page: this.props.page, type: this.props.view, filter: this.props.filter })
+    this.props.fetchTickets({ limit: 50, page: this.props.page, type: this.props.view, filter: this.props.filter, organizationId: this.props.common.organizationId })
   }
 
-  componentDidUpdate () {
+  componentDidUpdate() {
     if (this.timeline) {
       this.timeline.pause()
       this.timeline.seek(0)
@@ -90,7 +90,7 @@ class TicketsContainer extends React.Component {
     this.timeline.play()
   }
 
-  componentWillUnmount () {
+  componentWillUnmount() {
     anime.remove('tr.overdue td')
     this.timeline = null
     this.props.unloadTickets()
@@ -99,26 +99,26 @@ class TicketsContainer extends React.Component {
     socket.socket.off('$trudesk:client:ticket:deleted', this.onTicketDeleted)
   }
 
-  onTicketCreated (ticket) {
-    if (this.props.page === '0') this.props.ticketEvent({ type: 'created', data: ticket })
+  onTicketCreated(ticket) {
+    if (this.props.page === '0') this.props.ticketEvent({ type: 'created', data: ticket, organizationId: this.props.common.organizationId })
   }
 
-  onTicketUpdated (data) {
+  onTicketUpdated(data) {
     this.props.ticketUpdated(data)
   }
 
-  onTicketDeleted (id) {
+  onTicketDeleted(id) {
     this.props.ticketEvent({ type: 'deleted', data: id })
   }
 
-  onTicketCheckChanged (e, id) {
+  onTicketCheckChanged(e, id) {
     if (e.target.checked) this.selectedTickets.push(id)
     else this.selectedTickets = without(this.selectedTickets, id)
 
     this.selectedTickets = uniq(this.selectedTickets)
   }
 
-  onSetStatus (status) {
+  onSetStatus(status) {
     let statusText = ''
     switch (status) {
       case 0:
@@ -155,7 +155,7 @@ class TicketsContainer extends React.Component {
       })
   }
 
-  onDeleteClicked () {
+  onDeleteClicked() {
     each(this.selectedTickets, id => {
       this.props.deleteTicket({ id })
     })
@@ -163,7 +163,7 @@ class TicketsContainer extends React.Component {
     this._clearChecked()
   }
 
-  onSearchTermChanged (e) {
+  onSearchTermChanged(e) {
     this.searchTerm = e.target.value
     if (this.searchTerm.length > 3) {
       SearchResults.toggleAnimation(true, true)
@@ -173,11 +173,11 @@ class TicketsContainer extends React.Component {
     }
   }
 
-  _onSearchFocus (e) {
+  _onSearchFocus(e) {
     if (this.searchTerm.length > 3) SearchResults.toggleAnimation(true, true)
   }
 
-  onSearchKeypress (e) {
+  onSearchKeypress(e) {
     if (this.searchTerm.length > 3) this.props.fetchSearchResults({ term: this.searchTerm })
 
     // e.persist()
@@ -188,7 +188,7 @@ class TicketsContainer extends React.Component {
     // }
   }
 
-  _selectAll () {
+  _selectAll() {
     this.selectedTickets = []
     const checkboxes = this.ticketsTable.querySelectorAll('td > input[type="checkbox"]')
     checkboxes.forEach(item => {
@@ -199,7 +199,7 @@ class TicketsContainer extends React.Component {
     this.selectedTickets = uniq(this.selectedTickets)
   }
 
-  _clearChecked () {
+  _clearChecked() {
     this.selectedTickets = []
     const checkboxes = this.ticketsTable.querySelectorAll('td > input[type="checkbox"]')
     checkboxes.forEach(item => {
@@ -209,12 +209,12 @@ class TicketsContainer extends React.Component {
     this.selectAllCheckbox.checked = false
   }
 
-  onSelectAll (e) {
+  onSelectAll(e) {
     if (e.target.checked) this._selectAll()
     else this._clearChecked()
   }
 
-  render () {
+  render() {
     const loadingItems = []
     for (let i = 0; i < 51; i++) {
       const cells = []
@@ -371,8 +371,8 @@ class TicketsContainer extends React.Component {
 
                 const updated = ticket.get('updated')
                   ? helpers.formatDate(ticket.get('updated'), helpers.getShortDateFormat()) +
-                    ', ' +
-                    helpers.formatDate(ticket.get('updated'), helpers.getTimeFormat())
+                  ', ' +
+                  helpers.formatDate(ticket.get('updated'), helpers.getTimeFormat())
                   : '--'
 
                 const dueDate = ticket.get('dueDate')
@@ -400,7 +400,7 @@ class TicketsContainer extends React.Component {
                       const td = e.target.closest('td')
                       const input = td.getElementsByTagName('input')
                       if (input.length > 0) return false
-                      History.pushState(null, `Ticket-${ticket.get('uid')}`, `/tickets/${ticket.get('uid')}`)
+                      History.pushState(null, `Ticket-${ticket.get('uid')}`, `/${ticket.get('organizationId')}/tickets/${ticket.get('uid')}`)
                     }}
                   >
                     <TableCell

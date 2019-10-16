@@ -124,7 +124,7 @@
   "Profile": "Profile",
   "Start_Conversation": "Start_Conversation",
   "Customers": "Customers",
-  "_t": "Thu Sep 05 2019 17:49:13 GMT+0200 (heure d’été d’Europe centrale)",
+  "_t": "Fri Sep 27 2019 15:50:48 GMT+0200 (heure d’été d’Europe centrale)",
   "Agents": "Agents",
   "Teams": "Teams",
   "Departments": "Departments",
@@ -138,5 +138,12 @@
   "More Conversations": "More Conversations",
   "Customer": "Customer",
   "Due Date": "Due Date",
-  "No Tickets Found": "No Tickets Found"
+  "No Tickets Found": "No Tickets Found",
+  "to the selected priority above.": "to the selected priority above.",
+  "button": "button",
+  "submit": "submit",
+  "Remove Role": "Remove Role",
+  "The role you are about to remove is an admin role. Please ensure there is another Admin role or you could be locked out!": "The role you are about to remove is an admin role. Please ensure there is another Admin role or you could be locked out!",
+  "Save Team": "Save Team",
+  "Save Department": "Save Department"
 }

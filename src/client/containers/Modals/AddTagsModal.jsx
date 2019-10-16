@@ -24,6 +24,7 @@ import axios from 'axios'
 import $ from 'jquery'
 import helpers from 'lib/helpers'
 import socket from 'lib/socket'
+import { withTranslation } from 'react-i18next';
 
 class AddTagsModal extends React.Component {
   componentDidMount () {
@@ -57,6 +58,8 @@ class AddTagsModal extends React.Component {
   }
 
   render () {
+    const { t } = this.props
+
     const mappedTags =
       this.props.tagsSettings.tags &&
       this.props.tagsSettings.tags
@@ -71,7 +74,7 @@ class AddTagsModal extends React.Component {
     return (
       <BaseModal options={{ bgclose: false }}>
         <div className={'uk-clearfix'}>
-          <h5 style={{ fontWeight: 300 }}>Add Tags</h5>
+          <h5 style={{ fontWeight: 300 }}>{t('Add Tags')}</h5>
           <div>
             <form className='nomargin' onSubmit={e => this.onSubmit(e)}>
               <div className='search-container'>
@@ -92,18 +95,18 @@ class AddTagsModal extends React.Component {
                 </select>
                 <button type='button' style={{ borderRadius: 0 }}>
                   <i className='material-icons' style={{ marginRight: 0 }}>
-                    add
+                    {t('Add')}
                   </i>
                 </button>
               </div>
 
               <div className='left' style={{ marginTop: 15 }}>
-                <Button type={'button'} text={'Clear'} small={true} flat={true} style={'danger'} />
+                <Button type={'button'} text={t('Clear')} small={true} flat={true} style={'danger'} />
               </div>
               <div className='right' style={{ marginTop: 15 }}>
                 <Button
                   type={'button'}
-                  text={'Cancel'}
+                  text={t('Cancel')}
                   style={'secondary'}
                   small={true}
                   flat={true}
@@ -111,7 +114,7 @@ class AddTagsModal extends React.Component {
                   extraClass={'uk-modal-close'}
                   ref={r => (this.closeButton = r)}
                 />
-                <Button type={'submit'} text={'Save Tags'} style={'success'} small={true} waves={true} />
+                <Button type={'submit'} text={t('Save Tags')} style={'success'} small={true} waves={true} />
               </div>
             </form>
           </div>
@@ -132,7 +135,7 @@ const mapStateToProps = state => ({
   tagsSettings: state.tagsSettings
 })
 
-export default connect(
+export default withTranslation('common')(connect(
   mapStateToProps,
   { getTagsWithPage }
-)(AddTagsModal)
+)(AddTagsModal))

@@ -42,7 +42,7 @@ apiGroups.get = function (req, res) {
   var permissions = require('../../../permissions')
   var hasPublic = permissions.canThis(user.role, 'tickets:public')
 
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   if (user.role.isAgent || user.role.isAdmin) {
@@ -99,7 +99,7 @@ apiGroups.get = function (req, res) {
  */
 
 apiGroups.getAll = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   GroupSchema.getAllGroups(function (err, groups) {
@@ -128,7 +128,7 @@ apiGroups.getAll = function (req, res) {
  *
  */
 apiGroups.getSingleGroup = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var id = req.params.id
@@ -181,7 +181,7 @@ apiGroups.getSingleGroup = function (req, res) {
 apiGroups.create = function (req, res) {
   var Group = new GroupSchema()
 
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   Group.name = req.body.name
@@ -230,7 +230,7 @@ apiGroups.create = function (req, res) {
  }
  */
 apiGroups.updateGroup = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var id = req.params.id
@@ -289,7 +289,7 @@ apiGroups.updateGroup = function (req, res) {
  }
  */
 apiGroups.deleteGroup = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var id = req.params.id

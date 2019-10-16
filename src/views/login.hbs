@@ -175,7 +175,7 @@
     <img src="{{pageLogo}}" alt="Logo" class="site-logo-login" />
 
     <div class="loginForm">
-        <form id="loginForm" method="post" action="/login" class="uk-form-stacked uk-clearfix">
+        <form id="loginForm" method="post" action="/{{organizationId}}/login" class="uk-form-stacked uk-clearfix">
             <div class="uk-margin-medium-bottom">
                 <label for="login-username">{{t 'common:Username'}}</label>
                 <input id="login-username" name="login-username" class="md-input" type="text" />

@@ -16,7 +16,6 @@ var mongoose = require('mongoose')
 
 var noteSchema = mongoose.Schema({
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'accounts' },
-  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
   date: { type: Date, required: true },
   note: { type: String, required: true },
   deleted: { type: Boolean, default: false, required: true }

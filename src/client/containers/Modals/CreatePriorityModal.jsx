@@ -24,6 +24,7 @@ import ColorSelector from 'components/ColorSelector'
 
 import $ from 'jquery'
 import helpers from 'lib/helpers'
+import { withTranslation } from 'react-i18next';
 
 @observer
 class CreatePriorityModal extends React.Component {
@@ -50,18 +51,20 @@ class CreatePriorityModal extends React.Component {
   }
 
   render () {
+    const { t } = this.props
+
     return (
       <BaseModal {...this.props} ref={i => (this.base = i)}>
         <form className={'uk-form-stacked'} onSubmit={e => this.onCreatePrioritySubmit(e)}>
           <div className='uk-margin-medium-bottom uk-clearfix'>
-            <h2>Create Priority</h2>
+            <h2>{t('Create Priority')}</h2>
           </div>
 
           <div>
             <div className='uk-clearfix'>
               <div className='z-box uk-grid uk-grid-collpase uk-clearfix'>
                 <div className='uk-width-1-3'>
-                  <label>Priority Name</label>
+                  <label>{t('Priority Name')}</label>
                   <input
                     type='text'
                     className={'md-input'}
@@ -73,7 +76,7 @@ class CreatePriorityModal extends React.Component {
                   />
                 </div>
                 <div className='uk-width-1-3'>
-                  <label>SLA Overdue (minutes)</label>
+                  <label>{t('SLA Overdue (minutes)')}</label>
                   <input
                     type='text'
                     className={'md-input'}
@@ -94,8 +97,8 @@ class CreatePriorityModal extends React.Component {
                 </div>
               </div>
               <div className='uk-modal-footer uk-text-right'>
-                <Button text={'Cancel'} type={'button'} extraClass={'uk-modal-close'} flat={true} waves={true} />
-                <Button text={'Create'} type={'submit'} flat={true} waves={true} style={'success'} />
+                <Button text={t('Cancel')} type={'button'} extraClass={'uk-modal-close'} flat={true} waves={true} />
+                <Button text={t('Create')} type={'submit'} flat={true} waves={true} style={'success'} />
               </div>
             </div>
           </div>
@@ -110,7 +113,7 @@ CreatePriorityModal.propTypes = {
   createPriority: PropTypes.func.isRequired
 }
 
-export default connect(
+export default withTranslation('common')(connect(
   null,
   { createPriority }
-)(CreatePriorityModal)
+)(CreatePriorityModal))

@@ -41,6 +41,8 @@ module.exports = function () {
         passReqToCallback: true
       },
       function (req, username, password, done) {
+        // console.log(req.params)
+
         User.findOne({ username: new RegExp('^' + username.trim() + '$', 'i') })
           .select('+password +tOTPKey +tOTPPeriod')
           .exec(function (err, user) {
@@ -57,7 +59,6 @@ module.exports = function () {
             }
 
             req.user = user
-
             return done(null, user)
           })
       }
@@ -95,6 +96,7 @@ module.exports = function () {
         ignoreExpiration: true
       },
       function (jwtPayload, done) {
+        // console.log('jwt')
         if (jwtPayload.exp < Date.now() / 1000) return done({ type: 'exp' })
 
         return done(null, jwtPayload.user)

@@ -344,7 +344,7 @@ class BackupRestoreSettingsContainer extends React.Component {
                           <td className='uk-text-right valign-middle'>
                             <ButtonGroup>
                               <a
-                                href={`/backups/${backup.get('filename')}`}
+                                href={`backups/${backup.get('filename')}`}
                                 className={'md-btn md-btn-small md-btn-wave no-ajaxy'}
                                 download={backup.get('filename')}
                               >

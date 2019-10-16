@@ -31,13 +31,14 @@ function parseSetting (settings, name, defaultValue) {
   return s
 }
 
-util.setSetting = function (setting, value, callback) {
+util.setSetting = function (setting, value, callback, organizationId) {
   var s = {
     name: setting,
-    value: value
+    value: value,
+    organizationId: organizationId
   }
 
-  settingSchema.updateOne({ name: s.name }, s, { upsert: true }, callback)
+  settingSchema.updateOne({ name: s.name, organizationId: organizationId }, s, { upsert: true }, callback)
 }
 
 util.getSettings = function (callback, organizationId) {

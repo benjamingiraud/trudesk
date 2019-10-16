@@ -105,9 +105,9 @@ messageSchema.statics.getConversationWithObject = function (object, callback) {
   return q.exec(callback)
 }
 
-messageSchema.statics.getMostRecentMessage = function (convoId, callback) {
+messageSchema.statics.getMostRecentMessage = function (convoId, callback, organizationId) {
   return this.model(COLLECTION)
-    .find({ conversation: convoId })
+    .find({ conversation: convoId, organizationId: organizationId })
     .sort('-createdAt')
     .limit(1)
     .populate({

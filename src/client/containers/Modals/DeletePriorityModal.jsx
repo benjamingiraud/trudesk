@@ -22,6 +22,7 @@ import Button from 'components/Button'
 import { deletePriority } from 'actions/tickets'
 
 import helpers from 'lib/helpers'
+import { withTranslation } from 'react-i18next';
 
 class DeletePriorityModal extends React.Component {
   constructor (props) {
@@ -54,7 +55,7 @@ class DeletePriorityModal extends React.Component {
   }
 
   render () {
-    const { priority } = this.props
+    const { priority, t } = this.props
     const mappedPriorities = this.getPriorities()
       .filter(obj => {
         return priority.get('name') !== obj.get('name')
@@ -67,13 +68,13 @@ class DeletePriorityModal extends React.Component {
         <div>
           <form onSubmit={e => this.onSubmit(e)}>
             <div className='uk-margin-medium-bottom uk-clearfix'>
-              <h2>Remove Priority</h2>
-              <span>Please select the priority you wish to reassign tickets to in order to delete this priority</span>
+              <h2>{t('Remove Priority')}</h2>
+              <span>{t('Please select the priority you wish to reassign tickets to in order to delete this priority')}</span>
               <hr style={{ margin: '10px 0' }} />
             </div>
             <div className='uk-margin-medium-bottom uk-clearfix'>
               <div className='uk-float-left' style={{ width: '100%' }}>
-                <label className={'uk-form-label'}>Priority</label>
+                <label className={'uk-form-label'}>{t('Priority')}</label>
                 <SingleSelect
                   items={mappedPriorities}
                   showTextbox={false}
@@ -85,13 +86,12 @@ class DeletePriorityModal extends React.Component {
             </div>
             <div className='uk-margin-medium-bottom uk-clearfix'>
               <span className='uk-text-danger'>
-                WARNING: This will change all tickets with a priority of: <strong>{priority.get('name')}</strong> to the
-                selected priority above.
+                {t('WarningPriority')} <strong>{priority.get('name')}</strong> {t('WarningPriority2')}
               </span>
             </div>
             <div className='uk-modal-footer uk-text-right'>
-              <Button type={'button'} flat={true} waves={true} text={'Cancel'} extraClass={'uk-modal-close'} />
-              <Button type={'submit'} flat={true} waves={true} text={'Delete'} style={'danger'} />
+              <Button type={t('button')} flat={true} waves={true} text={t('Cancel')} extraClass={'uk-modal-close'} />
+              <Button type={t('submit')} flat={true} waves={true} text={t('Delete')} style={'danger'} />
             </div>
           </form>
         </div>
@@ -110,7 +110,7 @@ const mapStateToProps = state => ({
   settings: state.settings.settings
 })
 
-export default connect(
+export default withTranslation('common')(connect(
   mapStateToProps,
   { deletePriority }
-)(DeletePriorityModal)
+)(DeletePriorityModal))

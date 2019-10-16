@@ -48,17 +48,21 @@ departmentSchema.statics.getDepartmentsByTeam = function (teamIds, callback, org
     .exec(callback)
 }
 
-departmentSchema.statics.getUserDepartments = function (userId, callback) {
+departmentSchema.statics.getUserDepartments = function (userId, callback, organizationId) {
   var self = this
 
-  Teams.getTeamsOfUser(userId, function (err, teams) {
-    if (err) return callback(err)
+  Teams.getTeamsOfUser(
+    userId,
+    function (err, teams) {
+      if (err) return callback(err)
 
-    return self
-      .model(COLLECTION)
-      .find({ teams: { $in: teams } })
-      .exec(callback)
-  })
+      return self
+        .model(COLLECTION)
+        .find({ teams: { $in: teams }, organizationId: organizationId })
+        .exec(callback)
+    },
+    organizationId
+  )
 }
 
 departmentSchema.statics.getDepartmentGroupsOfUser = function (userId, callback, organizationId) {

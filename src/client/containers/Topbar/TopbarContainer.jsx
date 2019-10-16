@@ -140,7 +140,7 @@ class TopbarContainer extends React.Component {
     const { viewdata, sessionUser, t } = this.props
     return (
       <div>
-        {sessionUser && sessionUser.role.isAdmin && (
+        {/* {sessionUser && sessionUser.role.isAdmin && (
           <div className={clsx('info-banner', this.showInfoBanner ? '' : 'hide')}>
             <div className={'close'} onClick={() => this.closeInfo()} />
             <p>
@@ -156,7 +156,7 @@ class TopbarContainer extends React.Component {
               </a>
             </p>
           </div>
-        )}
+        )} */}
         {this.props.notice && <NoticeBanner notice={this.props.notice} />}
         <div className={'uk-grid top-nav'}>
           <div className='uk-width-1-1'>
@@ -242,9 +242,9 @@ class TopbarContainer extends React.Component {
                           </a>
                           <Dropdown small={true}>
                             <DropdownHeader text={viewdata.loggedInAccount.fullname} />
-                            <DropdownItem text={t('Profile')} href={'/profile'} />
+                            <DropdownItem text={t('Profile')} href={`/${sessionUser.organizationId}/profile`} />
                             <DropdownSeparator />
-                            <DropdownItem text={t('Logout')} href={'/logout'} />
+                            <DropdownItem text={t('Logout')} href={`/${sessionUser.organizationId}/logout`} />
                           </Dropdown>
                         </DropdownTrigger>
                       </div>
@@ -252,6 +252,7 @@ class TopbarContainer extends React.Component {
                   </ul>
                   <NotificationsDropdownPartial
                     shortDateFormat={viewdata.shortDateFormat}
+                    organizationId={viewdata.organizationId}
                     timezone={viewdata.timezone}
                     onViewAllNotificationsClick={() => this.props.showModal('VIEW_ALL_NOTIFICATIONS')}
                   />

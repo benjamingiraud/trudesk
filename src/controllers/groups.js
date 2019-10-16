@@ -26,9 +26,10 @@ groupsController.get = function (req, res) {
   var user = req.user
   if (_.isUndefined(user) || !permissions.canThis(user.role, 'groups:view')) {
     req.flash('message', 'Permission Denied.')
-    return res.redirect('/')
+    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    return res.redirect(404)
   }
-
+  console.log(req.organization._id)
   var content = {}
   content.title = 'Groups'
   content.nav = 'groups'
@@ -50,15 +51,16 @@ groupsController.get = function (req, res) {
       content.data.users = _.sortBy(users, 'fullname')
 
       res.render('groups', content)
-    })
-  })
+    }, req.organization._id)
+  }, req.organization._id)
 }
 
 groupsController.getCreate = function (req, res) {
   var user = req.user
   if (_.isUndefined(user) || !permissions.canThis(user.role, 'groups:create')) {
     req.flash('message', 'Permission Denied.')
-    return res.redirect('/')
+    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    return res.redirect(404)
   }
 
   var content = {}
@@ -77,14 +79,15 @@ groupsController.getCreate = function (req, res) {
     content.data.users = _.sortBy(users, 'fullname')
 
     res.render('subviews/createGroup', content)
-  })
+  }, req.organization._id)
 }
 
 groupsController.edit = function (req, res) {
   var user = req.user
   if (_.isUndefined(user) || !permissions.canThis(user.role, 'groups:edit')) {
     req.flash('message', 'Permission Denied.')
-    return res.redirect('/')
+    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    return res.redirect(404)
   }
 
   var content = {}
@@ -96,7 +99,7 @@ groupsController.edit = function (req, res) {
   content.data.common = req.viewdata
   content.data.users = []
   var groupId = req.params.id
-  if (_.isUndefined(groupId)) return res.redirect('/groups/')
+  if (_.isUndefined(groupId)) return res.redirect(`/${req.organization._id}/groups`)
 
   async.parallel(
     {
@@ -105,14 +108,18 @@ groupsController.edit = function (req, res) {
           if (err) return next(err)
 
           next(null, users)
-        })
+        }, req.organization._id)
       },
       group: function (next) {
-        groupSchema.getGroupById(groupId, function (err, group) {
-          if (err) return next(err)
+        groupSchema.getGroupById(
+          groupId,
+          function (err, group) {
+            if (err) return next(err)
 
-          next(null, group)
-        })
+            next(null, group)
+          },
+          req.organization._id
+        )
       }
     },
     function (err, done) {

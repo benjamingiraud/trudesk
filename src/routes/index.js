@@ -17,7 +17,12 @@ var winston = require('winston')
 var packagejson = require('../../package.json')
 
 function mainRoutes (router, middleware, controllers) {
-  router.get('/', middleware.redirectToDashboardIfLoggedIn, controllers.main.index)
+  router.get(
+    '/:organizationId',
+    middleware.checkOrganization,
+    middleware.redirectToDashboardIfLoggedIn,
+    controllers.main.index
+  )
   router.get('/healthz', function (req, res) {
     return res.status(200).send('OK')
   })
@@ -28,27 +33,29 @@ function mainRoutes (router, middleware, controllers) {
     return res.redirect('/')
   })
   router.get(
-    '/dashboard',
+    '/:organizationId/dashboard',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.redirectIfUser,
     middleware.loadCommonData,
     controllers.main.dashboard
   )
 
-  router.get('/login', function (req, res) {
-    return res.redirect('/')
+  router.get('/:organizationId/login', function (req, res) {
+    if (req.organization) res.redirect(`/${req.organization._id}`)
+    return res.redirect(404)
   })
 
-  router.post('/login', controllers.main.loginPost)
+  router.post('/:organizationId/login', controllers.main.loginPost)
   router.get('/l2auth', controllers.main.l2authget)
   router.post('/l2auth', controllers.main.l2AuthPost)
-  router.get('/logout', controllers.main.logout)
-  router.post('/forgotpass', controllers.main.forgotPass)
-  router.get('/resetpassword/:hash', controllers.main.resetPass)
+  router.get('/:organizationId/logout', middleware.checkOrganization, controllers.main.logout)
+  router.post('/:organizationId/forgotpass', controllers.main.forgotPass)
+  router.get('/:organizationId/resetpassword/:hash', controllers.main.resetPass)
   router.post('/forgotl2auth', controllers.main.forgotL2Auth)
   router.get('/resetl2auth/:hash', controllers.main.resetl2auth)
 
-  router.get('/about', middleware.redirectToLogin, middleware.loadCommonData, controllers.main.about)
+  // router.get('/about', middleware.redirectToLogin, middleware.loadCommonData, controllers.main.about)
 
   router.get('/captcha', function (req, res) {
     var svgCaptcha = require('svg-captcha')
@@ -59,11 +66,11 @@ function mainRoutes (router, middleware, controllers) {
   })
 
   // Public
-  router.get('/newissue', controllers.tickets.pubNewIssue)
-  router.get('/register', controllers.accounts.signup)
-  router.get('/signup', controllers.accounts.signup)
+  router.get('/:organizationId/newissue', controllers.tickets.pubNewIssue)
+  router.get('/:organizationId/register', controllers.accounts.signup)
+  router.get('/:organizationId/signup', controllers.accounts.signup)
 
-  router.get('/logoimage', function (req, res) {
+  router.get('/:organizationId/logoimage', function (req, res) {
     var s = require('../models/setting')
     var _ = require('lodash')
     s.getSettingByName('gen:customlogo', function (err, hasCustomLogo) {
@@ -83,127 +90,172 @@ function mainRoutes (router, middleware, controllers) {
 
   // Tickets
   router.get(
-    '/tickets',
+    '/:organizationId/tickets',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.tickets.getActive,
     controllers.tickets.processor
   )
   router.get(
-    '/tickets/filter',
+    '/:organizationId/tickets/filter',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.tickets.filter,
     controllers.tickets.processor
   )
   router.get(
-    '/tickets/active',
+    '/:organizationId/tickets/active',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.tickets.getActive,
     controllers.tickets.processor
   )
   router.get(
-    '/tickets/active/page/:page',
+    '/:organizationId/tickets/active/page/:page',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.tickets.getActive,
     controllers.tickets.processor
   )
   router.get(
-    '/tickets/new',
+    '/:organizationId/tickets/new',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.tickets.getByStatus,
     controllers.tickets.processor
   )
   router.get(
-    '/tickets/new/page/:page',
+    '/:organizationId/tickets/new/page/:page',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.tickets.getByStatus,
     controllers.tickets.processor
   )
   router.get(
-    '/tickets/open',
+    '/:organizationId/tickets/open',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.tickets.getByStatus,
     controllers.tickets.processor
   )
   router.get(
-    '/tickets/open/page/:page',
+    '/:organizationId/tickets/open/page/:page',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.tickets.getByStatus,
     controllers.tickets.processor
   )
   router.get(
-    '/tickets/pending',
+    '/:organizationId/tickets/pending',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.tickets.getByStatus,
     controllers.tickets.processor
   )
   router.get(
-    '/tickets/pending/page/:page',
+    '/:organizationId/tickets/pending/page/:page',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.tickets.getByStatus,
     controllers.tickets.processor
   )
   router.get(
-    '/tickets/closed',
+    '/:organizationId/tickets/closed',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.tickets.getByStatus,
     controllers.tickets.processor
   )
   router.get(
-    '/tickets/closed/page/:page',
+    '/:organizationId/tickets/closed/page/:page',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.tickets.getByStatus,
     controllers.tickets.processor
   )
   router.get(
-    '/tickets/assigned',
+    '/:organizationId/tickets/assigned',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.tickets.getAssigned,
     controllers.tickets.processor
   )
   router.get(
-    '/tickets/assigned/page/:page',
+    '/:organizationId/tickets/assigned/page/:page',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.tickets.getAssigned,
     controllers.tickets.processor
   )
   router.get(
-    '/tickets/unassigned',
+    '/:organizationId/tickets/unassigned',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.tickets.getUnassigned,
     controllers.tickets.processor
   )
   router.get(
-    '/tickets/unassigned/page/:page',
+    '/:organizationId/tickets/unassigned/page/:page',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.tickets.getUnassigned,
     controllers.tickets.processor
   )
-  router.get('/tickets/print/:uid', middleware.redirectToLogin, middleware.loadCommonData, controllers.tickets.print)
-  router.get('/tickets/:id', middleware.redirectToLogin, middleware.loadCommonData, controllers.tickets.single)
-  // router.post('/tickets/postcomment', middleware.redirectToLogin, controllers.tickets.postcomment);
-  router.post('/tickets/uploadattachment', middleware.redirectToLogin, controllers.tickets.uploadAttachment)
-  router.post('/tickets/uploadmdeimage', middleware.redirectToLogin, controllers.tickets.uploadImageMDE)
+  router.get(
+    '/:organizationId/tickets/print/:uid',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.tickets.print
+  )
+  router.get(
+    '/:organizationId/tickets/:id',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.tickets.single
+  )
+  // router.post('/:organizationId/tickets/postcomment', middleware.checkOrganization, middleware.redirectToLogin, controllers.tickets.postcomment)
+  router.post(
+    '/:organizationId/tickets/uploadattachment',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    controllers.tickets.uploadAttachment
+  )
+  router.post(
+    '/:organizationId/tickets/uploadmdeimage',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    controllers.tickets.uploadImageMDE
+  )
 
   // Messages
-  router.get('/messages', middleware.redirectToLogin, middleware.loadCommonData, controllers.messages.get)
   router.get(
-    '/messages/startconversation',
+    '/:organizationId/messages',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.messages.get
+  )
+  router.get(
+    '/:organizationId/messages/startconversation',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     function (req, res, next) {
@@ -213,122 +265,295 @@ function mainRoutes (router, middleware, controllers) {
     controllers.messages.get
   )
   router.get(
-    '/messages/:convoid',
+    '/:organizationId/messages/:convoid',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.messages.getConversation
   )
 
   // Accounts
-  router.get('/profile', middleware.redirectToLogin, middleware.loadCommonData, controllers.accounts.profile)
-  router.get('/accounts', middleware.redirectToLogin, middleware.loadCommonData, controllers.accounts.getCustomers)
   router.get(
-    '/accounts/customers',
+    '/:organizationId/profile',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.accounts.profile
+  )
+  router.get(
+    '/:organizationId/accounts',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.accounts.getCustomers
   )
-  router.get('/accounts/agents', middleware.redirectToLogin, middleware.loadCommonData, controllers.accounts.getAgents)
-  router.get('/accounts/admins', middleware.redirectToLogin, middleware.loadCommonData, controllers.accounts.getAdmins)
-  router.post('/accounts/uploadimage', middleware.redirectToLogin, controllers.accounts.uploadImage)
-  router.get('/accounts/import', middleware.redirectToLogin, middleware.loadCommonData, controllers.accounts.importPage)
-  router.post('/accounts/import/csv/upload', middleware.redirectToLogin, controllers.accounts.uploadCSV)
-  router.post('/accounts/import/json/upload', middleware.redirectToLogin, controllers.accounts.uploadJSON)
-  router.post('/accounts/import/ldap/bind', middleware.redirectToLogin, controllers.accounts.bindLdap)
+  router.get(
+    '/:organizationId/accounts/customer',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.accounts.getCustomers
+  )
+  router.get(
+    '/:organizationId/accounts/agents',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.accounts.getAgents
+  )
+  router.get(
+    '/:organizationId/accounts/admin',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.accounts.getAdmins
+  )
+  router.post(
+    '/:organizationId/accounts/uploadimage',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    controllers.accounts.uploadImage
+  )
+  router.get(
+    '/:organizationId/accounts/import',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.accounts.importPage
+  )
+  router.post(
+    '/:organizationId/accounts/import/csv/upload',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    controllers.accounts.uploadCSV
+  )
+  router.post(
+    '/:organizationId/accounts/import/json/upload',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    controllers.accounts.uploadJSON
+  )
+  router.post(
+    '/:organizationId/accounts/import/ldap/bind',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    controllers.accounts.bindLdap
+  )
 
   // Groups
-  router.get('/groups', middleware.redirectToLogin, middleware.loadCommonData, controllers.groups.get)
-  router.get('/groups/create', middleware.redirectToLogin, middleware.loadCommonData, controllers.groups.getCreate)
-  router.get('/groups/:id', middleware.redirectToLogin, middleware.loadCommonData, controllers.groups.edit)
+  router.get(
+    '/:organizationId/groups',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.groups.get
+  )
+  router.get(
+    '/:organizationId/groups/create',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.groups.getCreate
+  )
+  router.get(
+    '/:organizationId/groups/:id',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.groups.edit
+  )
 
   // Teams
-  router.get('/teams', middleware.redirectToLogin, middleware.loadCommonData, controllers.teams.get)
+  router.get(
+    '/:organizationId/teams',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.teams.get
+  )
 
   // Departments
-  router.get('/departments', middleware.redirectToLogin, middleware.loadCommonData, controllers.departments.get)
+  router.get(
+    '/:organizationId/departments',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.departments.get
+  )
 
   // Reports
-  router.get('/reports', middleware.redirectToLogin, middleware.loadCommonData, controllers.reports.overview)
-  router.get('/reports/overview', middleware.redirectToLogin, middleware.loadCommonData, controllers.reports.overview)
-  router.get('/reports/generate', middleware.redirectToLogin, middleware.loadCommonData, controllers.reports.generate)
   router.get(
-    '/reports/breakdown/group',
+    '/:organizationId/reports',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.reports.overview
+  )
+  router.get(
+    '/:organizationId/reports/overview',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.reports.overview
+  )
+  router.get(
+    '/:organizationId/reports/generate',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.reports.generate
+  )
+  router.get(
+    '/:organizationId/reports/breakdown/group',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.reports.breakdownGroup
   )
   router.get(
-    '/reports/breakdown/user',
+    '/:organizationId/reports/breakdown/user',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.reports.breakdownUser
   )
 
   // Notices
-  router.get('/notices', middleware.redirectToLogin, middleware.loadCommonData, controllers.notices.get)
-  router.get('/notices/create', middleware.redirectToLogin, middleware.loadCommonData, controllers.notices.create)
-  router.get('/notices/:id', middleware.redirectToLogin, middleware.loadCommonData, controllers.notices.edit)
-
-  router.get('/settings', middleware.redirectToLogin, middleware.loadCommonData, controllers.settings.general)
-  router.get('/settings/general', middleware.redirectToLogin, middleware.loadCommonData, controllers.settings.general)
   router.get(
-    '/settings/appearance',
+    '/:organizationId/notices',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.notices.get
+  )
+  router.get(
+    '/:organizationId/notices/create',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.notices.create
+  )
+  router.get(
+    '/:organizationId/notices/:id',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.notices.edit
+  )
+
+  router.get(
+    '/:organizationId/settings',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.settings.general
+  )
+  router.get(
+    '/:organizationId/settings/general',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.settings.general
+  )
+  router.get(
+    '/:organizationId/settings/appearance',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.settings.appearance
   )
-  router.post('/settings/general/uploadlogo', middleware.redirectToLogin, controllers.main.uploadLogo)
-  router.post('/settings/general/uploadpagelogo', middleware.redirectToLogin, controllers.main.uploadPageLogo)
-  router.post('/settings/general/uploadfavicon', middleware.redirectToLogin, controllers.main.uploadFavicon)
+  router.post(
+    '/:organizationId/settings/general/uploadlogo',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    controllers.main.uploadLogo
+  )
+  router.post(
+    '/:organizationId/settings/general/uploadpagelogo',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    controllers.main.uploadPageLogo
+  )
+  router.post(
+    '/:organizationId/settings/general/uploadfavicon',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    controllers.main.uploadFavicon
+  )
   router.get(
-    '/settings/permissions',
+    '/:organizationId/settings/permissions',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.settings.permissionsSettings
   )
   router.get(
-    '/settings/tickets',
+    '/:organizationId/settings/tickets',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.settings.ticketSettings
   )
   router.get(
-    '/settings/mailer',
+    '/:organizationId/settings/mailer',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.settings.mailerSettings
   )
   router.get(
-    '/settings/notifications',
+    '/:organizationId/settings/notifications',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.settings.notificationsSettings
   )
   router.get(
-    '/settings/elasticsearch',
+    '/:organizationId/settings/elasticsearch',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.settings.elasticsearchSettings
   )
-  router.get('/settings/tps', middleware.redirectToLogin, middleware.loadCommonData, controllers.settings.tpsSettings)
   router.get(
-    '/settings/backup',
+    '/:organizationId/settings/tps',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.settings.tpsSettings
+  )
+  router.get(
+    '/:organizationId/settings/backup',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.settings.backupSettings
   )
-  router.get('/settings/legal', middleware.redirectToLogin, middleware.loadCommonData, controllers.settings.legal)
-  router.get('/settings/logs', middleware.redirectToLogin, middleware.loadCommonData, controllers.settings.logs)
+  router.get(
+    '/:organizationId/settings/legal',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.settings.legal
+  )
+  router.get(
+    '/:organizationId/settings/logs',
+    middleware.checkOrganization,
+    middleware.redirectToLogin,
+    middleware.loadCommonData,
+    controllers.settings.logs
+  )
 
   router.get(
-    '/settings/editor/:template',
+    '/:organizationId/settings/editor/:template',
+    middleware.checkOrganization,
     middleware.redirectToLogin,
     middleware.loadCommonData,
     controllers.editor.page
   )
 
-  // Plugins
-  router.get('/plugins', middleware.redirectToLogin, middleware.loadCommonData, controllers.plugins.get)
+  // // Plugins
+  // router.get('/:organizationId/plugins', middleware.redirectToLogin, middleware.loadCommonData, controllers.plugins.get)
 
   // API
   // v1
@@ -336,21 +561,21 @@ function mainRoutes (router, middleware, controllers) {
   // v2
   require('../controllers/api/v2/routes')(middleware, router, controllers)
 
-  router.get('/api/v1/plugins/list/installed', middleware.api, function (req, res) {
-    return res.json({ success: true, loadedPlugins: global.plugins })
-  })
-  router.get(
-    '/api/v1/plugins/install/:packageid',
-    middleware.api,
-    middleware.isAdmin,
-    controllers.api.v1.plugins.installPlugin
-  )
-  router.delete(
-    '/api/v1/plugins/remove/:packageid',
-    middleware.api,
-    middleware.isAdmin,
-    controllers.api.v1.plugins.removePlugin
-  )
+  // router.get('/api/v1/plugins/list/installed', middleware.api, function (req, res) {
+  //   return res.json({ success: true, loadedPlugins: global.plugins })
+  // })
+  // router.get(
+  //   '/api/v1/plugins/install/:packageid',
+  //   middleware.api,
+  //   middleware.isAdmin,
+  //   controllers.api.v1.plugins.installPlugin
+  // )
+  // router.delete(
+  //   '/api/v1/plugins/remove/:packageid',
+  //   middleware.api,
+  //   middleware.isAdmin,
+  //   controllers.api.v1.plugins.removePlugin
+  // )
 
   router.get('/api/v1/admin/restart', middleware.api, middleware.isAdmin, function (req, res) {
     var pm2 = require('pm2')

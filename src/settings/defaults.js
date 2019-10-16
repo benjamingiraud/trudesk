@@ -660,6 +660,7 @@ function mailTemplates (callback, organizationId) {
       },
       function (done) {
         templateSchema.findOne({ name: passwordReset.name, organizationId: organizationId }, function (err, templates) {
+          winston.warn(JSON.stringify(templates))
           if (err) return done(err)
           if (!templates || templates.length < 1) {
             passwordReset.organizationId = organizationId

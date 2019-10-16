@@ -100,7 +100,9 @@ class AppearanceSettings extends React.Component {
       selectedColorScheme: 'light'
     }
   }
-
+  componentDidMount () {
+    console.log(this.props)
+  }
   componentDidUpdate () {
     const colorScheme = this.calcColorScheme()
     if (this.state.selectedColorScheme !== colorScheme)
@@ -188,7 +190,7 @@ class AppearanceSettings extends React.Component {
           component={
             <UploadButtonWithX
               buttonText={'Upload Logo'}
-              uploadAction={'/settings/general/uploadlogo'}
+              uploadAction={`/${this.props.common.organizationId}/settings/general/uploadlogo`}
               extAllowed={'*.(jpg|jpeg|gif|png)'}
               showX={this.getSettingsValue('hasCustomLogo')}
               onXClick={() => {
@@ -211,7 +213,7 @@ class AppearanceSettings extends React.Component {
           component={
             <UploadButtonWithX
               buttonText={'Upload Logo'}
-              uploadAction={'/settings/general/uploadpagelogo'}
+              uploadAction={`/${this.props.common.organizationId}/settings/general/uploadpagelogo`}
               extAllowed={'*.(jpg|jpeg|gif|png)'}
               showX={this.getSettingsValue('hasCustomPageLogo')}
               onXClick={() => {
@@ -227,7 +229,7 @@ class AppearanceSettings extends React.Component {
           component={
             <UploadButtonWithX
               buttonText={'Upload Favicon'}
-              uploadAction={'/settings/general/uploadfavicon'}
+              uploadAction={`/${this.props.common.organizationId}/settings/general/uploadfavicon`}
               extAllowed={'*.(jpg|jpeg|gif|png|ico)'}
               showX={this.getSettingsValue('hasCustomFavicon')}
               onXClick={() => {

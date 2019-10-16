@@ -50,7 +50,7 @@ var apiNotices = {}
  }
  */
 apiNotices.create = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var postData = req.body
@@ -100,7 +100,7 @@ apiNotices.create = function (req, res) {
  */
 apiNotices.updateNotice = function (req, res) {
   var id = req.params.id
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   NoticeSchema.getNotice(
@@ -138,7 +138,7 @@ apiNotices.updateNotice = function (req, res) {
  }
  */
 apiNotices.clearActive = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   NoticeSchema.getNotices(function (err, notices) {
@@ -178,7 +178,7 @@ apiNotices.clearActive = function (req, res) {
  */
 apiNotices.deleteNotice = function (req, res) {
   var id = req.params.id
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   NoticeSchema.getNotice(

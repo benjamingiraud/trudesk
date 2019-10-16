@@ -23,10 +23,9 @@ var Department = require('../../../models/department')
 var accountsApi = {}
 
 accountsApi.create = function (req, res) {
-  console.log('heyyyyo')
   var postData = req.body
   if (!postData) return apiUtil.sendApiError_InvalidPostData(res)
-
+  var organizationId = req.user.organizationId
   var savedId = null
 
   async.series(
@@ -39,7 +38,8 @@ accountsApi.create = function (req, res) {
             password: postData.password,
             fullname: postData.fullname,
             title: postData.title,
-            role: postData.role
+            role: postData.role,
+            organizationId: organizationId
           },
           function (err, user) {
             if (err) return apiUtil.sendApiError(res, 500, err.message)
@@ -53,48 +53,56 @@ accountsApi.create = function (req, res) {
       groups: function (next) {
         if (!postData.groups) return next(null, [])
 
-        Group.getGroups(postData.groups, function (err, groups) {
-          if (err) return next(err)
+        Group.getGroups(
+          postData.groups,
+          function (err, groups) {
+            if (err) return next(err)
 
-          async.each(
-            groups,
-            function (group, callback) {
-              group.addMember(savedId, function (err) {
-                if (err) return callback(err)
-                group.save(callback)
-              })
-            },
-            function (err) {
-              if (err) return next(err)
+            async.each(
+              groups,
+              function (group, callback) {
+                group.addMember(savedId, function (err) {
+                  if (err) return callback(err)
+                  group.save(callback)
+                })
+              },
+              function (err) {
+                if (err) return next(err)
 
-              return next(null, groups)
-            }
-          )
-        })
+                return next(null, groups)
+              }
+            )
+          },
+          organizationId
+        )
       },
       teams: function (next) {
         if (!postData.teams) return next()
 
-        Team.getTeamsByIds(postData.teams, function (err, teams) {
-          if (err) return next(err)
+        Team.getTeamsByIds(
+          postData.teams,
+          function (err, teams) {
+            if (err) return next(err)
 
-          async.each(
-            teams,
-            function (team, callback) {
-              team.addMember(savedId, function () {
-                team.save(callback)
-              })
-            },
-            function (err) {
-              if (err) return next(err)
+            async.each(
+              teams,
+              function (team, callback) {
+                team.addMember(savedId, function () {
+                  team.save(callback)
+                })
+              },
+              function (err) {
+                if (err) return next(err)
 
-              return next(null, teams)
-            }
-          )
-        })
+                return next(null, teams)
+              }
+            )
+          },
+          organizationId
+        )
       },
       departments: function (next) {
-        Department.getUserDepartments(savedId, next)
+        Department.getUserDepartments(savedId, next, organizationId)
       }
     },
     function (err, results) {
@@ -125,11 +133,13 @@ accountsApi.get = function (req, res) {
   var type = query.type || 'customers'
   var limit = query.limit ? Number(query.limit) : 25
   var page = query.page ? Number(query.page) : 0
+  var organizationId = req.user.organizationId
 
   var obj = {
     limit: limit === -1 ? 999999 : limit,
     page: page,
-    showDeleted: query.showDeleted && query.showDeleted === 'true'
+    showDeleted: query.showDeleted && query.showDeleted === 'true',
+    organizationId: organizationId
   }
 
   switch (type) {
@@ -149,15 +159,19 @@ accountsApi.get = function (req, res) {
         async.eachSeries(
           accounts,
           function (account, next) {
-            Group.getAllGroupsOfUser(account._id, function (err, groups) {
-              if (err) return next(err)
-              var a = account.toObject()
-              a.groups = groups.map(function (group) {
-                return { name: group.name, _id: group._id }
-              })
-              resAccounts.push(a)
-              next()
-            })
+            Group.getAllGroupsOfUser(
+              account._id,
+              function (err, groups) {
+                if (err) return next(err)
+                var a = account.toObject()
+                a.groups = groups.map(function (group) {
+                  return { name: group.name, _id: group._id }
+                })
+                resAccounts.push(a)
+                next()
+              },
+              organizationId
+            )
           },
           function (err) {
             if (err) return apiUtil.sendApiError(res, 500, err.message)
@@ -176,22 +190,30 @@ accountsApi.get = function (req, res) {
           accounts,
           function (account, next) {
             var a = account.toObject()
-            Department.getUserDepartments(account._id, function (err, departments) {
-              if (err) return next(err)
-
-              a.departments = departments.map(function (department) {
-                return { name: department.name, _id: department._id }
-              })
-
-              Team.getTeamsOfUser(account._id, function (err, teams) {
+            Department.getUserDepartments(
+              account._id,
+              function (err, departments) {
                 if (err) return next(err)
-                a.teams = teams.map(function (team) {
-                  return { name: team.name, _id: team._id }
+
+                a.departments = departments.map(function (department) {
+                  return { name: department.name, _id: department._id }
                 })
-                resAccounts.push(a)
-                next()
-              })
-            })
+
+                Team.getTeamsOfUser(
+                  account._id,
+                  function (err, teams) {
+                    if (err) return next(err)
+                    a.teams = teams.map(function (team) {
+                      return { name: team.name, _id: team._id }
+                    })
+                    resAccounts.push(a)
+                    next()
+                  },
+                  organizationId
+                )
+              },
+              organizationId
+            )
           },
           function (err) {
             if (err) return apiUtil.sendApiError(res, 500, err.message)
@@ -210,22 +232,30 @@ accountsApi.get = function (req, res) {
           accounts,
           function (account, next) {
             var a = account.toObject()
-            Department.getUserDepartments(account._id, function (err, departments) {
-              if (err) return next(err)
-
-              a.departments = departments.map(function (department) {
-                return { name: department.name, _id: department._id }
-              })
-
-              Team.getTeamsOfUser(account._id, function (err, teams) {
+            Department.getUserDepartments(
+              account._id,
+              function (err, departments) {
                 if (err) return next(err)
-                a.teams = teams.map(function (team) {
-                  return { name: team.name, _id: team._id }
+
+                a.departments = departments.map(function (department) {
+                  return { name: department.name, _id: department._id }
                 })
-                resAccounts.push(a)
-                next()
-              })
-            })
+
+                Team.getTeamsOfUser(
+                  account._id,
+                  function (err, teams) {
+                    if (err) return next(err)
+                    a.teams = teams.map(function (team) {
+                      return { name: team.name, _id: team._id }
+                    })
+                    resAccounts.push(a)
+                    next()
+                  },
+                  organizationId
+                )
+              },
+              organizationId
+            )
           },
           function (err) {
             if (err) return apiUtil.sendApiError(res, 500, err.message)
@@ -244,46 +274,51 @@ accountsApi.update = function (req, res) {
   var username = req.params.username
   var postData = req.body
   if (!username || !postData) return apiUtil.sendApiError_InvalidPostData(res)
+  var organizationId = req.user.organizationId
 
   async.series(
     {
       user: function (next) {
-        User.getByUsername(username, function (err, user) {
-          if (err) return next(err)
-          if (!user) return next({ message: 'Invalid User' })
-
-          postData._id = user._id
-
-          if (
-            !_.isUndefined(postData.password) &&
-            !_.isEmpty(postData.password) &&
-            !_.isUndefined(postData.passwordConfirm) &&
-            !_.isEmpty(postData.passwordConfirm)
-          ) {
-            if (postData.password === postData.passwordConfirm) {
-              user.password = postData.password
-            }
-          }
-
-          if (!_.isUndefined(postData.fullname) && postData.fullname.length > 0) user.fullname = postData.fullname
-          if (!_.isUndefined(postData.email) && postData.email.length > 0) user.email = postData.email
-          if (!_.isUndefined(postData.title) && postData.title.length > 0) user.title = postData.title
-          if (!_.isUndefined(postData.role) && postData.role.length > 0) user.role = postData.role
-
-          user.save(function (err, user) {
+        User.getByUsername(
+          username,
+          function (err, user) {
             if (err) return next(err)
+            if (!user) return next({ message: 'Invalid User' })
 
-            user.populate('role', function (err, populatedUser) {
+            postData._id = user._id
+
+            if (
+              !_.isUndefined(postData.password) &&
+              !_.isEmpty(postData.password) &&
+              !_.isUndefined(postData.passwordConfirm) &&
+              !_.isEmpty(postData.passwordConfirm)
+            ) {
+              if (postData.password === postData.passwordConfirm) {
+                user.password = postData.password
+              }
+            }
+
+            if (!_.isUndefined(postData.fullname) && postData.fullname.length > 0) user.fullname = postData.fullname
+            if (!_.isUndefined(postData.email) && postData.email.length > 0) user.email = postData.email
+            if (!_.isUndefined(postData.title) && postData.title.length > 0) user.title = postData.title
+            if (!_.isUndefined(postData.role) && postData.role.length > 0) user.role = postData.role
+
+            user.save(function (err, user) {
               if (err) return next(err)
-              var resUser = apiUtil.stripUserFields(populatedUser)
 
-              return next(null, resUser)
+              user.populate('role', function (err, populatedUser) {
+                if (err) return next(err)
+                var resUser = apiUtil.stripUserFields(populatedUser)
+
+                return next(null, resUser)
+              })
             })
-          })
-        })
+          },
+          organizationId
+        )
       },
       groups: function (next) {
-        if (!postData.groups) return Group.getAllGroupsOfUser(postData._id, next)
+        if (!postData.groups) return Group.getAllGroupsOfUser(postData._id, next, organizationId)
 
         var userGroups = []
         Group.getAllGroups(function (err, groups) {
@@ -331,10 +366,10 @@ accountsApi.update = function (req, res) {
               return next(null, userGroups)
             }
           )
-        })
+        }, organizationId)
       },
       teams: function (next) {
-        if (!postData.teams) return Team.getTeamsOfUser(postData._id, next)
+        if (!postData.teams) return Team.getTeamsOfUser(postData._id, next, organizationId)
 
         var userTeams = []
         Team.getTeams(function (err, teams) {
@@ -382,10 +417,10 @@ accountsApi.update = function (req, res) {
               return next(null, userTeams)
             }
           )
-        })
+        }, organizationId)
       },
       departments: function (next) {
-        Department.getUserDepartments(postData._id, next)
+        Department.getUserDepartments(postData._id, next, organizationId)
       }
     },
     function (err, results) {

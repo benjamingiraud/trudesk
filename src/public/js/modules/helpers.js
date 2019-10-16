@@ -106,8 +106,9 @@ define([
 
     if (string.indexOf(':') !== -1 && string.trim().substr(-1) !== '}') string = '{' + string + '}'
 
-    var start = string ? string.indexOf('{') : -1,
-      options = {}
+    var start = string ? string.indexOf('{') : -1
+
+    var options = {}
 
     if (start !== -1) {
       try {
@@ -1530,6 +1531,7 @@ define([
     if (!timezone) {
       timezone = 'America/New_York'
     }
+    console.log(global.timezone)
 
     return moment
       .utc(date)

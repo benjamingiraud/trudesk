@@ -19,6 +19,7 @@ import BaseModal from './BaseModal'
 import Button from 'components/Button'
 
 import { createTag } from 'actions/tickets'
+import { withTranslation } from 'react-i18next';
 
 class CreateTagModal extends React.Component {
   constructor (props) {
@@ -43,14 +44,16 @@ class CreateTagModal extends React.Component {
   }
 
   render () {
+    const { t } = this.props
+
     return (
       <BaseModal>
         <form className='uk-form-stacked' onSubmit={e => this.onSubmit(e)}>
           <div>
-            <h2 className={'nomargin mb-5'}>Create Tag</h2>
-            <p className='uk-text-muted'>Tags categorize tickets, making it easy to identify issues</p>
+            <h2 className={'nomargin mb-5'}>{t('Create Tag')}</h2>
+            <p className='uk-text-muted'>{t('Tags categorize tickets, making it easy to identify issues')}</p>
 
-            <label>Tag Name</label>
+            <label>{t('Tag Name')}</label>
             <input
               type='text'
               className={'md-input'}
@@ -63,8 +66,8 @@ class CreateTagModal extends React.Component {
             />
           </div>
           <div className='uk-modal-footer uk-text-right'>
-            <Button text={'Close'} extraClass={'uk-modal-close'} flat={true} waves={true} />
-            <Button text={'Create'} type={'submit'} flat={true} waves={true} style={'success'} />
+            <Button text={t('Close')} extraClass={'uk-modal-close'} flat={true} waves={true} />
+            <Button text={t('Create')} type={'submit'} flat={true} waves={true} style={'success'} />
           </div>
         </form>
       </BaseModal>
@@ -78,7 +81,7 @@ CreateTagModal.propTypes = {
   currentPage: PropTypes.number
 }
 
-export default connect(
+export default withTranslation('common')(connect(
   null,
   { createTag }
-)(CreateTagModal)
+)(CreateTagModal))

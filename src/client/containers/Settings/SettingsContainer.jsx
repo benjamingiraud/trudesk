@@ -42,6 +42,7 @@ class SettingsContainer extends React.Component {
   }
 
   componentDidMount () {
+    console.log(this.props)
     const location = window.location.pathname.replace(/^(\/settings(\/?))/, '')
     if (location) {
       this.setState({
@@ -154,15 +155,15 @@ class SettingsContainer extends React.Component {
           />
           <div className='page-wrapper full-height scrollable no-overflow-x' ref={i => (this.page = i)}>
             <div className='settings-wrap'>
-              <GeneralSettings active={this.state.activeCategory === 'settings-general'} />
-              <AppearanceSettings active={this.state.activeCategory === 'settings-appearance'} />
-              <PermissionsSettingsContainer active={this.state.activeCategory === 'settings-permissions'} />
-              <TicketsSettings active={this.state.activeCategory === 'settings-tickets'} />
-              <MailerSettingsContainer active={this.state.activeCategory === 'settings-mailer'} />
-              <ElasticsearchSettingsContainer active={this.state.activeCategory === 'settings-elasticsearch'} />
-              <TPSSettingsContainer active={this.state.activeCategory === 'settings-tps'} />
-              <BackupRestoreSettingsContainer active={this.state.activeCategory === 'settings-backup'} />
-              <LegalSettingsContainer active={this.state.activeCategory === 'settings-legal'} />
+              <GeneralSettings active={this.state.activeCategory === 'settings-general'} common={this.props.common} />
+              <AppearanceSettings active={this.state.activeCategory === 'settings-appearance'} common={this.props.common}/>
+              <PermissionsSettingsContainer active={this.state.activeCategory === 'settings-permissions'} common={this.props.common}/>
+              <TicketsSettings active={this.state.activeCategory === 'settings-tickets'} common={this.props.common}/>
+              <MailerSettingsContainer active={this.state.activeCategory === 'settings-mailer'} common={this.props.common}/>
+              <ElasticsearchSettingsContainer active={this.state.activeCategory === 'settings-elasticsearch'} common={this.props.common}/>
+              <TPSSettingsContainer active={this.state.activeCategory === 'settings-tps'} common={this.props.common}/>
+              <BackupRestoreSettingsContainer active={this.state.activeCategory === 'settings-backup'} common={this.props.common}/>
+              <LegalSettingsContainer active={this.state.activeCategory === 'settings-legal'} common={this.props.common}/>
             </div>
           </div>
         </div>
@@ -173,11 +174,13 @@ class SettingsContainer extends React.Component {
 
 SettingsContainer.propTypes = {
   fetchSettings: PropTypes.func.isRequired,
-  sidebar: PropTypes.object.isRequired
+  sidebar: PropTypes.object.isRequired,
+  common: PropTypes.object.isRequired
 }
 
 const mapStateToProps = state => ({
-  sidebar: state.sidebar
+  sidebar: state.sidebar,
+  common: state.common
 })
 
 export default connect(

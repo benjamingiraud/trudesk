@@ -27,6 +27,8 @@ import Button from 'components/Button'
 
 import helpers from 'lib/helpers'
 import $ from 'jquery'
+import { withTranslation } from 'react-i18next';
+
 
 @observer
 class CreateGroupModal extends React.Component {
@@ -67,6 +69,8 @@ class CreateGroupModal extends React.Component {
   }
 
   render () {
+    const { t } = this.props;
+
     const mappedAccounts = this.props.accounts
       .map(account => {
         return { text: account.get('fullname'), value: account.get('_id') }
@@ -75,11 +79,11 @@ class CreateGroupModal extends React.Component {
     return (
       <BaseModal>
         <div className={'mb-25'}>
-          <h2>Create Group</h2>
+          <h2>{t('Create Group')}</h2>
         </div>
         <form className={'uk-form-stacked'} onSubmit={e => this.onFormSubmit(e)}>
           <div className={'uk-margin-medium-bottom'}>
-            <label>Group Name</label>
+            <label>{t('Group Name')}</label>
             <input
               type='text'
               className={'md-input'}
@@ -91,12 +95,12 @@ class CreateGroupModal extends React.Component {
             />
           </div>
           <div className={'uk-margin-medium-bottom'}>
-            <label style={{ marginBottom: 5 }}>Group Members</label>
+            <label style={{ marginBottom: 5 }}>{t('Group Members')}</label>
             <MultiSelect items={mappedAccounts} onChange={() => {}} ref={r => (this.membersSelect = r)} />
           </div>
           <div className='uk-modal-footer uk-text-right'>
-            <Button text={'Close'} flat={true} waves={true} extraClass={'uk-modal-close'} />
-            <Button text={'Create Group'} flat={true} waves={true} style={'primary'} type={'submit'} />
+            <Button text={t('Close')} flat={true} waves={true} extraClass={'uk-modal-close'} />
+            <Button text={t('Create Group')} flat={true} waves={true} style={'primary'} type={'submit'} />
           </div>
         </form>
       </BaseModal>
@@ -115,7 +119,7 @@ const mapStateToProps = state => ({
   accounts: state.accountsState.accounts
 })
 
-export default connect(
+export default withTranslation('common')(connect(
   mapStateToProps,
   { createGroup, fetchAccounts, unloadAccounts }
-)(CreateGroupModal)
+)(CreateGroupModal))

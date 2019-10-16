@@ -28,6 +28,7 @@ import Button from 'components/Button'
 import helpers from 'lib/helpers'
 import $ from 'jquery'
 import SpinLoader from 'components/SpinLoader'
+import { withTranslation } from 'react-i18next';
 
 @observer
 class EditGroupModal extends React.Component {
@@ -69,6 +70,8 @@ class EditGroupModal extends React.Component {
   }
 
   render () {
+    const { t } = this.props;
+
     const mappedAccounts = this.props.accounts
       .map(account => {
         return { text: account.get('fullname'), value: account.get('_id') }
@@ -85,11 +88,11 @@ class EditGroupModal extends React.Component {
       <BaseModal>
         <SpinLoader active={this.props.accountsLoading} />
         <div className={'mb-25'}>
-          <h2>Edit Group</h2>
+          <h2>{t('Edit Group')}</h2>
         </div>
         <form className={'uk-form-stacked'} onSubmit={e => this.onFormSubmit(e)}>
           <div className={'uk-margin-medium-bottom'}>
-            <label>Group Name</label>
+            <label>{t('Group Name')}</label>
             <input
               type='text'
               className={'md-input'}
@@ -101,7 +104,7 @@ class EditGroupModal extends React.Component {
             />
           </div>
           <div className={'uk-margin-medium-bottom'}>
-            <label style={{ marginBottom: 5 }}>Group Members</label>
+            <label style={{ marginBottom: 5 }}>{t('Group Members')}</label>
             <MultiSelect
               items={mappedAccounts}
               initialSelected={selectedMembers}
@@ -110,7 +113,7 @@ class EditGroupModal extends React.Component {
             />
           </div>
           <div className={'uk-margin-medium-bottom'}>
-            <label style={{ marginBottom: 5 }}>Send Notifications To</label>
+            <label style={{ marginBottom: 5 }}>{t('Send Notifications To')}</label>
             <MultiSelect
               items={mappedAccounts}
               initialSelected={selectedSendMailTo}
@@ -119,8 +122,8 @@ class EditGroupModal extends React.Component {
             />
           </div>
           <div className='uk-modal-footer uk-text-right'>
-            <Button text={'Close'} flat={true} waves={true} extraClass={'uk-modal-close'} />
-            <Button text={'Save Group'} flat={true} waves={true} style={'primary'} type={'submit'} />
+            <Button text={t('Close')} flat={true} waves={true} extraClass={'uk-modal-close'} />
+            <Button text={t('Save Group')} flat={true} waves={true} style={'primary'} type={'submit'} />
           </div>
         </form>
       </BaseModal>
@@ -142,7 +145,7 @@ const mapStateToProps = state => ({
   accountsLoading: state.accountsState.loading
 })
 
-export default connect(
+export default withTranslation('common')(connect(
   mapStateToProps,
   { updateGroup, fetchAccounts, unloadAccounts }
-)(EditGroupModal)
+)(EditGroupModal))

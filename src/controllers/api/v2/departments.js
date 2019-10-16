@@ -18,7 +18,10 @@ var apiUtils = require('../apiUtils')
 var apiDepartments = {}
 
 apiDepartments.get = function (req, res) {
-  Department.find({}, function (err, departments) {
+  var organizationId = req.user.organizationId
+  if (!organizationId) return apiUtils.sendApiError(res, 400, 'Invalid Organization Id')
+
+  Department.find({ organizationId: organizationId }, function (err, departments) {
     if (err) return apiUtils.sendApiError(res, 500, err.message)
 
     return apiUtils.sendApiSuccess(res, { departments: departments })
@@ -28,9 +31,14 @@ apiDepartments.get = function (req, res) {
 apiDepartments.create = function (req, res) {
   var postData = req.body
   if (!postData) return apiUtils.sendApiError_InvalidPostData(res)
-  
+
   if (!postData.teams) postData.teams = []
   if (!postData.groups) postData.groups = []
+
+  var organizationId = req.user.organizationId
+  if (!organizationId) return apiUtils.sendApiError(res, 400, 'Invalid Organization Id')
+
+  postData.organizationId = organizationId
 
   Department.create(postData, function (err, createdDepartment) {
     if (err) return apiUtils.sendApiError(res, 500, err.message)
@@ -55,13 +63,18 @@ apiDepartments.test = function (req, res) {
 apiDepartments.update = function (req, res) {
   var putData = req.body
   var id = req.params.id
-  if (!putData || !id) return apiUtils.sendApiError_InvalidPostData(res)
+  var organizationId = req.user.organizationId
+
+  if (!putData || !id || !organizationId) return apiUtils.sendApiError_InvalidPostData(res)
 
   if (!putData.teams) putData.teams = []
   if (!putData.groups) putData.groups = []
   if (putData.allGroups) putData.groups = []
 
-  Department.findOneAndUpdate({ _id: id }, putData, { new: true }, function (err, department) {
+  Department.findOneAndUpdate({ _id: id, organizationId: organizationId }, putData, { new: true }, function (
+    err,
+    department
+  ) {
     if (err) return apiUtils.sendApiError(res, 500, err.message)
 
     department.populate('teams groups', function (err, department) {
@@ -103,7 +116,10 @@ apiDepartments.delete = function (req, res) {
   var id = req.params.id
   if (!id) return apiUtils.sendApiError_InvalidPostData(res)
 
-  Department.deleteOne({ _id: id }, function (err, success) {
+  var organizationId = req.user.organizationId
+  if (!organizationId) return apiUtils.sendApiError(res, 400, 'Invalid Organization Id')
+
+  Department.deleteOne({ _id: id, organizationId: organizationId }, function (err, success) {
     if (err) return apiUtils.sendApiError(res, 500, err.message)
     if (!success) return apiUtils.sendApiError(res, 500, 'Unable to delete department')
 

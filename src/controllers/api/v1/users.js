@@ -44,7 +44,7 @@ var apiUsers = {}
  }
  */
 apiUsers.getWithLimit = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var limit = 10
@@ -152,7 +152,7 @@ apiUsers.getWithLimit = function (req, res) {
  }
  */
 apiUsers.create = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var postData = req.body
@@ -369,7 +369,7 @@ apiUsers.createPublicAccount = function (req, res) {
  }
  */
 apiUsers.update = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var username = req.params.username
@@ -532,7 +532,7 @@ apiUsers.update = function (req, res) {
  }
  */
 apiUsers.updatePreferences = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var username = req.params.username
@@ -594,7 +594,7 @@ apiUsers.updatePreferences = function (req, res) {
  }
  */
 apiUsers.deleteUser = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var username = req.params.username
@@ -699,7 +699,7 @@ apiUsers.enableUser = function (req, res) {
   var username = req.params.username
   if (_.isUndefined(username)) return res.status(400).json({ error: 'Invalid Request' })
 
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   UserSchema.getUserByUsername(
@@ -758,7 +758,7 @@ apiUsers.single = function (req, res) {
   var username = req.params.username
   if (_.isUndefined(username)) return res.status(400).json({ error: 'Invalid Request.' })
 
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var response = {
@@ -828,7 +828,7 @@ apiUsers.single = function (req, res) {
  }
  */
 apiUsers.notificationCount = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   notificationSchema.getUnreadCount(
@@ -843,7 +843,7 @@ apiUsers.notificationCount = function (req, res) {
 }
 
 apiUsers.getNotifications = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   notificationSchema.findAllForUser(
@@ -1028,7 +1028,7 @@ apiUsers.removeL2Auth = function (req, res) {
 
 apiUsers.checkEmail = function (req, res) {
   var email = req.body.email
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   if (_.isUndefined(email) || _.isNull(email)) {
@@ -1071,7 +1071,7 @@ apiUsers.checkEmail = function (req, res) {
  }
  */
 apiUsers.getAssingees = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   UserSchema.getAssigneeUsers(function (err, users) {
@@ -1095,8 +1095,8 @@ apiUsers.getAssingees = function (req, res) {
 }
 
 apiUsers.getGroups = function (req, res) {
-  var organizationId = req.params.organizationId
-  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+  if (!req.organization) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+  var organizationId = req.organization._id
 
   if (req.user.role.isAdmin || req.user.role.isAgent) {
     var departmentSchema = require('../../../models/department')

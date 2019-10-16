@@ -36,20 +36,28 @@ function updateNotifications () {
     async.parallel(
       [
         function (done) {
-          notificationSchema.getForUserWithLimit(socket.request.user._id, function (err, items) {
-            if (err) return done(err)
+          notificationSchema.getForUserWithLimit(
+            socket.request.user._id,
+            function (err, items) {
+              if (err) return done(err)
 
-            notifications.items = items
-            return done()
-          })
+              notifications.items = items
+              return done()
+            },
+            socket.request.user.organizationId
+          )
         },
         function (done) {
-          notificationSchema.getUnreadCount(socket.request.user._id, function (err, count) {
-            if (err) return done(err)
+          notificationSchema.getUnreadCount(
+            socket.request.user._id,
+            function (err, count) {
+              if (err) return done(err)
 
-            notifications.count = count
-            return done()
-          })
+              notifications.count = count
+              return done()
+            },
+            socket.request.user.organizationId
+          )
         }
       ],
       function (err) {
@@ -67,13 +75,17 @@ function updateNotifications () {
 function updateAllNotifications (socket) {
   var notifications = {}
   var notificationSchema = require('../models/notification')
-  notificationSchema.findAllForUser(socket.request.user._id, function (err, items) {
-    if (err) return false
+  notificationSchema.findAllForUser(
+    socket.request.user._id,
+    function (err, items) {
+      if (err) return false
 
-    notifications.items = items
+      notifications.items = items
 
-    utils.sendToSelf(socket, 'updateAllNotifications', notifications)
-  })
+      utils.sendToSelf(socket, 'updateAllNotifications', notifications)
+    },
+    socket.request.user.organizationId
+  )
 }
 
 events.updateNotifications = function (socket) {
@@ -92,17 +104,21 @@ events.markNotificationRead = function (socket) {
   socket.on('markNotificationRead', function (_id) {
     if (_.isUndefined(_id)) return true
     var notificationSchema = require('../models/notification')
-    notificationSchema.getNotification(_id, function (err, notification) {
-      if (err) return true
+    notificationSchema.getNotification(
+      _id,
+      function (err, notification) {
+        if (err) return true
 
-      notification.markRead(function () {
-        notification.save(function (err) {
-          if (err) return true
+        notification.markRead(function () {
+          notification.save(function (err) {
+            if (err) return true
 
-          updateNotifications(socket)
+            updateNotifications(socket)
+          })
         })
-      })
-    })
+      },
+      socket.request.user.organizationId
+    )
   })
 }
 
@@ -115,11 +131,15 @@ events.clearNotifications = function (socket) {
     notifications.count = 0
 
     var notificationSchema = require('../models/notification')
-    notificationSchema.clearNotifications(userId, function (err) {
-      if (err) return true
+    notificationSchema.clearNotifications(
+      userId,
+      function (err) {
+        if (err) return true
 
-      utils.sendToSelf(socket, 'updateNotifications', notifications)
-    })
+        utils.sendToSelf(socket, 'updateNotifications', notifications)
+      },
+      socket.request.user.organizationId
+    )
   })
 }
 

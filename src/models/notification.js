@@ -39,12 +39,12 @@ notificationSchema.methods.markRead = function (callback) {
   return callback(null, true)
 }
 
-notificationSchema.statics.getNotification = function (id, callback) {
+notificationSchema.statics.getNotification = function (id, callback, organizationId) {
   if (_.isUndefined(id)) {
     return callback('Invalid ObjectId - NotificationSchema.GetNotification()', null)
   }
 
-  return this.model(COLLECTION).findOne({ _id: id }, callback)
+  return this.model(COLLECTION).findOne({ _id: id, organizationId }, callback)
 }
 
 notificationSchema.statics.findAllForUser = function (oId, callback, organizationId) {
@@ -63,11 +63,11 @@ notificationSchema.statics.findAllForUser = function (oId, callback, organizatio
   return q.exec(callback)
 }
 
-notificationSchema.statics.getForUserWithLimit = function (oId, callback) {
+notificationSchema.statics.getForUserWithLimit = function (oId, callback, organizationId) {
   if (_.isUndefined(oId)) return callback('Invalid ObjectId - NotificationSchema.GetForUserWithLimit()', null)
 
   return this.model(COLLECTION)
-    .find({ owner: oId })
+    .find({ owner: oId, organizationId: organizationId })
     .sort({ created: -1 })
     .limit(5)
     .exec(callback)
@@ -92,12 +92,12 @@ notificationSchema.statics.getUnreadCount = function (oId, callback, organizatio
   return this.model(COLLECTION).countDocuments({ owner: oId, unread: true, organizationId: organizationId }, callback)
 }
 
-notificationSchema.statics.clearNotifications = function (oId, callback) {
+notificationSchema.statics.clearNotifications = function (oId, callback, organizationId) {
   if (_.isUndefined(oId)) {
     return callback('Invalid UserId - NotificationSchema.ClearNotifications()', null)
   }
 
-  return this.model(COLLECTION).deleteMany({ owner: oId }, callback)
+  return this.model(COLLECTION).deleteMany({ owner: oId, organizationId: organizationId }, callback)
 }
 
 module.exports = mongoose.model(COLLECTION, notificationSchema)

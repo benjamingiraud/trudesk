@@ -1,10 +1,10 @@
 {
-  "Find_Group": "Find Group",
-  "Members_with_count": "{{count}} member",
-  "Members_with_count_plural": "{{count}} members",
-  "Members": "Members",
-  "Send_Notifications_To": "Send Notifications To",
-  "Create_Group": "Create Group",
-  "Group_Name": "Group Name",
-  "Group_Breakdown": "Group Breakdown"
+  "Find_Group": "Retrouver le groupe",
+  "Members_with_count": "{{count}} membre",
+  "Members_with_count_plural": "{{count}} mebres",
+  "Members": "Membres",
+  "Send_Notifications_To": "Envoyer une notification à",
+  "Create_Group": "Creéer un groupe",
+  "Group_Name": "Nom du groupe",
+  "Group_Breakdown": "Répartition des groupes"
 }

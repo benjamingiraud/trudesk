@@ -29,8 +29,8 @@ function defaultApiResponse (err, res) {
 }
 
 apiSettings.getSettings = function (req, res) {
-  var organizationId = req.params.organizationId
-  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+  if (!req.organization) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+  var organizationId = req.organization._id
 
   settingsUtil.getSettings(function (err, settings) {
     if (err) return res.status(400).json({ success: false, error: err })
@@ -64,7 +64,7 @@ apiSettings.getSettings = function (req, res) {
 }
 
 apiSettings.getSingleSetting = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   settingsUtil.getSettings(function (err, settings) {
@@ -107,7 +107,8 @@ apiSettings.getSingleSetting = function (req, res) {
  }
  */
 apiSettings.updateSetting = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
+  console.log(organizationId)
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var postData = req.body
@@ -127,7 +128,8 @@ apiSettings.updateSetting = function (req, res) {
           if (err) return callback(err.message)
           if (_.isNull(s) || _.isUndefined(s)) {
             s = new SettingsSchema({
-              name: item.name
+              name: item.name,
+              organizationId: organizationId
             })
           }
 
@@ -174,10 +176,14 @@ apiSettings.updateTemplateSubject = function (req, res) {
   var templateSchema = require('../../../models/template')
   var id = req.params.id
   var subject = req.body.subject
+  var organizationId = req.organization._id
+  console.log(organizationId)
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   if (!subject) return res.status(400).json({ sucess: false, error: 'Invalid PUT data' })
   subject = subject.trim()
 
-  templateSchema.findOne({ _id: id }, function (err, template) {
+  templateSchema.findOne({ _id: id, organizationId: organizationId }, function (err, template) {
     if (err) return defaultApiResponse(err, res)
     if (!template) return res.status(404).json({ success: false, error: 'No Template Found' })
 
@@ -199,11 +205,16 @@ apiSettings.buildsass = function (req, res) {
 apiSettings.updateRoleOrder = function (req, res) {
   if (!req.body.roleOrder) return res.status(400).json({ success: false, error: 'Invalid PUT Data' })
   var RoleOrderSchema = require('../../../models/roleorder')
+  var organizationId = req.organization._id
+  console.log(organizationId)
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   RoleOrderSchema.getOrder(function (err, order) {
     if (err) return res.status(500).json({ success: false, error: err.message })
     if (!order) {
       order = new RoleOrderSchema({
-        order: req.body.roleOrder
+        order: req.body.roleOrder,
+        organizationId: organizationId
       })
       order.save(function (err, order) {
         if (err) return res.status(500).json({ success: false, error: err.message })
@@ -221,7 +232,7 @@ apiSettings.updateRoleOrder = function (req, res) {
         return res.json({ success: true, roleOrder: order })
       })
     }
-  })
+  }, organizationId)
 }
 
 module.exports = apiSettings

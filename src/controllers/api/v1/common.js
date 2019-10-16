@@ -121,7 +121,7 @@ commonV1.getLoggedInUser = function (req, res) {
 commonV1.logout = function (req, res) {
   var deviceToken = req.headers.devicetoken
   var user = req.user
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 

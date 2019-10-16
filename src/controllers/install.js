@@ -120,6 +120,7 @@ installController.existingdb = function (req, res) {
 installController.install = function (req, res) {
   var db = require('../database')
   var roleSchema = require('../models/role')
+  var OrganizationSchema = require('../models/organization')
   var roleOrderSchema = require('../models/roleorder')
   var UserSchema = require('../models/user')
   var GroupSchema = require('../models/group')
@@ -128,6 +129,9 @@ installController.install = function (req, res) {
   var SettingsSchema = require('../models/setting')
 
   var data = req.body
+
+  // Organization
+  var name = data['organization[name]']
 
   // Mongo
   var host = data['mongo[host]']
@@ -161,6 +165,18 @@ installController.install = function (req, res) {
           return next(err)
         }, conuri)
       },
+      // function (next) {
+      //   var organization = new organizationSchema(postData)
+
+      //   organization.save(function (err, organization) {
+      //     if (err) {
+      //       winston.debug(err)
+      //       return res.status(400).send({ success: false, error: 'Invalid Post Data' })
+      //     }
+      //     const organizationId = organization._id
+
+      //   next()
+      // },
       function (next) {
         var s = new SettingsSchema({
           name: 'gen:version',

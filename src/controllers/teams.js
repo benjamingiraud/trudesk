@@ -21,7 +21,8 @@ var teamController = {}
 teamController.get = function (req, res) {
   var user = req.user
   if (_.isUndefined(user) || !permissions.canThis(user.role, 'teams:view')) {
-    return res.redirect('/')
+    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    return res.redirect(404)
   }
 
   var content = {}

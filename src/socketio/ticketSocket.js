@@ -58,53 +58,65 @@ events.onUpdateTicketStatus = function (socket) {
   socket.on('updateTicketStatus', function (data) {
     var ticketId = data.ticketId
     var ownerId = socket.request.user._id
+    var organizationId = socket.request.user.organizationId
     var status = data.status
 
-    ticketSchema.getTicketById(ticketId, function (err, ticket) {
-      if (err) return true
-
-      ticket.setStatus(ownerId, status, function (err, t) {
+    ticketSchema.getTicketById(
+      ticketId,
+      function (err, ticket) {
         if (err) return true
 
-        t.save(function (err, t) {
+        ticket.setStatus(ownerId, status, function (err, t) {
           if (err) return true
 
-          // emitter.emit('ticket:updated', t)
-          utils.sendToAllConnectedClients(io, 'updateTicketStatus', {
-            tid: t._id,
-            owner: t.owner,
-            status: status
+          t.save(function (err, t) {
+            if (err) return true
+
+            // emitter.emit('ticket:updated', t)
+            utils.sendToAllConnectedClients(io, 'updateTicketStatus', {
+              tid: t._id,
+              owner: t.owner,
+              status: status
+            })
           })
         })
-      })
-    })
+      },
+      organizationId
+    )
   })
 }
 
 events.onUpdateComments = function (socket) {
   socket.on('updateComments', function (data) {
     var ticketId = data.ticketId
+    var organizationId = socket.request.user.organizationId
 
-    ticketSchema.getTicketById(ticketId, function (err, ticket) {
-      if (err) return true
+    ticketSchema.getTicketById(
+      ticketId,
+      function (err, ticket) {
+        if (err) return true
 
-      utils.sendToAllConnectedClients(io, 'updateComments', ticket)
-    })
+        utils.sendToAllConnectedClients(io, 'updateComments', ticket)
+      },
+      organizationId
+    )
   })
 }
 
 events.onUpdateAssigneeList = function (socket) {
   socket.on('updateAssigneeList', function () {
+    var organizationId = socket.request.user.organizationId
+
     roleSchema.getAgentRoles(function (err, roles) {
       if (err) return true
-      userSchema.find({ role: { $in: roles }, deleted: false }, function (err, users) {
+      userSchema.find({ role: { $in: roles }, deleted: false, organizationId: organizationId }, function (err, users) {
         if (err) return true
 
         var sortedUser = _.sortBy(users, 'fullname')
 
         utils.sendToSelf(socket, 'updateAssigneeList', sortedUser)
       })
-    })
+    }, organizationId)
   })
 }
 
@@ -113,49 +125,62 @@ events.onSetAssignee = function (socket) {
     var userId = data._id
     var ownerId = socket.request.user._id
     var ticketId = data.ticketId
-    ticketSchema.getTicketById(ticketId, function (err, ticket) {
-      if (err) return true
+    var organizationId = socket.request.user.organizationId
 
-      async.parallel(
-        {
-          setAssignee: function (callback) {
-            ticket.setAssignee(ownerId, userId, function (err, ticket) {
-              callback(err, ticket)
-            })
+    ticketSchema.getTicketById(
+      ticketId,
+      function (err, ticket) {
+        if (err) return true
+
+        async.parallel(
+          {
+            setAssignee: function (callback) {
+              ticket.setAssignee(
+                ownerId,
+                userId,
+                function (err, ticket) {
+                  callback(err, ticket)
+                },
+                organizationId
+              )
+            },
+            subscriber: function (callback) {
+              ticket.addSubscriber(userId, function (err, ticket) {
+                callback(err, ticket)
+              })
+            }
           },
-          subscriber: function (callback) {
-            ticket.addSubscriber(userId, function (err, ticket) {
-              callback(err, ticket)
+          function (err, results) {
+            if (err) return true
+
+            ticket = results.subscriber
+            ticket.save(function (err, ticket) {
+              if (err) return true
+              ticket.populate('assignee', function (err, ticket) {
+                if (err) return true
+
+                emitter.emit('ticket:subscriber:update', {
+                  user: userId,
+                  subscribe: true,
+                  organizationId: organizationId
+                })
+                emitter.emit('ticket:setAssignee', {
+                  assigneeId: ticket.assignee._id,
+                  ticketId: ticket._id,
+                  ticketUid: ticket.uid,
+                  hostname: socket.handshake.headers.host,
+                  organizationId: organizationId
+                })
+
+                // emitter.emit('ticket:updated', ticket)
+                utils.sendToAllConnectedClients(io, 'updateAssignee', ticket)
+              })
             })
           }
-        },
-        function (err, results) {
-          if (err) return true
-
-          ticket = results.subscriber
-          ticket.save(function (err, ticket) {
-            if (err) return true
-            ticket.populate('assignee', function (err, ticket) {
-              if (err) return true
-
-              emitter.emit('ticket:subscriber:update', {
-                user: userId,
-                subscribe: true
-              })
-              emitter.emit('ticket:setAssignee', {
-                assigneeId: ticket.assignee._id,
-                ticketId: ticket._id,
-                ticketUid: ticket.uid,
-                hostname: socket.handshake.headers.host
-              })
-
-              // emitter.emit('ticket:updated', ticket)
-              utils.sendToAllConnectedClients(io, 'updateAssignee', ticket)
-            })
-          })
-        }
-      )
-    })
+        )
+      },
+      organizationId
+    )
   })
 }
 
@@ -164,25 +189,35 @@ events.onSetTicketType = function (socket) {
     var ticketId = data.ticketId
     var typeId = data.typeId
     var ownerId = socket.request.user._id
+    var organizationId = socket.request.user.organizationId
 
     if (_.isUndefined(ticketId) || _.isUndefined(typeId)) return true
-    ticketSchema.getTicketById(ticketId, function (err, ticket) {
-      if (err) return true
-      ticket.setTicketType(ownerId, typeId, function (err, t) {
+    ticketSchema.getTicketById(
+      ticketId,
+      function (err, ticket) {
         if (err) return true
-
-        t.save(function (err, tt) {
-          if (err) return true
-
-          ticketSchema.populate(tt, 'type', function (err) {
+        ticket.setTicketType(
+          ownerId,
+          typeId,
+          function (err, t) {
             if (err) return true
 
-            // emitter.emit('ticket:updated', tt)
-            utils.sendToAllConnectedClients(io, 'updateTicketType', tt)
-          })
-        })
-      })
-    })
+            t.save(function (err, tt) {
+              if (err) return true
+
+              ticketSchema.populate(tt, 'type', function (err) {
+                if (err) return true
+
+                // emitter.emit('ticket:updated', tt)
+                utils.sendToAllConnectedClients(io, 'updateTicketType', tt)
+              })
+            })
+          },
+          organizationId
+        )
+      },
+      organizationId
+    )
   })
 }
 
@@ -191,27 +226,36 @@ events.onSetTicketPriority = function (socket) {
     var ticketId = data.ticketId
     var priority = data.priority
     var ownerId = socket.request.user._id
+    var organizationId = socket.request.user.organizationId
 
     if (_.isUndefined(ticketId) || _.isUndefined(priority)) return true
-    ticketSchema.getTicketById(ticketId, function (err, ticket) {
-      if (err) return true
-      prioritySchema.getPriority(priority, function (err, p) {
-        if (err) {
-          winston.debug(err)
-          return true
-        }
+    ticketSchema.getTicketById(
+      ticketId,
+      function (err, ticket) {
+        if (err) return true
+        prioritySchema.getPriority(
+          priority,
+          function (err, p) {
+            if (err) {
+              winston.debug(err)
+              return true
+            }
 
-        ticket.setTicketPriority(ownerId, p, function (err, t) {
-          if (err) return true
-          t.save(function (err, tt) {
-            if (err) return true
+            ticket.setTicketPriority(ownerId, p, function (err, t) {
+              if (err) return true
+              t.save(function (err, tt) {
+                if (err) return true
 
-            // emitter.emit('ticket:updated', tt)
-            utils.sendToAllConnectedClients(io, 'updateTicketPriority', tt)
-          })
-        })
-      })
-    })
+                // emitter.emit('ticket:updated', tt)
+                utils.sendToAllConnectedClients(io, 'updateTicketPriority', tt)
+              })
+            })
+          },
+          organizationId
+        )
+      },
+      organizationId
+    )
   })
 }
 
@@ -219,20 +263,26 @@ events.onClearAssignee = function (socket) {
   socket.on('clearAssignee', function (id) {
     var ticketId = id
     var ownerId = socket.request.user._id
-    ticketSchema.getTicketById(ticketId, function (err, ticket) {
-      if (err) return true
+    var organizationId = socket.request.user.organizationId
 
-      ticket.clearAssignee(ownerId, function (err, t) {
+    ticketSchema.getTicketById(
+      ticketId,
+      function (err, ticket) {
         if (err) return true
 
-        t.save(function (err, tt) {
+        ticket.clearAssignee(ownerId, function (err, t) {
           if (err) return true
 
-          // emitter.emit('ticket:updated', tt)
-          utils.sendToAllConnectedClients(io, 'updateAssignee', tt)
+          t.save(function (err, tt) {
+            if (err) return true
+
+            // emitter.emit('ticket:updated', tt)
+            utils.sendToAllConnectedClients(io, 'updateAssignee', tt)
+          })
         })
-      })
-    })
+      },
+      organizationId
+    )
   })
 }
 
@@ -241,27 +291,32 @@ events.onSetTicketGroup = function (socket) {
     var ticketId = data.ticketId
     var groupId = data.groupId
     var ownerId = socket.request.user._id
+    var organizationId = socket.request.user.organizationId
 
     if (_.isUndefined(ticketId) || _.isUndefined(groupId)) return true
 
-    ticketSchema.getTicketById(ticketId, function (err, ticket) {
-      if (err) return true
-
-      ticket.setTicketGroup(ownerId, groupId, function (err, t) {
+    ticketSchema.getTicketById(
+      ticketId,
+      function (err, ticket) {
         if (err) return true
 
-        t.save(function (err, tt) {
+        ticket.setTicketGroup(ownerId, groupId, function (err, t) {
           if (err) return true
 
-          ticketSchema.populate(tt, 'group', function (err) {
+          t.save(function (err, tt) {
             if (err) return true
 
-            // emitter.emit('ticket:updated', tt)
-            utils.sendToAllConnectedClients(io, 'updateTicketGroup', tt)
+            ticketSchema.populate(tt, 'group', function (err) {
+              if (err) return true
+
+              // emitter.emit('ticket:updated', tt)
+              utils.sendToAllConnectedClients(io, 'updateTicketGroup', tt)
+            })
           })
         })
-      })
-    })
+      },
+      organizationId
+    )
   })
 }
 
@@ -270,23 +325,28 @@ events.onSetTicketDueDate = function (socket) {
     var ticketId = data.ticketId
     var dueDate = data.dueDate
     var ownerId = socket.request.user._id
+    var organizationId = socket.request.user.organizationId
 
     if (_.isUndefined(ticketId)) return true
 
-    ticketSchema.getTicketById(ticketId, function (err, ticket) {
-      if (err) return true
-
-      ticket.setTicketDueDate(ownerId, dueDate, function (err, t) {
+    ticketSchema.getTicketById(
+      ticketId,
+      function (err, ticket) {
         if (err) return true
 
-        t.save(function (err, tt) {
+        ticket.setTicketDueDate(ownerId, dueDate, function (err, t) {
           if (err) return true
 
-          // emitter.emit('ticket:updated', tt)
-          utils.sendToAllConnectedClients(io, 'updateTicketDueDate', tt)
+          t.save(function (err, tt) {
+            if (err) return true
+
+            // emitter.emit('ticket:updated', tt)
+            utils.sendToAllConnectedClients(io, 'updateTicketDueDate', tt)
+          })
         })
-      })
-    })
+      },
+      organizationId
+    )
   })
 }
 
@@ -296,25 +356,31 @@ events.onSetTicketIssue = function (socket) {
     var issue = data.issue
     var subject = data.subject
     var ownerId = socket.request.user._id
+    var organizationId = socket.request.user.organizationId
+
     if (_.isUndefined(ticketId) || _.isUndefined(issue)) return true
 
-    ticketSchema.getTicketById(ticketId, function (err, ticket) {
-      if (err) return true
-
-      ticket.setSubject(ownerId, subject, function (err, ticket) {
+    ticketSchema.getTicketById(
+      ticketId,
+      function (err, ticket) {
         if (err) return true
 
-        ticket.setIssue(ownerId, issue, function (err, t) {
+        ticket.setSubject(ownerId, subject, function (err, ticket) {
           if (err) return true
 
-          t.save(function (err, tt) {
+          ticket.setIssue(ownerId, issue, function (err, t) {
             if (err) return true
 
-            utils.sendToAllConnectedClients(io, 'updateTicketIssue', tt)
+            t.save(function (err, tt) {
+              if (err) return true
+
+              utils.sendToAllConnectedClients(io, 'updateTicketIssue', tt)
+            })
           })
         })
-      })
-    })
+      },
+      organizationId
+    )
   })
 }
 
@@ -324,6 +390,8 @@ events.onSetCommentText = function (socket) {
     var ticketId = data.ticketId
     var commentId = data.commentId
     var comment = data.commentText
+    var organizationId = socket.request.user.organizationId
+
     if (_.isUndefined(ticketId) || _.isUndefined(commentId) || _.isUndefined(comment)) return true
 
     marked.setOptions({
@@ -334,18 +402,22 @@ events.onSetCommentText = function (socket) {
 
     var markedComment = marked(comment)
 
-    ticketSchema.getTicketById(ticketId, function (err, ticket) {
-      if (err) return winston.error(err)
-
-      ticket.updateComment(ownerId, commentId, markedComment, function (err) {
+    ticketSchema.getTicketById(
+      ticketId,
+      function (err, ticket) {
         if (err) return winston.error(err)
-        ticket.save(function (err, tt) {
-          if (err) return winston.error(err)
 
-          utils.sendToAllConnectedClients(io, 'updateComments', tt)
+        ticket.updateComment(ownerId, commentId, markedComment, function (err) {
+          if (err) return winston.error(err)
+          ticket.save(function (err, tt) {
+            if (err) return winston.error(err)
+
+            utils.sendToAllConnectedClients(io, 'updateComments', tt)
+          })
         })
-      })
-    })
+      },
+      organizationId
+    )
   })
 }
 
@@ -354,22 +426,27 @@ events.onRemoveComment = function (socket) {
     var ownerId = socket.request.user._id
     var ticketId = data.ticketId
     var commentId = data.commentId
+    var organizationId = socket.request.user.organizationId
 
     if (_.isUndefined(ticketId) || _.isUndefined(commentId)) return true
 
-    ticketSchema.getTicketById(ticketId, function (err, ticket) {
-      if (err) return true
-
-      ticket.removeComment(ownerId, commentId, function (err, t) {
+    ticketSchema.getTicketById(
+      ticketId,
+      function (err, ticket) {
         if (err) return true
 
-        t.save(function (err, tt) {
+        ticket.removeComment(ownerId, commentId, function (err, t) {
           if (err) return true
 
-          utils.sendToAllConnectedClients(io, 'updateComments', tt)
+          t.save(function (err, tt) {
+            if (err) return true
+
+            utils.sendToAllConnectedClients(io, 'updateComments', tt)
+          })
         })
-      })
-    })
+      },
+      organizationId
+    )
   })
 }
 
@@ -379,6 +456,8 @@ events.onSetNoteText = function (socket) {
     var ticketId = data.ticketId
     var noteId = data.noteId
     var note = data.noteText
+    var organizationId = socket.request.user.organizationId
+
     if (_.isUndefined(ticketId) || _.isUndefined(noteId) || _.isUndefined(note)) return true
 
     marked.setOptions({
@@ -386,18 +465,22 @@ events.onSetNoteText = function (socket) {
     })
     var markedNote = marked(note)
 
-    ticketSchema.getTicketById(ticketId, function (err, ticket) {
-      if (err) return winston.error(err)
-
-      ticket.updateNote(ownerId, noteId, markedNote, function (err) {
+    ticketSchema.getTicketById(
+      ticketId,
+      function (err, ticket) {
         if (err) return winston.error(err)
-        ticket.save(function (err, tt) {
-          if (err) return winston.error(err)
 
-          utils.sendToAllConnectedClients(io, 'updateNotes', tt)
+        ticket.updateNote(ownerId, noteId, markedNote, function (err) {
+          if (err) return winston.error(err)
+          ticket.save(function (err, tt) {
+            if (err) return winston.error(err)
+
+            utils.sendToAllConnectedClients(io, 'updateNotes', tt)
+          })
         })
-      })
-    })
+      },
+      organizationId
+    )
   })
 }
 
@@ -406,57 +489,75 @@ events.onRemoveNote = function (socket) {
     var ownerId = socket.request.user._id
     var ticketId = data.ticketId
     var noteId = data.noteId
+    var organizationId = socket.request.user.organizationId
+
     if (_.isUndefined(ticketId) || _.isUndefined(noteId)) return true
 
-    ticketSchema.getTicketById(ticketId, function (err, ticket) {
-      if (err) return true
-
-      ticket.removeNote(ownerId, noteId, function (err, t) {
+    ticketSchema.getTicketById(
+      ticketId,
+      function (err, ticket) {
         if (err) return true
 
-        t.save(function (err, tt) {
+        ticket.removeNote(ownerId, noteId, function (err, t) {
           if (err) return true
 
-          utils.sendToAllConnectedClients(io, 'updateNotes', tt)
+          t.save(function (err, tt) {
+            if (err) return true
+
+            utils.sendToAllConnectedClients(io, 'updateNotes', tt)
+          })
         })
-      })
-    })
+      },
+      organizationId
+    )
   })
 }
 
 events.onRefreshTicketAttachments = function (socket) {
   socket.on('refreshTicketAttachments', function (data) {
     var ticketId = data.ticketId
+    var organizationId = socket.request.user.organizationId
+
     if (_.isUndefined(ticketId)) return true
 
-    ticketSchema.getTicketById(ticketId, function (err, ticket) {
-      if (err) return true
+    ticketSchema.getTicketById(
+      ticketId,
+      function (err, ticket) {
+        if (err) return true
 
-      var user = socket.request.user
-      if (_.isUndefined(user)) return true
+        var user = socket.request.user
+        if (_.isUndefined(user)) return true
 
-      var canRemoveAttachments = permissions.canThis(user.role, 'tickets:removeAttachment')
+        var canRemoveAttachments = permissions.canThis(user.role, 'tickets:removeAttachment')
 
-      var data = {
-        ticket: ticket,
-        canRemoveAttachments: canRemoveAttachments
-      }
+        var data = {
+          ticket: ticket,
+          canRemoveAttachments: canRemoveAttachments
+        }
 
-      utils.sendToAllConnectedClients(io, 'updateTicketAttachments', data)
-    })
+        utils.sendToAllConnectedClients(io, 'updateTicketAttachments', data)
+      },
+      organizationId
+    )
   })
 }
 
 events.onRefreshTicketTags = function (socket) {
   socket.on('refreshTicketTags', function (data) {
     var ticketId = data.ticketId
+    var organizationId = socket.request.user.organizationId
+
     if (_.isUndefined(ticketId)) return true
 
-    ticketSchema.getTicketById(ticketId, function (err, ticket) {
-      if (err) return true
+    ticketSchema.getTicketById(
+      ticketId,
+      function (err, ticket) {
+        if (err) return true
 
-      utils.sendToAllConnectedClients(io, 'updateTicketTags', ticket)
-    })
+        utils.sendToAllConnectedClients(io, 'updateTicketTags', ticket)
+      },
+      organizationId
+    )
   })
 }
 

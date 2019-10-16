@@ -22,6 +22,7 @@ import { createRole } from 'actions/settings'
 
 import Button from 'components/Button'
 import BaseModal from './BaseModal'
+import { withTranslation } from 'react-i18next';
 
 @observer
 class CreateRoleModal extends React.Component {
@@ -38,14 +39,16 @@ class CreateRoleModal extends React.Component {
   }
 
   render () {
+    const { t } = this.props
+
     return (
       <BaseModal>
         <div className={'uk-form-stacked'}>
           <div>
-            <h2 className={'nomargin mb-5'}>Create Role</h2>
-            <p className='uk-text-muted'>Once created, the role will become editable in the permission editor</p>
+            <h2 className={'nomargin mb-5'}>{t('Create Role')}</h2>
+            <p className='uk-text-muted'>{t('Once created, the role will become editable in the permission editor')}</p>
 
-            <label>Role Name</label>
+            <label>{t('Role Name')}</label>
             <input
               type='text'
               className={'md-input'}
@@ -58,9 +61,9 @@ class CreateRoleModal extends React.Component {
             />
           </div>
           <div className='uk-modal-footer uk-text-right'>
-            <Button text={'Close'} extraClass={'uk-modal-close'} flat={true} waves={true} />
+            <Button text={t('Close')} extraClass={'uk-modal-close'} flat={true} waves={true} />
             <Button
-              text={'Create'}
+              text={t('Create')}
               type={'button'}
               flat={true}
               waves={true}
@@ -78,7 +81,7 @@ CreateRoleModal.propTypes = {
   createRole: PropTypes.func.isRequired
 }
 
-export default connect(
+export default withTranslation('common')(connect(
   null,
   { createRole }
-)(CreateRoleModal)
+)(CreateRoleModal))

@@ -18,14 +18,18 @@ var path = require('path')
 var passport = require('passport')
 var winston = require('winston')
 var pkg = require('../../package')
-
+var permissions = require('../permissions')
 var mainController = {}
 
 mainController.content = {}
 
 mainController.index = function (req, res) {
+  const organizationId = req.organization._id
+  if (!organizationId) return res.render(404)
+
   var content = {}
   content.title = 'Login'
+  content.organizationId = organizationId
   content.layout = false
   content.flash = req.flash('loginMessage')
 
@@ -51,7 +55,7 @@ mainController.index = function (req, res) {
     content.bottom = 'Trudesk v' + pkg.version
 
     res.render('login', content)
-  })
+  }, organizationId)
 }
 
 mainController.about = function (req, res) {
@@ -93,19 +97,25 @@ mainController.dashboard = function (req, res) {
   content.data = {}
   content.data.user = req.user
   content.data.common = req.viewdata
+  content.data.organization = req.organization
+
+  console.log('in dashboard controller')
 
   return res.render('dashboard', content)
 }
 
 mainController.loginPost = function (req, res, next) {
   passport.authenticate('local', function (err, user) {
+    if (!req.params.organizationId) return res.redirect(404)
+    const organizationId = req.params.organizationId
+
     if (err) {
       winston.error(err)
       return next(err)
     }
-    if (!user) return res.redirect('/')
+    if (!user) return res.redirect(`/${organizationId}`)
 
-    var redirectUrl = '/dashboard'
+    var redirectUrl = `/${organizationId}/dashboard`
 
     if (req.session.redirectUrl) {
       redirectUrl = req.session.redirectUrl
@@ -113,7 +123,7 @@ mainController.loginPost = function (req, res, next) {
     }
 
     if (req.user.role === 'user') {
-      redirectUrl = '/tickets'
+      redirectUrl = `/${organizationId}/tickets`
     }
 
     req.logIn(user, function (err) {
@@ -121,8 +131,9 @@ mainController.loginPost = function (req, res, next) {
         winston.debug(err)
         return next(err)
       }
-
-      return res.redirect(redirectUrl)
+      permissions.register(() => {
+        return res.redirect(redirectUrl)
+      }, user.organizationId)
     })
   })(req, res, next)
 }
@@ -153,10 +164,12 @@ mainController.l2AuthPost = function (req, res, next) {
 }
 
 mainController.logout = function (req, res) {
+  console.log(req.organization)
   req.logout()
   req.session.l2auth = null
   req.session.destroy()
-  return res.redirect('/')
+  if (req.organization) return res.redirect(`/${req.organization._id}`)
+  return res.redirect(404)
 }
 
 mainController.forgotL2Auth = function (req, res) {
@@ -552,6 +565,9 @@ mainController.l2authget = function (req, res) {
 }
 
 mainController.uploadFavicon = function (req, res) {
+  console.log(req.organization)
+  let organizationId = req.organization._id
+
   var fs = require('fs')
   var settingUtil = require('../settings/settingsUtil')
   var Busboy = require('busboy')
@@ -578,8 +594,8 @@ mainController.uploadFavicon = function (req, res) {
     var savePath = path.join(__dirname, '../../public/uploads/assets')
     if (!fs.existsSync(savePath)) fs.mkdirSync(savePath)
 
-    object.filePath = path.join(savePath, 'favicon' + path.extname(filename))
-    object.filename = 'favicon' + path.extname(filename)
+    object.filePath = path.join(savePath, `favicon-${organizationId}` + path.extname(filename))
+    object.filename = `favicon-${organizationId}` + path.extname(filename)
     object.mimetype = mimetype
 
     file.on('limit', function () {
@@ -606,15 +622,25 @@ mainController.uploadFavicon = function (req, res) {
 
     if (!fs.existsSync(object.filePath)) return res.status(400).send('File failed to save to disk')
 
-    settingUtil.setSetting('gen:customfavicon', true, function (err) {
-      if (err) return res.status(400).send('Failed to save setting to database')
-
-      settingUtil.setSetting('gen:customfaviconfilename', object.filename, function (err) {
+    settingUtil.setSetting(
+      'gen:customfavicon',
+      true,
+      function (err) {
         if (err) return res.status(400).send('Failed to save setting to database')
 
-        return res.send(object.filename)
-      })
-    })
+        settingUtil.setSetting(
+          'gen:customfaviconfilename',
+          object.filename,
+          function (err) {
+            if (err) return res.status(400).send('Failed to save setting to database')
+
+            return res.send(object.filename)
+          },
+          organizationId
+        )
+      },
+      organizationId
+    )
   })
 
   req.pipe(busboy)
@@ -623,6 +649,9 @@ mainController.uploadFavicon = function (req, res) {
 mainController.uploadLogo = function (req, res) {
   var fs = require('fs')
   var settingUtil = require('../settings/settingsUtil')
+  console.log(req.organization)
+  let organizationId = req.organization._id
+
   var Busboy = require('busboy')
   var busboy = new Busboy({
     headers: req.headers,
@@ -648,8 +677,8 @@ mainController.uploadLogo = function (req, res) {
     var savePath = path.join(__dirname, '../../public/uploads/assets')
     if (!fs.existsSync(savePath)) fs.mkdirSync(savePath)
 
-    object.filePath = path.join(savePath, 'topLogo' + path.extname(filename))
-    object.filename = 'topLogo' + path.extname(filename)
+    object.filePath = path.join(savePath, `topLogo-${organizationId}` + path.extname(filename))
+    object.filename = `topLogo-${organizationId}` + path.extname(filename)
     object.mimetype = mimetype
 
     file.on('limit', function () {
@@ -676,21 +705,34 @@ mainController.uploadLogo = function (req, res) {
 
     if (!fs.existsSync(object.filePath)) return res.status(400).send('File failed to save to disk')
 
-    settingUtil.setSetting('gen:customlogo', true, function (err) {
-      if (err) return res.status(400).send('Failed to save setting to database')
-
-      settingUtil.setSetting('gen:customlogofilename', object.filename, function (err) {
+    settingUtil.setSetting(
+      'gen:customlogo',
+      true,
+      function (err) {
         if (err) return res.status(400).send('Failed to save setting to database')
 
-        return res.send(object.filename)
-      })
-    })
+        settingUtil.setSetting(
+          'gen:customlogofilename',
+          object.filename,
+          function (err) {
+            if (err) return res.status(400).send('Failed to save setting to database')
+
+            return res.send(object.filename)
+          },
+          organizationId
+        )
+      },
+      organizationId
+    )
   })
 
   req.pipe(busboy)
 }
 
 mainController.uploadPageLogo = function (req, res) {
+  console.log(req.organization)
+  let organizationId = req.organization._id
+
   var fs = require('fs')
   var settingUtil = require('../settings/settingsUtil')
   var Busboy = require('busboy')
@@ -718,8 +760,8 @@ mainController.uploadPageLogo = function (req, res) {
     var savePath = path.join(__dirname, '../../public/uploads/assets')
     if (!fs.existsSync(savePath)) fs.mkdirSync(savePath)
 
-    object.filePath = path.join(savePath, 'pageLogo' + path.extname(filename))
-    object.filename = 'pageLogo' + path.extname(filename)
+    object.filePath = path.join(savePath, `pageLogo-${organizationId}` + path.extname(filename))
+    object.filename = `pageLogo-${organizationId}` + path.extname(filename)
     object.mimetype = mimetype
 
     file.on('limit', function () {
@@ -746,15 +788,25 @@ mainController.uploadPageLogo = function (req, res) {
 
     if (!fs.existsSync(object.filePath)) return res.status(400).send('File failed to save to disk')
 
-    settingUtil.setSetting('gen:custompagelogo', true, function (err) {
-      if (err) return res.status(400).send('Failed to save setting to database')
-
-      settingUtil.setSetting('gen:custompagelogofilename', object.filename, function (err) {
+    settingUtil.setSetting(
+      'gen:custompagelogo',
+      true,
+      function (err) {
         if (err) return res.status(400).send('Failed to save setting to database')
 
-        return res.send(object.filename)
-      })
-    })
+        settingUtil.setSetting(
+          'gen:custompagelogofilename',
+          object.filename,
+          function (err) {
+            if (err) return res.status(400).send('Failed to save setting to database')
+
+            return res.send(object.filename)
+          },
+          organizationId
+        )
+      },
+      organizationId
+    )
   })
 
   req.pipe(busboy)

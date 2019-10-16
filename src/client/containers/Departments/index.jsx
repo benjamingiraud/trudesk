@@ -27,6 +27,8 @@ import PageContent from 'components/PageContent'
 import UIKit from 'uikit'
 import helpers from 'lib/helpers'
 
+import { withTranslation } from 'react-i18next';
+
 class DepartmentsContainer extends React.Component {
   componentDidMount () {
     this.props.fetchDepartments()
@@ -61,6 +63,7 @@ class DepartmentsContainer extends React.Component {
   }
 
   render () {
+    const {t} = this.props
     return (
       <div>
         <PageTitle
@@ -70,7 +73,7 @@ class DepartmentsContainer extends React.Component {
             <div className={'uk-grid uk-grid-collapse'}>
               <div className={'uk-width-1-1 mt-15 uk-text-right'}>
                 <Button
-                  text={'Create'}
+                  text={t('Create')}
                   flat={false}
                   small={true}
                   waves={false}
@@ -95,11 +98,11 @@ class DepartmentsContainer extends React.Component {
                     padding: '8px 8px 8px 27px'
                   }}
                 >
-                  Name
+                  {t('Name')}
                 </th>
-                <th style={{ verticalAlign: 'middle', fontSize: 12, textTransform: 'uppercase' }}>Teams</th>
+                <th style={{ verticalAlign: 'middle', fontSize: 12, textTransform: 'uppercase' }}>{t('Teams')}</th>
                 <th style={{ width: '25%', verticalAlign: 'middle', fontSize: 12, textTransform: 'uppercase' }}>
-                  Groups
+                {t('Groups')}
                 </th>
                 <th
                   style={{
@@ -151,7 +154,7 @@ class DepartmentsContainer extends React.Component {
                         {department.get('allGroups') === true && (
                           <div>
                             <h6 className={'text-success'} style={{ fontWeight: 'bold' }}>
-                              All Groups
+                            {t('All Groups')}
                             </h6>
                           </div>
                         )}
@@ -169,7 +172,7 @@ class DepartmentsContainer extends React.Component {
                         <ButtonGroup>
                           {helpers.canUser('departments:update', true) && (
                             <Button
-                              text={'Edit'}
+                              text={t('Edit')}
                               small={true}
                               waves={true}
                               onClick={() => this.onEditDepartmentClick(department)}
@@ -177,7 +180,7 @@ class DepartmentsContainer extends React.Component {
                           )}
                           {helpers.canUser('departments:delete', true) && (
                             <Button
-                              text={'Delete'}
+                              text={t('Delete')}
                               style={'danger'}
                               small={true}
                               waves={true}
@@ -208,7 +211,7 @@ const mapStateToProps = state => ({
   departments: state.departmentsState.departments
 })
 
-export default connect(
+export default withTranslation('common')(connect(
   mapStateToProps,
   { fetchDepartments, deleteDepartment, showModal }
-)(DepartmentsContainer)
+)(DepartmentsContainer))

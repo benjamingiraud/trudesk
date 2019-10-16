@@ -24,11 +24,14 @@ var viewdata = {}
 viewdata.users = {}
 
 viewController.getData = function (request, cb) {
+  const organizationId = request.organization._id
+  console.log('in view data')
+  viewdata.organizationId = organizationId
   async.parallel(
     [
       function (callback) {
         if (global.env === 'development') {
-          require('../../sass/buildsass').build(callback)
+          require('../../sass/buildsass').build(callback, organizationId)
         } else {
           return callback()
         }
@@ -37,37 +40,49 @@ viewController.getData = function (request, cb) {
         async.parallel(
           [
             function (done) {
-              settingSchema.getSetting('gen:timeFormat', function (err, setting) {
-                if (!err && setting && setting.value) {
-                  viewdata.timeFormat = setting.value
-                } else {
-                  viewdata.timeFormat = 'hh:mma'
-                }
+              settingSchema.getSetting(
+                'gen:timeFormat',
+                function (err, setting) {
+                  if (!err && setting && setting.value) {
+                    viewdata.timeFormat = setting.value
+                  } else {
+                    viewdata.timeFormat = 'hh:mma'
+                  }
 
-                return done()
-              })
+                  return done()
+                },
+                organizationId
+              )
             },
             function (done) {
-              settingSchema.getSetting('gen:shortDateFormat', function (err, setting) {
-                if (!err && setting && setting.value) {
-                  viewdata.shortDateFormat = setting.value
-                } else {
-                  viewdata.shortDateFormat = 'MM/DD/YYYY'
-                }
+              settingSchema.getSetting(
+                'gen:shortDateFormat',
+                function (err, setting) {
+                  if (!err && setting && setting.value) {
+                    viewdata.shortDateFormat = setting.value
+                  } else {
+                    viewdata.shortDateFormat = 'MM/DD/YYYY'
+                  }
 
-                return done()
-              })
+                  return done()
+                },
+                organizationId
+              )
             },
             function (done) {
-              settingSchema.getSetting('gen:longDateFormat', function (err, setting) {
-                if (!err && setting && setting.value) {
-                  viewdata.longDateFormat = setting.value
-                } else {
-                  viewdata.longDateFormat = 'MMM DD, YYYY'
-                }
+              settingSchema.getSetting(
+                'gen:longDateFormat',
+                function (err, setting) {
+                  if (!err && setting && setting.value) {
+                    viewdata.longDateFormat = setting.value
+                  } else {
+                    viewdata.longDateFormat = 'MMM DD, YYYY'
+                  }
 
-                return done()
-              })
+                  return done()
+                },
+                organizationId
+              )
             }
           ],
           callback
@@ -78,135 +93,179 @@ viewController.getData = function (request, cb) {
         async.parallel(
           [
             function (done) {
-              settingSchema.getSetting('ticket:minlength:subject', function (err, setting) {
-                if (!err && setting && setting.value) {
-                  viewdata.ticketSettings.minSubject = setting.value
-                } else {
-                  viewdata.ticketSettings.minSubject = 10
-                }
+              settingSchema.getSetting(
+                'ticket:minlength:subject',
+                function (err, setting) {
+                  if (!err && setting && setting.value) {
+                    viewdata.ticketSettings.minSubject = setting.value
+                  } else {
+                    viewdata.ticketSettings.minSubject = 10
+                  }
 
-                return done()
-              })
+                  return done()
+                },
+                organizationId
+              )
             },
             function (done) {
-              settingSchema.getSetting('ticket:minlength:issue', function (err, setting) {
-                if (!err && setting && setting.value) {
-                  viewdata.ticketSettings.minIssue = setting.value
-                } else {
-                  viewdata.ticketSettings.minIssue = 10
-                }
+              settingSchema.getSetting(
+                'ticket:minlength:issue',
+                function (err, setting) {
+                  if (!err && setting && setting.value) {
+                    viewdata.ticketSettings.minIssue = setting.value
+                  } else {
+                    viewdata.ticketSettings.minIssue = 10
+                  }
 
-                return done()
-              })
+                  return done()
+                },
+                organizationId
+              )
             }
           ],
           callback
         )
       },
       function (callback) {
-        settingSchema.getSetting('gen:sitetitle', function (err, setting) {
-          if (!err && setting && setting.value) {
-            viewdata.siteTitle = setting.value
-          } else {
-            viewdata.siteTitle = 'Trudesk'
-          }
+        settingSchema.getSetting(
+          'gen:sitetitle',
+          function (err, setting) {
+            if (!err && setting && setting.value) {
+              viewdata.siteTitle = setting.value
+            } else {
+              viewdata.siteTitle = 'Trudesk'
+            }
 
-          return callback()
-        })
+            return callback()
+          },
+          organizationId
+        )
       },
       function (callback) {
         viewdata.hostname = request.hostname
         viewdata.hosturl = request.protocol + '://' + request.get('host')
 
         // If hosturl setting is not set. Let's set it.
-        settingSchema.getSetting('gen:siteurl', function (err, setting) {
-          if (!err && !setting) {
-            settingSchema.create(
-              {
-                name: 'gen:siteurl',
-                value: viewdata.hosturl
-              },
-              function (err, setting) {
-                if (err) return callback()
-                if (!global.TRUDESK_BASEURL) global.TRUDESK_BASEURL = setting.value
+        settingSchema.getSetting(
+          'gen:siteurl',
+          function (err, setting) {
+            if (!err && !setting) {
+              settingSchema.create(
+                {
+                  name: 'gen:siteurl',
+                  value: viewdata.hosturl
+                },
+                function (err, setting) {
+                  if (err) return callback()
+                  if (!global.TRUDESK_BASEURL) global.TRUDESK_BASEURL = setting.value
+
+                  return callback()
+                }
+              )
+            } else {
+              return callback()
+            }
+          },
+          organizationId
+        )
+      },
+      function (callback) {
+        settingSchema.getSetting(
+          'gen:timezone',
+          function (err, timezone) {
+            if (!err && timezone) {
+              viewdata.timezone = timezone.value
+            } else {
+              viewdata.timezone = 'America/New_York'
+            }
+
+            return callback()
+          },
+          organizationId
+        )
+      },
+      function (callback) {
+        settingSchema.getSetting(
+          'gen:customlogo',
+          function (err, hasCustomLogo) {
+            viewdata.hasCustomLogo = !!(!err && hasCustomLogo && hasCustomLogo.value)
+
+            if (!viewdata.hasCustomLogo) {
+              viewdata.logoImage = '/img/defaultLogoLight.png'
+              return callback()
+            }
+
+            settingSchema.getSetting(
+              'gen:customlogofilename',
+              function (err, logoFileName) {
+                if (!err && logoFileName && !_.isUndefined(logoFileName.value)) {
+                  viewdata.logoImage = '/assets/' + logoFileName.value
+                } else {
+                  viewdata.logoImage = '/img/defaultLogoLight.png'
+                }
 
                 return callback()
-              }
+              },
+              organizationId
             )
-          } else {
-            return callback()
-          }
-        })
+          },
+          organizationId
+        )
       },
       function (callback) {
-        settingSchema.getSetting('gen:timezone', function (err, timezone) {
-          if (!err && timezone) {
-            viewdata.timezone = timezone.value
-          } else {
-            viewdata.timezone = 'America/New_York'
-          }
+        settingSchema.getSetting(
+          'gen:custompagelogo',
+          function (err, hasCustomPageLogo) {
+            viewdata.hasCustomPageLogo = !!(!err && hasCustomPageLogo && hasCustomPageLogo.value)
 
-          return callback()
-        })
-      },
-      function (callback) {
-        settingSchema.getSetting('gen:customlogo', function (err, hasCustomLogo) {
-          viewdata.hasCustomLogo = !!(!err && hasCustomLogo && hasCustomLogo.value)
-
-          if (!viewdata.hasCustomLogo) {
-            viewdata.logoImage = '/img/defaultLogoLight.png'
-            return callback()
-          }
-
-          settingSchema.getSetting('gen:customlogofilename', function (err, logoFileName) {
-            if (!err && logoFileName && !_.isUndefined(logoFileName.value)) {
-              viewdata.logoImage = '/assets/' + logoFileName.value
-            } else {
-              viewdata.logoImage = '/img/defaultLogoLight.png'
-            }
-
-            return callback()
-          })
-        })
-      },
-      function (callback) {
-        settingSchema.getSetting('gen:custompagelogo', function (err, hasCustomPageLogo) {
-          viewdata.hasCustomPageLogo = !!(!err && hasCustomPageLogo && hasCustomPageLogo.value)
-
-          if (!viewdata.hasCustomPageLogo) {
-            viewdata.pageLogoImage = '/img/defaultLogoDark.png'
-            return callback()
-          }
-
-          settingSchema.getSetting('gen:custompagelogofilename', function (err, logoFileName) {
-            if (!err && logoFileName && !_.isUndefined(logoFileName.value)) {
-              viewdata.pageLogoImage = '/assets/' + logoFileName.value
-            } else {
+            if (!viewdata.hasCustomPageLogo) {
               viewdata.pageLogoImage = '/img/defaultLogoDark.png'
+              return callback()
             }
 
-            return callback()
-          })
-        })
+            settingSchema.getSetting(
+              'gen:custompagelogofilename',
+              function (err, logoFileName) {
+                if (!err && logoFileName && !_.isUndefined(logoFileName.value)) {
+                  viewdata.pageLogoImage = '/assets/' + logoFileName.value
+                } else {
+                  viewdata.pageLogoImage = '/img/defaultLogoDark.png'
+                }
+
+                return callback()
+              },
+              organizationId
+            )
+          },
+          organizationId
+        )
       },
       function (callback) {
-        settingSchema.getSetting('gen:customfavicon', function (err, hasCustomFavicon) {
-          viewdata.hasCustomFavicon = !!(!err && hasCustomFavicon && hasCustomFavicon.value)
-          if (!viewdata.hasCustomFavicon) {
-            viewdata.favicon = '/img/favicon.ico'
-            return callback()
-          }
-
-          settingSchema.getSetting('gen:customfaviconfilename', function (err, faviconFilename) {
-            if (!err && faviconFilename && !_.isUndefined(faviconFilename.value)) {
-              viewdata.favicon = '/assets/' + faviconFilename.value
-            } else {
+        settingSchema.getSetting(
+          'gen:customfavicon',
+          function (err, hasCustomFavicon) {
+            viewdata.hasCustomFavicon = !!(!err && hasCustomFavicon && hasCustomFavicon.value)
+            if (!viewdata.hasCustomFavicon) {
               viewdata.favicon = '/img/favicon.ico'
+              return callback()
             }
 
-            return callback()
-          })
-        })
+            settingSchema.getSetting(
+              'gen:customfaviconfilename',
+              function (err, faviconFilename) {
+                if (!err && faviconFilename && !_.isUndefined(faviconFilename.value)) {
+                  viewdata.favicon = '/assets/' + faviconFilename.value
+                } else {
+                  viewdata.favicon = '/img/favicon.ico'
+                }
+
+                return callback()
+              },
+              organizationId
+            )
+          },
+          organizationId
+        )
       },
       function (callback) {
         viewController.getActiveNotice(function (err, data) {
@@ -219,7 +278,7 @@ viewController.getData = function (request, cb) {
           }
 
           return callback()
-        })
+        }, organizationId)
       },
       // function (callback) {
       //   viewController.getUserNotifications(request, function (err, data) {
@@ -237,79 +296,115 @@ viewController.getData = function (request, cb) {
       //   })
       // },
       function (callback) {
-        viewController.getConversations(request, function (err, conversations) {
-          if (err) return callback(err)
+        viewController.getConversations(
+          request,
+          function (err, conversations) {
+            if (err) return callback(err)
 
-          viewdata.conversations = conversations
+            viewdata.conversations = conversations
 
-          return callback()
-        })
+            return callback()
+          },
+          organizationId
+        )
       },
       function (callback) {
-        viewController.getUsers(request, function (users) {
-          viewdata.users = users
+        viewController.getUsers(
+          request,
+          function (users) {
+            viewdata.users = users
 
-          return callback()
-        })
+            return callback()
+          },
+          organizationId
+        )
       },
       function (callback) {
-        viewController.loggedInAccount(request, function (data) {
-          viewdata.loggedInAccount = data
-          return callback()
-        })
+        viewController.loggedInAccount(
+          request,
+          function (data) {
+            viewdata.loggedInAccount = data
+            return callback()
+          },
+          organizationId
+        )
       },
       function (callback) {
-        viewController.getTeams(request, function (err, teams) {
-          if (err) return callback(null, null)
+        viewController.getTeams(
+          request,
+          function (err, teams) {
+            if (err) return callback(null, null)
 
-          viewdata.teams = teams
-          return callback()
-        })
+            viewdata.teams = teams
+            return callback()
+          },
+          organizationId
+        )
       },
       function (callback) {
-        viewController.getGroups(request, function (err, data) {
-          if (err) return callback(null, null)
+        viewController.getGroups(
+          request,
+          function (err, data) {
+            if (err) return callback(null, null)
 
-          viewdata.groups = data
+            viewdata.groups = data
 
-          return callback()
-        })
+            return callback()
+          },
+          organizationId
+        )
       },
       function (callback) {
-        viewController.getTypes(request, function (err, data) {
-          if (err) return callback()
+        viewController.getTypes(
+          request,
+          function (err, data) {
+            if (err) return callback()
 
-          viewdata.ticketTypes = data
+            viewdata.ticketTypes = data
 
-          return callback()
-        })
+            return callback()
+          },
+          organizationId
+        )
       },
       function (callback) {
-        viewController.getDefaultTicketType(request, function (err, data) {
-          if (err) return callback()
+        viewController.getDefaultTicketType(
+          request,
+          function (err, data) {
+            if (err) return callback()
 
-          viewdata.defaultTicketType = data
+            viewdata.defaultTicketType = data
 
-          return callback()
-        })
+            return callback()
+          },
+          organizationId
+        )
       },
       function (callback) {
-        viewController.getPriorities(request, function (err, data) {
-          if (err) return callback()
+        viewController.getPriorities(
+          request,
+          function (err, data) {
+            if (err) return callback()
 
-          viewdata.priorities = data
+            viewdata.priorities = data
 
-          return callback()
-        })
+            return callback()
+          },
+          organizationId
+        )
       },
       function (callback) {
-        viewController.getTags(request, function (err, data) {
-          if (err) return callback()
+        viewController.getTags(
+          request,
+          function (err, data) {
+            if (err) return callback()
 
-          viewdata.ticketTags = data
+            viewdata.ticketTags = data
 
-          return callback()
-        })
+            return callback()
+          },
+          organizationId
+        )
       },
       function (callback) {
         var roleSchmea = require('../../models/role')
@@ -324,26 +419,34 @@ viewController.getData = function (request, cb) {
             viewdata.roleOrder = ro
 
             return callback()
-          })
-        })
+          }, organizationId)
+        }, organizationId)
       },
       function (callback) {
-        viewController.getShowTourSetting(request, function (err, data) {
-          if (err) return callback(err)
+        viewController.getShowTourSetting(
+          request,
+          function (err, data) {
+            if (err) return callback(err)
 
-          viewdata.showTour = data
+            viewdata.showTour = data
 
-          return callback()
-        })
+            return callback()
+          },
+          organizationId
+        )
       },
       function (callback) {
-        viewController.getOverdueSetting(request, function (err, data) {
-          if (err) return callback(err)
+        viewController.getOverdueSetting(
+          request,
+          function (err, data) {
+            if (err) return callback(err)
 
-          viewdata.showOverdue = data
+            viewdata.showOverdue = data
 
-          return callback()
-        })
+            return callback()
+          },
+          organizationId
+        )
       },
       function (callback) {
         viewController.getPluginsInfo(request, function (err, data) {
@@ -365,7 +468,7 @@ viewController.getData = function (request, cb) {
   )
 }
 
-viewController.getActiveNotice = function (callback) {
+viewController.getActiveNotice = function (callback, organizationId) {
   var noticeSchema = require('../../models/notice')
   noticeSchema.getActive(function (err, notice) {
     if (err) {
@@ -374,7 +477,7 @@ viewController.getActiveNotice = function (callback) {
     }
 
     return callback(null, notice)
-  })
+  }, organizationId)
 }
 
 viewController.getUserNotifications = function (request, callback) {
@@ -401,66 +504,75 @@ viewController.getUnreadNotificationsCount = function (request, callback) {
   })
 }
 
-viewController.getConversations = function (request, callback) {
+viewController.getConversations = function (request, callback, organizationId) {
   var conversationSchema = require('../../models/chat/conversation')
   var messageSchema = require('../../models/chat/message')
-  conversationSchema.getConversationsWithLimit(request.user._id, 10, function (err, conversations) {
-    if (err) {
-      winston.warn(err.message)
-      return callback(err)
-    }
+  conversationSchema.getConversationsWithLimit(
+    request.user._id,
+    10,
+    function (err, conversations) {
+      if (err) {
+        winston.warn(err.message)
+        return callback(err)
+      }
 
-    var convos = []
+      var convos = []
 
-    async.eachSeries(
-      conversations,
-      function (convo, done) {
-        var c = convo.toObject()
+      async.eachSeries(
+        conversations,
+        function (convo, done) {
+          var c = convo.toObject()
 
-        var userMeta =
-          convo.userMeta[
-            _.findIndex(convo.userMeta, function (item) {
-              return item.userId.toString() === request.user._id.toString()
-            })
-          ]
-        if (!_.isUndefined(userMeta) && !_.isUndefined(userMeta.deletedAt) && userMeta.deletedAt > convo.updatedAt) {
-          return done()
-        }
-
-        messageSchema.getMostRecentMessage(c._id, function (err, rm) {
-          if (err) return done(err)
-
-          _.each(c.participants, function (p) {
-            if (p._id.toString() !== request.user._id.toString()) {
-              c.partner = p
-            }
-          })
-
-          rm = _.first(rm)
-
-          if (!_.isUndefined(rm)) {
-            if (String(c.partner._id) === String(rm.owner._id)) {
-              c.recentMessage = c.partner.fullname + ': ' + rm.body
-            } else {
-              c.recentMessage = 'You: ' + rm.body
-            }
-          } else {
-            c.recentMessage = 'New Conversation'
+          var userMeta =
+            convo.userMeta[
+              _.findIndex(convo.userMeta, function (item) {
+                return item.userId.toString() === request.user._id.toString()
+              })
+            ]
+          if (!_.isUndefined(userMeta) && !_.isUndefined(userMeta.deletedAt) && userMeta.deletedAt > convo.updatedAt) {
+            return done()
           }
 
-          convos.push(c)
+          messageSchema.getMostRecentMessage(
+            c._id,
+            function (err, rm) {
+              if (err) return done(err)
 
-          return done()
-        })
-      },
-      function (err) {
-        return callback(err, convos)
-      }
-    )
-  })
+              _.each(c.participants, function (p) {
+                if (p._id.toString() !== request.user._id.toString()) {
+                  c.partner = p
+                }
+              })
+
+              rm = _.first(rm)
+
+              if (!_.isUndefined(rm)) {
+                if (String(c.partner._id) === String(rm.owner._id)) {
+                  c.recentMessage = c.partner.fullname + ': ' + rm.body
+                } else {
+                  c.recentMessage = 'You: ' + rm.body
+                }
+              } else {
+                c.recentMessage = 'New Conversation'
+              }
+
+              convos.push(c)
+
+              return done()
+            },
+            organizationId
+          )
+        },
+        function (err) {
+          return callback(err, convos)
+        }
+      )
+    },
+    organizationId
+  )
 }
 
-viewController.getUsers = function (request, callback) {
+viewController.getUsers = function (request, callback, organizationId) {
   var userSchema = require('../../models/user')
   if (request.user.role.isAdmin || request.user.role.isAgent) {
     userSchema.findAll(function (err, users) {
@@ -484,95 +596,111 @@ viewController.getUsers = function (request, callback) {
       u = _.sortBy(u, 'fullname')
 
       return callback(u)
-    })
+    }, organizationId)
   } else {
     var groupSchema = require('../../models/group')
-    groupSchema.getAllGroupsOfUser(request.user._id, function (err, groups) {
-      if (err) return callback(err)
+    groupSchema.getAllGroupsOfUser(
+      request.user._id,
+      function (err, groups) {
+        if (err) return callback(err)
 
-      var users = _.map(groups, function (g) {
-        return _.map(g.members, function (m) {
-          var mFiltered = m
-          m.password = null
-          m.role = null
-          m.resetPassHash = null
-          m.resetPassExpire = null
-          m.accessToken = null
-          m.iOSDeviceTokens = null
-          m.preferences = null
-          m.tOTPKey = null
+        var users = _.map(groups, function (g) {
+          return _.map(g.members, function (m) {
+            var mFiltered = m
+            m.password = null
+            m.role = null
+            m.resetPassHash = null
+            m.resetPassExpire = null
+            m.accessToken = null
+            m.iOSDeviceTokens = null
+            m.preferences = null
+            m.tOTPKey = null
 
-          return mFiltered
+            return mFiltered
+          })
         })
-      })
 
-      users = _.chain(users)
-        .flattenDeep()
-        .uniqBy(function (i) {
-          return i._id
-        })
-        .sortBy('fullname')
-        .value()
+        users = _.chain(users)
+          .flattenDeep()
+          .uniqBy(function (i) {
+            return i._id
+          })
+          .sortBy('fullname')
+          .value()
 
-      return callback(users)
-    })
+        return callback(users)
+      },
+      organizationId
+    )
   }
 }
 
-viewController.loggedInAccount = function (request, callback) {
+viewController.loggedInAccount = function (request, callback, organizationId) {
   var userSchema = require('../../models/user')
-  userSchema.getUser(request.user._id, function (err, data) {
-    if (err) {
-      return callback(err)
-    }
+  userSchema.getUser(
+    request.user._id,
+    function (err, data) {
+      if (err) {
+        return callback(err)
+      }
 
-    return callback(data)
-  })
+      return callback(data)
+    },
+    organizationId
+  )
 }
 
-viewController.getTeams = function (request, callback) {
+viewController.getTeams = function (request, callback, organizationId) {
   var Team = require('../../models/team')
-  return Team.getTeams(callback)
+  return Team.getTeams(callback, organizationId)
 }
 
-viewController.getGroups = function (request, callback) {
+viewController.getGroups = function (request, callback, organizationId) {
   var groupSchema = require('../../models/group')
   var Department = require('../../models/department')
   if (request.user.role.isAdmin || request.user.role.isAgent) {
-    Department.getDepartmentGroupsOfUser(request.user._id, function (err, groups) {
-      if (err) {
-        winston.debug(err)
-        return callback(err)
-      }
+    Department.getDepartmentGroupsOfUser(
+      request.user._id,
+      function (err, groups) {
+        if (err) {
+          winston.debug(err)
+          return callback(err)
+        }
 
-      return callback(null, groups)
-    })
+        return callback(null, groups)
+      },
+      organizationId
+    )
   } else {
-    groupSchema.getAllGroupsOfUserNoPopulate(request.user._id, function (err, data) {
-      if (err) {
-        winston.debug(err)
-        return callback(err)
-      }
+    groupSchema.getAllGroupsOfUserNoPopulate(
+      request.user._id,
+      function (err, data) {
+        if (err) {
+          winston.debug(err)
+          return callback(err)
+        }
 
-      var p = require('../../permissions')
-      if (p.canThis(request.user.role, 'ticket:public')) {
-        groupSchema.getAllPublicGroups(function (err, groups) {
-          if (err) {
-            winston.debug(err)
-            return callback(err)
-          }
+        var p = require('../../permissions')
+        if (p.canThis(request.user.role, 'ticket:public')) {
+          groupSchema.getAllPublicGroups(function (err, groups) {
+            if (err) {
+              winston.debug(err)
+              return callback(err)
+            }
 
-          data = data.concat(groups)
+            data = data.concat(groups)
+            return callback(null, data)
+          })
+        } else {
           return callback(null, data)
-        })
-      } else {
-        return callback(null, data)
-      }
-    })
+        }
+      },
+      organizationId
+    )
   }
 }
 
-viewController.getTypes = function (request, callback) {
+viewController.getTypes = function (request, callback, organizationId) {
   var typeSchema = require('../../models/tickettype')
 
   typeSchema.getTypes(function (err, data) {
@@ -582,30 +710,38 @@ viewController.getTypes = function (request, callback) {
     }
 
     return callback(null, data)
-  })
+  }, organizationId)
 }
 
-viewController.getDefaultTicketType = function (request, callback) {
+viewController.getDefaultTicketType = function (request, callback, organizationId) {
   var settingSchema = require('../../models/setting')
-  settingSchema.getSetting('ticket:type:default', function (err, defaultType) {
-    if (err) {
-      winston.debug('Error viewController:getDefaultTicketType: ', err)
-      return callback(err)
-    }
-
-    var typeSchema = require('../../models/tickettype')
-    typeSchema.getType(defaultType.value, function (err, type) {
+  settingSchema.getSetting(
+    'ticket:type:default',
+    function (err, defaultType) {
       if (err) {
         winston.debug('Error viewController:getDefaultTicketType: ', err)
         return callback(err)
       }
 
-      return callback(null, type)
-    })
-  })
+      var typeSchema = require('../../models/tickettype')
+      typeSchema.getType(
+        defaultType.value,
+        function (err, type) {
+          if (err) {
+            winston.debug('Error viewController:getDefaultTicketType: ', err)
+            return callback(err)
+          }
+
+          return callback(null, type)
+        },
+        organizationId
+      )
+    },
+    organizationId
+  )
 }
 
-viewController.getPriorities = function (request, callback) {
+viewController.getPriorities = function (request, callback, organizationId) {
   var ticketPrioritySchema = require('../../models/ticketpriority')
   ticketPrioritySchema.getPriorities(function (err, priorities) {
     if (err) {
@@ -616,10 +752,10 @@ viewController.getPriorities = function (request, callback) {
     priorities = _.sortBy(priorities, ['migrationNum', 'name'])
 
     return callback(null, priorities)
-  })
+  }, organizationId)
 }
 
-viewController.getTags = function (request, callback) {
+viewController.getTags = function (request, callback, organizationId) {
   var tagSchema = require('../../models/tag')
 
   tagSchema.getTags(function (err, data) {
@@ -631,50 +767,62 @@ viewController.getTags = function (request, callback) {
     // data = _.sortBy(data, 'name');
 
     return callback(null, data)
-  })
+  }, organizationId)
 }
 
-viewController.getOverdueSetting = function (request, callback) {
+viewController.getOverdueSetting = function (request, callback, organizationId) {
   var settingSchema = require('../../models/setting')
-  settingSchema.getSettingByName('showOverdueTickets:enable', function (err, data) {
-    if (err) {
-      winston.debug(err)
-      return callback(null, true)
-    }
-    if (_.isNull(data)) return callback(null, true)
-    return callback(null, data.value)
-  })
+  settingSchema.getSettingByName(
+    'showOverdueTickets:enable',
+    function (err, data) {
+      if (err) {
+        winston.debug(err)
+        return callback(null, true)
+      }
+      if (_.isNull(data)) return callback(null, true)
+      return callback(null, data.value)
+    },
+    organizationId
+  )
 }
 
-viewController.getShowTourSetting = function (request, callback) {
+viewController.getShowTourSetting = function (request, callback, organizationId) {
   var settingSchema = require('../../models/setting')
-  settingSchema.getSettingByName('showTour:enable', function (err, data) {
-    if (err) {
-      winston.debug(err)
-      return callback(null, true)
-    }
-
-    if (!_.isNull(data) && !_.isUndefined(data) && data === false) {
-      return callback(null, true)
-    }
-
-    var userSchema = require('../../models/user')
-    userSchema.getUser(request.user._id, function (err, user) {
-      if (err) return callback(err)
-
-      var hasTourCompleted = false
-
-      if (user.preferences.tourCompleted) {
-        hasTourCompleted = user.preferences.tourCompleted
+  settingSchema.getSettingByName(
+    'showTour:enable',
+    function (err, data) {
+      if (err) {
+        winston.debug(err)
+        return callback(null, true)
       }
 
-      if (hasTourCompleted) return callback(null, false)
+      if (!_.isNull(data) && !_.isUndefined(data) && data === false) {
+        return callback(null, true)
+      }
 
-      if (_.isNull(data)) return callback(null, true)
+      var userSchema = require('../../models/user')
+      userSchema.getUser(
+        request.user._id,
+        function (err, user) {
+          if (err) return callback(err)
 
-      return callback(null, data.value)
-    })
-  })
+          var hasTourCompleted = false
+
+          if (user && user.preferences.tourCompleted) {
+            hasTourCompleted = user.preferences.tourCompleted
+          }
+
+          if (hasTourCompleted) return callback(null, false)
+
+          if (_.isNull(data)) return callback(null, true)
+
+          return callback(null, data.value)
+        },
+        organizationId
+      )
+    },
+    organizationId
+  )
 }
 
 viewController.getPluginsInfo = function (request, callback) {

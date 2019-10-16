@@ -20,7 +20,11 @@ var Department = require('../../../models/department')
 var apiGroups = {}
 
 apiGroups.create = function (req, res) {
+  var organizationId = req.user.organizationId
+  if (!organizationId) return apiUtils.sendApiError(res, 400, 'Invalid Organization Id')
+
   var postGroup = req.body
+  postGroup.organizationId = organizationId
   if (!postGroup) return apiUtils.sendApiError_InvalidPostData(res)
 
   Group.create(postGroup, function (err, group) {
@@ -38,38 +42,51 @@ apiGroups.get = function (req, res) {
   var limit = Number(req.query.limit) || 50
   var page = Number(req.query.page) || 0
   var type = req.query.type || 'user'
+  var organizationId = req.user.organizationId
+  if (!organizationId) return apiUtils.sendApiError(res, 400, 'Invalid Organization Id')
 
   if (type === 'all') {
-    Group.getWithObject({ limit: limit, page: page }, function (err, groups) {
+    Group.getWithObject({ limit: limit, page: page, organizationId: organizationId }, function (err, groups) {
       if (err) return apiUtils.sendApiError(res, 500, err.message)
 
       return apiUtils.sendApiSuccess(res, { groups: groups, count: groups.length })
     })
   } else {
     if (req.user.role.isAdmin || req.user.role.isAgent) {
-      Department.getDepartmentGroupsOfUser(req.user._id, function (err, groups) {
-        if (err) return apiUtils.sendApiError(res, 500, err.message)
+      Department.getDepartmentGroupsOfUser(
+        req.user._id,
+        function (err, groups) {
+          if (err) return apiUtils.sendApiError(res, 500, err.message)
 
-        return apiUtils.sendApiSuccess(res, { groups: groups, count: groups.length })
-      })
+          return apiUtils.sendApiSuccess(res, { groups: groups, count: groups.length })
+        },
+        organizationId
+      )
     } else {
-      Group.getAllGroupsOfUser(req.user._id, function (err, groups) {
-        if (err) return apiUtils.sendApiError(res, 500, err.message)
+      Group.getAllGroupsOfUser(
+        req.user._id,
+        function (err, groups) {
+          if (err) return apiUtils.sendApiError(res, 500, err.message)
 
-        return apiUtils.sendApiSuccess(res, { groups: groups, count: groups.length })
-      })
+          return apiUtils.sendApiSuccess(res, { groups: groups, count: groups.length })
+        },
+        organizationId
+      )
     }
   }
 }
 
 apiGroups.update = function (req, res) {
+  var organizationId = req.user.organizationId
+  if (!organizationId) return apiUtils.sendApiError(res, 400, 'Invalid Organization Id')
+
   var id = req.params.id
   if (!id) return apiUtils.sendApiError(res, 400, 'Invalid Group Id')
 
   var putData = req.body
   if (!putData) return apiUtils.sendApiError_InvalidPostData(res)
 
-  Group.findOne({ _id: id }, function (err, group) {
+  Group.findOne({ _id: id, organizationId: organizationId }, function (err, group) {
     if (err || !group) return apiUtils.sendApiError(res, 400, 'Invalid Group')
 
     if (putData.name) group.name = putData.name
@@ -92,13 +109,17 @@ apiGroups.delete = function (req, res) {
   var id = req.params.id
   if (!id) return apiUtils.sendApiError_InvalidPostData(res)
 
+  var organizationId = req.user.organizationId
+  if (!organizationId) return apiUtils.sendApiError(res, 400, 'Invalid Organization Id')
+
   Ticket.countDocuments({ group: { $in: [id] } }, function (err, tickets) {
     if (err) return apiUtils.sendApiError(res, 500, err.message)
-    if (tickets > 0) return apiUtils.sendApiError(res, 400, 'Unable to delete group with tickets.')
+    if (tickets > 0) return apiUtils.sendApiError(res, 400, 'Impossible de supprimer un groupe ayant des tickets.')
 
-    Group.deleteOne({ _id: id }, function (err, success) {
+    Group.deleteOne({ _id: id, organizationId: organizationId }, function (err, success) {
       if (err) return apiUtils.sendApiError(res, 500, err.message)
-      if (!success) return apiUtils.sendApiError(res, 500, 'Unable to delete group. Contact your administrator.')
+      if (!success)
+        return apiUtils.sendApiError(res, 500, 'Impossible de supprimer le groupe, contactez votre administrateur.')
 
       return apiUtils.sendApiSuccess(res, { _id: id })
     })

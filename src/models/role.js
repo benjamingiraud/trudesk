@@ -95,8 +95,8 @@ roleSchema.statics.getRoleByName = function (name, callback, organizationId) {
   return q.exec(callback)
 }
 
-roleSchema.statics.getAgentRoles = function (callback) {
-  var q = this.model(COLLECTION).find({})
+roleSchema.statics.getAgentRoles = function (callback, organizationId) {
+  var q = this.model(COLLECTION).find({ organizationId: organizationId })
   q.exec(function (err, roles) {
     if (err) return callback(err)
 

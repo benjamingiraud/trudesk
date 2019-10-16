@@ -31,6 +31,8 @@ import ButtonGroup from 'components/ButtonGroup'
 import UIKit from 'uikit'
 import helpers from 'lib/helpers'
 
+import { withTranslation } from 'react-i18next';
+
 class GroupsContainer extends React.Component {
   componentDidMount () {
     this.props.fetchGroups({ type: 'all' })
@@ -66,7 +68,7 @@ class GroupsContainer extends React.Component {
   }
 
   render () {
-    const { groups } = this.props
+    const { groups, t } = this.props
 
     const tableItems = groups.map(group => {
       return (
@@ -108,11 +110,11 @@ class GroupsContainer extends React.Component {
           <TableCell style={{ textAlign: 'right', paddingRight: 15 }}>
             <ButtonGroup>
               {helpers.canUser('groups:update', true) && (
-                <Button text={'Edit'} small={true} waves={true} onClick={() => this.onEditGroupClick(group.toJS())} />
+                <Button text={t('Edit')} small={true} waves={true} onClick={() => this.onEditGroupClick(group.toJS())} />
               )}
               {helpers.canUser('groups:delete', true) && (
                 <Button
-                  text={'Delete'}
+                  text={t('Delete')}
                   style={'danger'}
                   small={true}
                   waves={true}
@@ -128,12 +130,12 @@ class GroupsContainer extends React.Component {
     return (
       <div>
         <PageTitle
-          title={'Customer Groups'}
+          title={t('Customer Groups')}
           rightComponent={
             <div className={'uk-grid uk-grid-collapse'}>
               <div className={'uk-width-1-1 mt-15 uk-text-right'}>
                 <Button
-                  text={'Create'}
+                  text={t('Create')}
                   flat={false}
                   small={true}
                   waves={false}
@@ -147,9 +149,9 @@ class GroupsContainer extends React.Component {
         <PageContent padding={0} paddingBottom={0}>
           <Table
             headers={[
-              <TableHeader key={0} width={'25%'} height={40} text={'Name'} padding={'8px 8px 8px 15px'} />,
-              <TableHeader key={1} width={'50%'} text={'Group Members'} />,
-              <TableHeader key={2} width={130} text={'Group Actions'} />
+              <TableHeader key={0} width={'25%'} height={40} text={t('Name')} padding={'8px 8px 8px 15px'} />,
+              <TableHeader key={1} width={'50%'} text={t('Group Members')} />,
+              <TableHeader key={2} width={130} text={'Actions'} />
             ]}
           >
             {tableItems}
@@ -171,7 +173,7 @@ const mapStateToProps = state => ({
   groups: state.groupsState.groups
 })
 
-export default connect(
+export default withTranslation('common')(connect(
   mapStateToProps,
   { fetchGroups, deleteGroup, showModal }
-)(GroupsContainer)
+)(GroupsContainer))

@@ -271,35 +271,39 @@ function spawnOpenChatWindows (socket) {
   var loggedInAccountId = socket.request.user._id
   var userSchema = require('../models/user')
   var conversationSchema = require('../models/chat/conversation')
-  userSchema.getUser(loggedInAccountId, function (err, user) {
-    if (err) return true
+  userSchema.getUser(
+    loggedInAccountId,
+    function (err, user) {
+      if (err) return true
 
-    async.eachSeries(user.preferences.openChatWindows, function (convoId, done) {
-      var partner = null
-      conversationSchema.getConversation(convoId, function (err, conversation) {
-        if (err || !conversation) return done()
-        _.each(conversation.participants, function (i) {
-          if (i._id.toString() !== loggedInAccountId.toString()) {
-            partner = i.toObject()
-            return partner
-          }
+      async.eachSeries(user.preferences.openChatWindows, function (convoId, done) {
+        var partner = null
+        conversationSchema.getConversation(convoId, function (err, conversation) {
+          if (err || !conversation) return done()
+          _.each(conversation.participants, function (i) {
+            if (i._id.toString() !== loggedInAccountId.toString()) {
+              partner = i.toObject()
+              return partner
+            }
+          })
+
+          if (partner === null) return done()
+
+          delete partner.password
+          delete partner.resetPassHash
+          delete partner.resetPassExpire
+          delete partner.accessToken
+          delete partner.iOSDeviceTokens
+          delete partner.deleted
+
+          utils.sendToSelf(socket, 'spawnChatWindow', partner)
+
+          return done()
         })
-
-        if (partner === null) return done()
-
-        delete partner.password
-        delete partner.resetPassHash
-        delete partner.resetPassExpire
-        delete partner.accessToken
-        delete partner.iOSDeviceTokens
-        delete partner.deleted
-
-        utils.sendToSelf(socket, 'spawnChatWindow', partner)
-
-        return done()
       })
-    })
-  })
+    },
+    socket.request.user.organizationId
+  )
 }
 
 events.getOpenChatWindows = function (socket) {

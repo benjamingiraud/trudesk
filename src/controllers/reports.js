@@ -23,7 +23,8 @@ reportsController.overview = function (req, res) {
   var user = req.user
   if (_.isUndefined(user) || !permissions.canThis(user.role, 'reports:view')) {
     req.flash('message', 'Permission Denied.')
-    return res.redirect('/')
+    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    return res.redirect(404)
   }
 
   var content = {}
@@ -45,7 +46,8 @@ reportsController.generate = function (req, res) {
   var user = req.user
   if (_.isUndefined(user) || !permissions.canThis(user.role, 'reports:create')) {
     req.flash('message', 'Permission Denied.')
-    return res.redirect('/')
+    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    return res.redirect(404)
   }
 
   var content = {}
@@ -70,14 +72,15 @@ reportsController.generate = function (req, res) {
     content.data.priorities = priorities
 
     return res.render('subviews/reports/generate', content)
-  })
+  }, req.organization._id)
 }
 
 reportsController.breakdownGroup = function (req, res) {
   var user = req.user
   if (_.isUndefined(user) || !permissions.canThis(user.role, 'reports:view')) {
     req.flash('message', 'Permission Denied.')
-    return res.redirect('/')
+    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    return res.redirect(404)
   }
 
   var content = {}
@@ -99,7 +102,8 @@ reportsController.breakdownUser = function (req, res) {
   var user = req.user
   if (_.isUndefined(user) || !permissions.canThis(user.role, 'reports:view')) {
     req.flash('message', 'Permission Denied.')
-    return res.redirect('/')
+    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    return res.redirect(404)
   }
 
   var content = {}

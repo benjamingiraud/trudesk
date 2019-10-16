@@ -31,6 +31,7 @@ class FilterTicketsModal extends React.Component {
   }
 
   componentDidMount () {
+    console.log(this.props)
     helpers.UI.inputs()
     this.props.fetchGroups()
     this.props.fetchAccounts({ page: 0, limit: -1, type: 'agents', showDeleted: false })
@@ -82,7 +83,8 @@ class FilterTicketsModal extends React.Component {
       queryString += `&au=${i}`
     })
 
-    History.pushState(null, null, `/tickets/filter/${queryString}&r=${Math.floor(Math.random() * (99999 - 1 + 1)) + 1}`)
+    History.pushState(null, null, `/${this.props.common.organizationId}/tickets/filter/${queryString}&r=${Math.floor(Math.random() * (99999 - 1 + 1)) + 1}`)
+    // History.pushState(null, null, `/tickets/filter/${queryString}&r=${Math.floor(Math.random() * (99999 - 1 + 1)) + 1}`)
     this.props.hideModal()
   }
 

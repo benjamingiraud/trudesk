@@ -293,8 +293,8 @@ userSchema.statics.validate = function (password, dbPass) {
  *
  * @param {QueryCallback} callback MongoDB Query Callback
  */
-userSchema.statics.findAll = function (callback) {
-  return this.model(COLLECTION).find({}, callback)
+userSchema.statics.findAll = function (callback, organizationId) {
+  return this.model(COLLECTION).find({ organizationId: organizationId }, callback)
 }
 
 /**
@@ -307,12 +307,12 @@ userSchema.statics.findAll = function (callback) {
  * @param {Object} oId Object _id to Query MongoDB
  * @param {QueryCallback} callback MongoDB Query Callback
  */
-userSchema.statics.getUser = function (oId, callback) {
+userSchema.statics.getUser = function (oId, callback, organizationId) {
   if (_.isUndefined(oId)) {
     return callback('Invalid ObjectId - UserSchema.GetUser()', null)
   }
 
-  return this.model(COLLECTION).findOne({ _id: oId }, callback)
+  return this.model(COLLECTION).findOne({ _id: oId, organizationId: organizationId }, callback)
 }
 
 /**
@@ -486,13 +486,13 @@ userSchema.statics.getAssigneeUsers = function (callback, organizationId) {
  * @param {Array} roles Array of role ids
  * @param {QueryCallback} callback MongoDB Query Callback
  */
-userSchema.statics.getUsersByRoles = function (roles, callback) {
+userSchema.statics.getUsersByRoles = function (roles, callback, organizationId) {
   if (_.isUndefined(roles)) return callback('Invalid roles array', null)
   if (!_.isArray(roles)) {
     roles = [roles]
   }
 
-  var q = this.model(COLLECTION).find({ role: { $in: roles }, deleted: false })
+  var q = this.model(COLLECTION).find({ role: { $in: roles }, deleted: false, organizationId: organizationId })
 
   return q.exec(callback)
 }
@@ -645,7 +645,7 @@ userSchema.statics.getCustomers = function (obj, callback) {
   var self = this
   return self
     .model(COLLECTION)
-    .find({}, '-password -resetPassHash -resetPassExpire')
+    .find({ organizationId: obj.organizationId }, '-password -resetPassHash -resetPassExpire')
     .exec(function (err, accounts) {
       if (err) return callback(err)
 
@@ -656,7 +656,10 @@ userSchema.statics.getCustomers = function (obj, callback) {
       })
 
       var q = self
-        .find({ role: { $in: customerRoleIds } }, '-password -resetPassHash -resetPassExpire')
+        .find(
+          { role: { $in: customerRoleIds }, organizationId: obj.organizationId },
+          '-password -resetPassHash -resetPassExpire'
+        )
         .sort({ fullname: 1 })
         .skip(page * limit)
         .limit(limit)
@@ -674,7 +677,7 @@ userSchema.statics.getAgents = function (obj, callback) {
 
   return self
     .model(COLLECTION)
-    .find({})
+    .find({ organizationId: obj.organizationId })
     .exec(function (err, accounts) {
       if (err) return callback(err)
 
@@ -686,7 +689,10 @@ userSchema.statics.getAgents = function (obj, callback) {
 
       var q = self
         .model(COLLECTION)
-        .find({ role: { $in: agentRoleIds } }, '-password -resetPassHash -resetPassExpire')
+        .find(
+          { role: { $in: agentRoleIds }, organizationId: obj.organizationId },
+          '-password -resetPassHash -resetPassExpire'
+        )
         .sort({ fullname: 1 })
         .skip(page * limit)
         .limit(limit)
@@ -716,7 +722,10 @@ userSchema.statics.getAdmins = function (obj, callback) {
 
       var q = self
         .model(COLLECTION)
-        .find({ role: { $in: adminRoleIds } }, '-password -resetPassHash -resetPassExpire')
+        .find(
+          { role: { $in: adminRoleIds }, organizationId: obj.organizationId },
+          '-password -resetPassHash -resetPassExpire'
+        )
         .sort({ fullname: 1 })
         .skip(page * limit)
         .limit(limit)

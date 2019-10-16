@@ -55,13 +55,13 @@ class NotificationsDropdownPartial extends React.Component {
     socket.ui.clearNotifications()
   }
 
-  static markNotificationRead (e, notification) {
+  static markNotificationRead (e, notification, organizationId) {
     e.preventDefault()
     e.stopPropagation()
 
     socket.ui.markNotificationRead(notification._id)
 
-    History.pushState(null, null, `/tickets/${notification.data.ticket.uid}`)
+    History.pushState(null, null, `/${organizationId}/tickets/${notification.data.ticket.uid}`)
   }
 
   render () {
@@ -102,7 +102,7 @@ class NotificationsDropdownPartial extends React.Component {
             <li key={notification._id}>
               <a
                 className='item no-ajaxy'
-                onClick={e => NotificationsDropdownPartial.markNotificationRead(e, notification)}
+                onClick={e => NotificationsDropdownPartial.markNotificationRead(e, notification, this.props.organizationId)}
               >
                 <div className='uk-clearfix'>
                   {notification.unread && <div className={'messageUnread'} />}

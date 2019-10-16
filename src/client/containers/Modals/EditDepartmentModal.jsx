@@ -28,6 +28,7 @@ import helpers from 'lib/helpers'
 import $ from 'jquery'
 import Button from 'components/Button'
 import MultiSelect from 'components/MultiSelect'
+import { withTranslation } from 'react-i18next';
 
 @observer
 class EditDepartmentModal extends React.Component {
@@ -77,7 +78,7 @@ class EditDepartmentModal extends React.Component {
   }
 
   render () {
-    const { department } = this.props
+    const { department, t } = this.props
     const departmentTeams = department.get('teams')
     const departmentGroups = department.get('groups')
     const mappedTeams = this.props.teams
@@ -95,11 +96,11 @@ class EditDepartmentModal extends React.Component {
     return (
       <BaseModal {...this.props} options={{ bgclose: false }}>
         <div className={'mb-25'}>
-          <h2>Edit Department: {department.get('name')}</h2>
+          <h2>{t('Edit Department')}: {department.get('name')}</h2>
         </div>
         <form className={'uk-form-stacked'} onSubmit={e => this.onFormSubmit(e)}>
           <div className={'uk-margin-medium-bottom'}>
-            <label>Department Name</label>
+            <label>{t('Department Name')}</label>
             <input
               type='text'
               className={'md-input'}
@@ -111,7 +112,7 @@ class EditDepartmentModal extends React.Component {
             />
           </div>
           <div className={'uk-margin-medium-bottom'}>
-            <label style={{ marginBottom: 5 }}>Teams</label>
+            <label style={{ marginBottom: 5 }}>{t('Teams')}</label>
             <MultiSelect
               items={mappedTeams}
               initialSelected={departmentTeams ? departmentTeams.map(d => d.get('_id')).toArray() : []}
@@ -122,11 +123,11 @@ class EditDepartmentModal extends React.Component {
           <hr />
           <div className={'uk-margin-medium-bottom uk-clearfix'}>
             <div className='uk-float-left'>
-              <h4 style={{ paddingLeft: 2 }}>Access all current and new customer groups?</h4>
+              <h4 style={{ paddingLeft: 2 }}>{t('Access all current and new customer groups?')}</h4>
             </div>
             <div className='uk-float-right md-switch md-green' style={{ marginTop: 5 }}>
               <label>
-                Yes
+                {t('Yes')}
                 <input
                   type='checkbox'
                   checked={this.allGroups}
@@ -141,7 +142,7 @@ class EditDepartmentModal extends React.Component {
             </div>
           </div>
           <div className={'uk-margin-medium-bottom'}>
-            <label style={{ marginBottom: 5 }}>Customer Groups</label>
+            <label style={{ marginBottom: 5 }}>{t('Customer Groups')}</label>
             <MultiSelect
               items={mappedGroups}
               onChange={() => {}}
@@ -151,8 +152,8 @@ class EditDepartmentModal extends React.Component {
             />
           </div>
           <div className='uk-modal-footer uk-text-right'>
-            <Button text={'Close'} flat={true} waves={true} extraClass={'uk-modal-close'} />
-            <Button text={'Save Department'} flat={true} waves={true} style={'primary'} type={'submit'} />
+            <Button text={t('Close')} flat={true} waves={true} extraClass={'uk-modal-close'} />
+            <Button text={t('Save Department')} flat={true} waves={true} style={'primary'} type={'submit'} />
           </div>
         </form>
       </BaseModal>
@@ -176,7 +177,7 @@ const mapStateToProps = state => ({
   groups: state.groupsState.groups
 })
 
-export default connect(
+export default withTranslation('common')(connect(
   mapStateToProps,
   { updateDepartment, fetchTeams, unloadTeams, fetchGroups, unloadGroups }
-)(EditDepartmentModal)
+)(EditDepartmentModal))

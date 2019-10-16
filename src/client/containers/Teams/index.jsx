@@ -31,6 +31,8 @@ import TableCell from 'components/Table/TableCell'
 import TableHeader from 'components/Table/TableHeader'
 import ButtonGroup from 'components/ButtonGroup'
 
+import { withTranslation } from 'react-i18next';
+
 class TeamsContainer extends React.Component {
   constructor (props) {
     super(props)
@@ -86,6 +88,8 @@ class TeamsContainer extends React.Component {
   }
 
   render () {
+    const {t} = this.props
+
     const tableItems = this.props.teamsState.teams.map(team => {
       return (
         <TableRow key={team.get('_id')} className={'vam nbb'}>
@@ -125,11 +129,11 @@ class TeamsContainer extends React.Component {
           <TableCell style={{ textAlign: 'right', paddingRight: 15 }}>
             <ButtonGroup>
               {helpers.canUser('teams:update', true) && (
-                <Button text={'Edit'} small={true} waves={true} onClick={() => this.onEditTeamClick(team.toJS())} />
+                <Button text={t('Edit')} small={true} waves={true} onClick={() => this.onEditTeamClick(team.toJS())} />
               )}
               {helpers.canUser('teams:delete', true) && (
                 <Button
-                  text={'Delete'}
+                  text={t('Delete')}
                   style={'danger'}
                   small={true}
                   waves={true}
@@ -145,13 +149,13 @@ class TeamsContainer extends React.Component {
     return (
       <div>
         <PageTitle
-          title={'Teams'}
+          title={t('Teams')}
           shadow={true}
           rightComponent={
             <div className={'uk-grid uk-grid-collapse'}>
               <div className={'uk-width-1-1 mt-15 uk-text-right'}>
                 <Button
-                  text={'Create'}
+                  text={t('Create')}
                   flat={false}
                   small={true}
                   waves={false}
@@ -165,9 +169,9 @@ class TeamsContainer extends React.Component {
         <PageContent id={'teams-page-content'} padding={0} paddingBottom={0}>
           <Table
             headers={[
-              <TableHeader key={0} width={'25%'} height={40} text={'Name'} padding={'8px 8px 8px 15px'} />,
-              <TableHeader key={1} width={'50%'} text={'Team Members'} />,
-              <TableHeader key={2} width={130} text={'Team Actions'} />
+              <TableHeader key={0} width={'25%'} height={40} text={t('Name')} padding={'8px 8px 8px 15px'} />,
+              <TableHeader key={1} width={'50%'} text={t('Team Members')} />,
+              <TableHeader key={2} width={130} text={'Actions'} />
             ]}
           >
             {this.props.teamsState.teams.size < 1 && (
@@ -197,7 +201,7 @@ const mapStateToProps = state => ({
   teamsState: state.teamsState
 })
 
-export default connect(
+export default withTranslation('common')(connect(
   mapStateToProps,
   { fetchTeams, unloadTeams, deleteTeam, showModal }
-)(TeamsContainer)
+)(TeamsContainer))

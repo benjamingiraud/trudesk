@@ -22,8 +22,8 @@ module.exports = function (middleware, router, controllers) {
   var canUser = middleware.canUser
 
   // Common
-  router.post('/api/v2/login', controllers.api.v2.common.login)
-  router.post('/api/v2/token', controllers.api.v2.common.token)
+  router.post('/api/v2/login/:organizationId', controllers.api.v2.common.login)
+  router.post('/api/v2/token/:organizationId', controllers.api.v2.common.token)
 
   // Accounts
   router.get('/api/v2/accounts', apiv2Auth, apiv2.accounts.get)

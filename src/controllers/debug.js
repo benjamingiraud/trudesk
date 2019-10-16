@@ -398,8 +398,6 @@ debugController.populatedatabase = function (req, res) {
             if (err) return done(err)
 
             ticketTypeSchema.getTypes(function (err, types) {
-              console.log('heyo4')
-
               if (err) return done(err)
 
               tagSchema.getTags(function (err, tags) {

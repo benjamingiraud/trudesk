@@ -91,7 +91,7 @@ class SearchResults extends React.Component {
               const doc = item.get('_source')
               return (
                 <li key={item.get('_id')} className={`search-results-item status-${doc.get('status')}`}>
-                  <a href={`/tickets/${doc.get('uid')}`} onClick={e => this.onSearchItemClick(e)}>
+                  <a href={`/${this.props.common.organizationId}tickets/${doc.get('uid')}`} onClick={e => this.onSearchItemClick(e)}>
                     <span className='priority' style={{ background: `${doc.getIn(['priority', 'htmlColor'])}` }} />
                     <span className='uid'>{doc.get('uid')}</span>
                     <span className='subject'>{doc.get('subject')}</span>

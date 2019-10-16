@@ -56,7 +56,7 @@ var apiReports = {
  }
  */
 apiReports.generate.ticketsByGroup = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var postData = req.body
@@ -89,7 +89,7 @@ apiReports.generate.ticketsByGroup = function (req, res) {
 }
 
 apiReports.generate.ticketsByTeam = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var postData = req.body
@@ -163,7 +163,7 @@ apiReports.generate.ticketsByTeam = function (req, res) {
  */
 apiReports.generate.ticketsByPriority = function (req, res) {
   var postData = req.body
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   async.waterfall(
@@ -242,7 +242,7 @@ apiReports.generate.ticketsByPriority = function (req, res) {
  */
 apiReports.generate.ticketsByStatus = function (req, res) {
   var postData = req.body
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   async.waterfall(
@@ -326,7 +326,7 @@ apiReports.generate.ticketsByStatus = function (req, res) {
  */
 apiReports.generate.ticketsByTags = function (req, res) {
   var postData = req.body
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   async.waterfall(
@@ -410,7 +410,7 @@ apiReports.generate.ticketsByTags = function (req, res) {
  */
 apiReports.generate.ticketsByType = function (req, res) {
   var postData = req.body
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   async.waterfall(
@@ -494,7 +494,7 @@ apiReports.generate.ticketsByType = function (req, res) {
  */
 apiReports.generate.ticketsByUser = function (req, res) {
   var postData = req.body
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   async.waterfall(
@@ -547,7 +547,7 @@ apiReports.generate.ticketsByUser = function (req, res) {
 
 apiReports.generate.ticketsByAssignee = function (req, res) {
   var postData = req.body
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   async.waterfall(

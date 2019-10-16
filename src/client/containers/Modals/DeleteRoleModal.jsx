@@ -23,6 +23,7 @@ import { deleteRole } from 'actions/settings'
 import BaseModal from './BaseModal'
 import Button from 'components/Button'
 import SingleSelect from 'components/SingleSelect'
+import { withTranslation } from 'react-i18next';
 
 @observer
 class DeleteRoleModal extends React.Component {
@@ -39,7 +40,7 @@ class DeleteRoleModal extends React.Component {
   }
 
   render () {
-    const { role } = this.props
+    const { role, t } = this.props
     const mappedRoles = this.props.shared.roles
       .filter(obj => {
         return obj.get('_id') !== role.get('_id')
@@ -52,8 +53,8 @@ class DeleteRoleModal extends React.Component {
       <BaseModal {...this.props} options={{ bgclose: false }}>
         <form className={'uk-form-stacked'} onSubmit={e => this.onFormSubmit(e)}>
           <div className='uk-margin-medium-bottom uk-clearfix'>
-            <h2>Remove Role</h2>
-            <span>Please select the role you wish to assign ALL users to</span>
+            <h2>{t('Remove Role')}</h2>
+            <span>{t('Please select the role you wish to assign ALL users to')}</span>
             {/*<hr style={{ margin: '10px 0' }} />*/}
           </div>
           <div className='uk-margin-medium-bottom uk-clearfix'>
@@ -69,22 +70,20 @@ class DeleteRoleModal extends React.Component {
           </div>
           <div className='uk-margin-medium-bottom uk-clearfix'>
             <span className='uk-text-danger'>
-              WARNING: This will change all accounts with role <strong>{role.get('name')}</strong> to the selected role
-              above.
+              {t('WarningRole')} <strong>{role.get('name')}</strong> {t('WarningRole2')}
               {role.get('isAdmin') && (
                 <span className={'uk-text-danger'}>
-                  The role you are about to remove is an admin role. Please ensure there is another Admin role or you
-                  could be locked out!
+                  {t('The role you are about to remove is an admin role. Please ensure there is another Admin role or you could be locked out!')}
                 </span>
               )}
               <br />
               <br />
-              <strong style={{ fontSize: '18px' }}>This is permanent!</strong>
+              <strong style={{ fontSize: '18px' }}>{t('This is permanent!')}</strong>
             </span>
           </div>
           <div className='uk-modal-footer uk-text-right'>
-            <Button text={'Cancel'} flat={true} waves={true} extraClass={'uk-modal-close'} />
-            <Button text={'Delete'} style={'danger'} flat={true} type={'submit'} />
+            <Button text={t('Cancel')} flat={true} waves={true} extraClass={'uk-modal-close'} />
+            <Button text={t('Delete')} style={'danger'} flat={true} type={'submit'} />
           </div>
         </form>
       </BaseModal>
@@ -102,7 +101,7 @@ const mapStateToProps = state => ({
   shared: state.shared
 })
 
-export default connect(
+export default withTranslation('common')(connect(
   mapStateToProps,
   { deleteRole }
-)(DeleteRoleModal)
+)(DeleteRoleModal))

@@ -118,10 +118,11 @@ groupSchema.statics.getWithObject = function (obj, callback) {
   var limit = obj.limit ? Number(obj.limit) : 100
   var page = obj.page ? Number(obj.page) : 0
   var userId = obj.userId
+  var organizationId = obj.organizationId
 
   if (userId) {
     return this.model(COLLECTION)
-      .find({ members: userId })
+      .find({ members: userId, organizationId: organizationId })
       .limit(limit)
       .skip(page * limit)
       .populate('members', '_id username fullname email role preferences image title deleted')
@@ -131,7 +132,7 @@ groupSchema.statics.getWithObject = function (obj, callback) {
   }
 
   return this.model(COLLECTION)
-    .find({})
+    .find({ organizationId: organizationId })
     .limit(limit)
     .skip(page * limit)
     .populate('members', '_id username fullname email role preferences image title deleted')

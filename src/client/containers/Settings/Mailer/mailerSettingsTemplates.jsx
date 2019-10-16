@@ -131,13 +131,13 @@ class MailerSettings_Templates extends React.Component {
       })
   }
 
-  static onOpenEditor (e, name) {
+  static onOpenEditor (e, name, organizationId) {
     e.preventDefault()
-    const url = `/settings/editor/${name}/`
+    const url = `/${organizationId}/settings/editor/${name}/`
     History.pushState(null, null, url)
   }
 
-  mapTemplateMenu () {
+  mapTemplateMenu (organizationId) {
     return this.templates.map((template, idx) => {
       const templateJS = template.toJS()
       return {
@@ -146,14 +146,14 @@ class MailerSettings_Templates extends React.Component {
         bodyComponent: templateBody({
           template: templateJS,
           handleSaveSubject: e => this.onSaveSubject(e),
-          handleOpenEditor: e => MailerSettings_Templates.onOpenEditor(e, templateJS.name)
+          handleOpenEditor: e => MailerSettings_Templates.onOpenEditor(e, templateJS.name, organizationId)
         })
       }
     })
   }
 
   render () {
-    const mappedValues = this.mapTemplateMenu()
+    const mappedValues = this.mapTemplateMenu(this.props.organizationId)
     return (
       <div>
         <SettingItem

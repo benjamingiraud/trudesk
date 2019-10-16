@@ -18,6 +18,7 @@ import { connect } from 'react-redux'
 import { createTicketType } from 'actions/tickets'
 import BaseModal from './BaseModal'
 import Button from 'components/Button'
+import { withTranslation } from 'react-i18next';
 
 import $ from 'jquery'
 import helpers from 'lib/helpers'
@@ -51,13 +52,15 @@ class CreateTicketTypeModal extends React.Component {
   }
 
   render () {
+    const { t } = this.props
+
     return (
       <BaseModal {...this.props} ref={i => (this.base = i)}>
         <form className={'uk-form-stacked'} onSubmit={e => this.onCreateTicketTypeSubmit(e)}>
           <div>
-            <h2 className='nomargin mb-5'>Create Ticket Type</h2>
-            <p className='uk-text-small uk-text-muted'>Create a ticket type</p>
-            <label htmlFor='typeName'>Type name</label>
+            <h2 className='nomargin mb-5'>{t('Create Ticket Type')}</h2>
+            <p className='uk-text-small uk-text-muted'>{t('Create Ticket Type')}</p>
+            <label htmlFor='typeName'>{t('Type name')}</label>
             <input
               value={this.state.typeName}
               onChange={e => this.onTypeNameChanged(e)}
@@ -70,8 +73,8 @@ class CreateTicketTypeModal extends React.Component {
             />
           </div>
           <div className='uk-modal-footer uk-text-right'>
-            <Button text={'Close'} flat={true} waves={true} extraClass={'uk-modal-close'} />
-            <Button text={'Create'} style={'success'} type={'submit'} />
+            <Button text={t('Close')} flat={true} waves={true} extraClass={'uk-modal-close'} />
+            <Button text={t('Create')} style={'success'} type={'submit'} />
           </div>
         </form>
       </BaseModal>
@@ -84,7 +87,7 @@ CreateTicketTypeModal.propTypes = {
   createTicketType: PropTypes.func.isRequired
 }
 
-export default connect(
+export default withTranslation('common')(connect(
   null,
   { createTicketType }
-)(CreateTicketTypeModal)
+)(CreateTicketTypeModal))

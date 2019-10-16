@@ -22,9 +22,12 @@ settingsController.content = {}
 
 function initViewContent (view, req) {
   var content = {}
+
   content.title = 'Settings'
   content.nav = 'settings'
   content.subnav = 'settings-' + view
+
+  content.organizationId = req.organization._id
 
   content.data = {}
   content.data.user = req.user
@@ -67,11 +70,14 @@ function renderView (res, content) {
     content.data.tags = returnedContent.data.tags
 
     return res.render('settings', content)
-  })
+  }, content.organizationId)
 }
 
 settingsController.general = function (req, res) {
-  if (!checkPerms(req, 'settings:view')) return res.redirect('/')
+  if (!checkPerms(req, 'settings:view')) {
+    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    return res.redirect(404)
+  }
 
   var content = initViewContent('general', req)
 
@@ -79,7 +85,10 @@ settingsController.general = function (req, res) {
 }
 
 settingsController.appearance = function (req, res) {
-  if (!checkPerms(req, 'settings:view')) return res.redirect('/')
+  if (!checkPerms(req, 'settings:view')) {
+    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    return res.redirect(404)
+  }
 
   var content = initViewContent('appearance', req)
 
@@ -87,7 +96,10 @@ settingsController.appearance = function (req, res) {
 }
 
 settingsController.ticketSettings = function (req, res) {
-  if (!checkPerms(req, 'settings:tickets')) return res.redirect('/settings')
+  if (!checkPerms(req, 'settings:tickets')) {
+    if (req.organization) return res.redirect(`/${req.organization._id}/settings`)
+    return res.redirect(404)
+  }
 
   var content = initViewContent('tickets', req)
 
@@ -95,7 +107,10 @@ settingsController.ticketSettings = function (req, res) {
 }
 
 settingsController.mailerSettings = function (req, res) {
-  if (!checkPerms(req, 'settings:mailer')) return res.redirect('/settings')
+  if (!checkPerms(req, 'settings:mailer')) {
+    if (req.organization) return res.redirect(`/${req.organization._id}/settings`)
+    return res.redirect(404)
+  }
 
   var content = initViewContent('mailer', req)
 
@@ -103,7 +118,10 @@ settingsController.mailerSettings = function (req, res) {
 }
 
 settingsController.permissionsSettings = function (req, res) {
-  if (!checkPerms(req, 'settings:permissions')) return res.redirect('/settings')
+  if (!checkPerms(req, 'settings:permissions')) {
+    if (req.organization) return res.redirect(`/${req.organization._id}/settings`)
+    return res.redirect(404)
+  }
 
   var content = initViewContent('permissions', req)
 
@@ -111,7 +129,10 @@ settingsController.permissionsSettings = function (req, res) {
 }
 
 settingsController.notificationsSettings = function (req, res) {
-  if (!checkPerms(req, 'settings:notifications')) return res.redirect('/settings')
+  if (!checkPerms(req, 'settings:notifications')) {
+    if (req.organization) return res.redirect(`/${req.organization._id}/settings`)
+    return res.redirect(404)
+  }
 
   var content = initViewContent('notifications', req)
 
@@ -119,7 +140,10 @@ settingsController.notificationsSettings = function (req, res) {
 }
 
 settingsController.elasticsearchSettings = function (req, res) {
-  if (!checkPerms(req, 'settings:elasticsearch')) return res.redirect('/settings')
+  if (!checkPerms(req, 'settings:elasticsearch')) {
+    if (req.organization) return res.redirect(`/${req.organization._id}/settings`)
+    return res.redirect(404)
+  }
 
   var content = initViewContent('elasticsearch', req)
 
@@ -127,7 +151,10 @@ settingsController.elasticsearchSettings = function (req, res) {
 }
 
 settingsController.tpsSettings = function (req, res) {
-  if (!checkPerms(req, 'settings:tps')) return res.redirect('/settings')
+  if (!checkPerms(req, 'settings:tps')) {
+    if (req.organization) return res.redirect(`/${req.organization._id}/settings`)
+    return res.redirect(404)
+  }
 
   var content = initViewContent('tps', req)
 
@@ -135,7 +162,10 @@ settingsController.tpsSettings = function (req, res) {
 }
 
 settingsController.backupSettings = function (req, res) {
-  if (!checkPerms(req, 'settings:backup')) return res.redirect('/settings')
+  if (!checkPerms(req, 'settings:backup')) {
+    if (req.organization) return res.redirect(`/${req.organization._id}/settings`)
+    return res.redirect(404)
+  }
 
   var content = initViewContent('backup', req)
 
@@ -143,7 +173,10 @@ settingsController.backupSettings = function (req, res) {
 }
 
 settingsController.legal = function (req, res) {
-  if (!checkPerms(req, 'settings:legal')) return res.redirect('/settings')
+  if (!checkPerms(req, 'settings:legal')) {
+    if (req.organization) return res.redirect(`/${req.organization._id}/settings`)
+    return res.redirect(404)
+  }
 
   var content = initViewContent('legal', req)
 
@@ -151,7 +184,10 @@ settingsController.legal = function (req, res) {
 }
 
 settingsController.logs = function (req, res) {
-  if (!checkPerms(req, 'settings:logs')) return res.redirect('/settings')
+  if (!checkPerms(req, 'settings:logs')) {
+    if (req.organization) return res.redirect(`/${req.organization._id}/settings`)
+    return res.redirect(404)
+  }
 
   var content = initViewContent('logs', req)
 

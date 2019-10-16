@@ -264,29 +264,33 @@ ticketSchema.methods.setStatus = function (ownerId, status, callback) {
  * @param {Object} userId User ID to set as assignee
  * @param {TicketCallback} callback Callback with the updated ticket.
  */
-ticketSchema.methods.setAssignee = function (ownerId, userId, callback) {
+ticketSchema.methods.setAssignee = function (ownerId, userId, callback, organizationId) {
   if (_.isUndefined(userId)) return callback('Invalid User Id', null)
   var permissions = require('../permissions')
   var self = this
 
   self.assignee = userId
-  userSchema.getUser(userId, function (err, user) {
-    if (err) return callback(err, null)
+  userSchema.getUser(
+    userId,
+    function (err, user) {
+      if (err) return callback(err, null)
 
-    if (!permissions.canThis(user.role, 'tickets:update') && !permissions.canThis(user.role, 'agent:*')) {
-      return callback('User does not have permission to be set as an assignee.', null)
-    }
+      if (!permissions.canThis(user.role, 'tickets:update') && !permissions.canThis(user.role, 'agent:*')) {
+        return callback('User does not have permission to be set as an assignee.', null)
+      }
 
-    var historyItem = {
-      action: 'ticket:set:assignee',
-      description: user.fullname + ' was set as assignee',
-      owner: ownerId
-    }
+      var historyItem = {
+        action: 'ticket:set:assignee',
+        description: user.fullname + ' was set as assignee',
+        owner: ownerId
+      }
 
-    self.history.push(historyItem)
+      self.history.push(historyItem)
 
-    return callback(null, self)
-  })
+      return callback(null, self)
+    },
+    organizationId
+  )
 }
 
 /**
@@ -320,11 +324,11 @@ ticketSchema.methods.clearAssignee = function (ownerId, callback) {
  * @param {Object} typeId TicketType Id to set as ticket type
  * @param {TicketCallback} callback Callback with the updated ticket.
  */
-ticketSchema.methods.setTicketType = function (ownerId, typeId, callback) {
+ticketSchema.methods.setTicketType = function (ownerId, typeId, callback, organizationId) {
   var typeSchema = require('./tickettype')
   var self = this
   self.type = typeId
-  typeSchema.findOne({ _id: typeId }, function (err, type) {
+  typeSchema.findOne({ _id: typeId, organizationId: organizationId }, function (err, type) {
     if (err) return callback(err)
     if (!type) return callback('Invalid Type Id: ' + typeId)
 
@@ -1045,7 +1049,7 @@ ticketSchema.statics.getTicketByUid = function (organizationId, uid, callback) {
  * @param {Object} id MongoDb _id.
  * @param {QueryCallback} callback MongoDB Query Callback
  */
-ticketSchema.statics.getTicketById = function (organizationId, id, callback) {
+ticketSchema.statics.getTicketById = function (id, callback, organizationId) {
   if (_.isUndefined(id)) return callback('Invalid Id - TicketSchema.GetTicketById()', null)
 
   var self = this
@@ -1637,10 +1641,15 @@ ticketSchema.statics.softDelete = function (organizationId, oId, callback) {
     .findOneAndUpdate({ organizationId: organizationId, _id: oId }, { deleted: true }, { new: true }, callback)
 }
 
-ticketSchema.statics.softDeleteUid = function (uid, callback) {
+ticketSchema.statics.softDeleteUid = function (uid, callback, organizationId) {
   if (_.isUndefined(uid)) return callback({ message: 'Invalid UID - TicketSchema.SoftDeleteUid()' })
 
-  return this.model(COLLECTION).findOneAndUpdate({ uid: uid }, { deleted: true }, { new: true }, callback)
+  return this.model(COLLECTION).findOneAndUpdate(
+    { uid: uid, organizationId: organizationId },
+    { deleted: true },
+    { new: true },
+    callback
+  )
 }
 
 ticketSchema.statics.restoreDeleted = function (oId, callback, organizationId) {

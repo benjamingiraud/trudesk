@@ -46,6 +46,7 @@ import SpinLoader from 'components/SpinLoader'
 import { withTranslation } from 'react-i18next';
 
 const fetchTicket = parent => {
+  console.log(parent.props)
   axios
     .get(`/api/v2/tickets/${parent.props.ticketUid}`)
     .then(res => {
@@ -525,7 +526,7 @@ class SingleTicketContainer extends React.Component {
                     <ul className='button-group'>
                       <li className='pagination'>
                         <a
-                          href={`/tickets/print/${this.ticket.uid}`}
+                          href={`/${this.props.common.organizationId}/tickets/print/${this.ticket.uid}`}
                           className='btn no-ajaxy'
                           style={{ borderRadius: 3, marginRight: 5 }}
                           rel='noopener noreferrer'
@@ -671,7 +672,7 @@ class SingleTicketContainer extends React.Component {
                           <TruTabWrapper style={{ paddingLeft: 85 }}>
                             <TruTabSelectors showTrack={false}>
                               {helpers.canUser('comments:create', true) && (
-                                <TruTabSelector selectorId={0} label={'Comment'} active={true} />
+                                <TruTabSelector selectorId={0} label={t('Comment')} active={true} />
                               )}
                               {helpers.canUser('tickets:notes', true) && (
                                 <TruTabSelector
@@ -738,7 +739,7 @@ class SingleTicketContainer extends React.Component {
                 </div>
               </div>
             </div>
-            <OffCanvasEditor primaryLabel={'Save Edit'} ref={r => (this.editorWindow = r)} />
+            <OffCanvasEditor primaryLabel={t('Save Edit')} ref={r => (this.editorWindow = r)} />
           </Fragment>
         )}
       </div>

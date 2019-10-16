@@ -50,9 +50,9 @@ prioritySchema.virtual('durationFormatted').get(function () {
     .format('Y [year], M [month], d [day], h [hour], m [min]', { trim: 'both' })
 })
 
-prioritySchema.statics.getPriority = function (_id, callback) {
+prioritySchema.statics.getPriority = function (_id, callback, organizationId) {
   return this.model(COLLECTION)
-    .findOne({ _id: _id })
+    .findOne({ _id: _id, organizationId: organizationId })
     .exec(callback)
 }
 

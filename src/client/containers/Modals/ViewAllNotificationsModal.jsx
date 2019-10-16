@@ -27,12 +27,14 @@ import Button from 'components/Button'
 
 import helpers from 'lib/helpers'
 import socket from 'lib/socket'
+import { withTranslation } from 'react-i18next';
 
 @observer
 class ViewAllNotificationsModal extends React.Component {
   @observable notifications = []
 
   componentDidMount () {
+    console.log(this.props)
     helpers.hideAllpDropDowns()
     axios
       .get('/api/v1/users/notifications')
@@ -51,10 +53,11 @@ class ViewAllNotificationsModal extends React.Component {
 
     this.props.hideModal()
     socket.socket.emit('markNotificationRead', notification._id)
-    History.pushState(null, null, `/tickets/${notification.data.ticket.uid}`)
+    History.pushState(null, null, `/${notification.data.ticket.organizationId}/tickets/${notification.data.ticket.uid}`)
   }
 
   render () {
+    let { t } = this.props
     return (
       <BaseModal large={true}>
         <div className='uk-modal-header'>
@@ -65,7 +68,7 @@ class ViewAllNotificationsModal extends React.Component {
             <thead>
               <tr>
                 <th className={'type'}>Type</th>
-                <th className={'title'}>Title</th>
+                <th className={'title'}>{t('Title')}</th>
                 <th className={'date'}>Date</th>
               </tr>
             </thead>
@@ -111,7 +114,7 @@ ViewAllNotificationsModal.propTypes = {
   hideModal: PropTypes.func.isRequired
 }
 
-export default connect(
+export default withTranslation('common')(connect(
   null,
   { hideModal }
-)(ViewAllNotificationsModal)
+)(ViewAllNotificationsModal))

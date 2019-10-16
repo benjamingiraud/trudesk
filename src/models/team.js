@@ -79,7 +79,7 @@ teamSchema.statics.getWithObject = function (obj, callback) {
   if (!obj) return callback({ message: 'Invalid Team Object - TeamSchema.GetWithObject()' })
 
   var q = this.model(COLLECTION)
-    .find({})
+    .find({ organizationId: obj.organizationId })
     .skip(obj.limit * obj.page)
     .limit(obj.limit)
     .sort('name')
@@ -95,9 +95,9 @@ teamSchema.statics.getTeamByName = function (name, callback) {
   return q.exec(callback)
 }
 
-teamSchema.statics.getTeams = function (callback) {
+teamSchema.statics.getTeams = function (callback, organizationId) {
   var q = this.model(COLLECTION)
-    .find({})
+    .find({ organizationId: organizationId })
     .sort('name')
 
   return q.exec(callback)

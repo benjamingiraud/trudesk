@@ -28,6 +28,9 @@ ticketsV2.create = function (req, res) {
 }
 
 ticketsV2.get = function (req, res) {
+  console.log(req.user)
+  console.log(req.user.organizationId)
+
   var query = req.query
   var type = query.type || 'all'
 
@@ -41,32 +44,37 @@ ticketsV2.get = function (req, res) {
 
   var queryObject = {
     limit: limit,
-    page: page
+    page: page,
+    organizationId: req.user.organizationId
   }
 
   async.waterfall(
     [
       function (next) {
         if (req.user.role.isAdmin || req.user.role.isAgent) {
-          Department.getUserDepartments(req.user._id, function (err, departments) {
-            if (err) return next(err)
+          Department.getUserDepartments(
+            req.user._id,
+            function (err, departments) {
+              if (err) return next(err)
 
-            if (_.some(departments, { allGroups: true })) {
-              Group.find({}, next)
-            } else {
-              var groups = _.flattenDeep(
-                departments.map(function (d) {
-                  return d.groups.map(function (g) {
-                    return g._id
+              if (_.some(departments, { allGroups: true })) {
+                Group.find({ organizationId: req.user.organizationId }, next)
+              } else {
+                var groups = _.flattenDeep(
+                  departments.map(function (d) {
+                    return d.groups.map(function (g) {
+                      return g._id
+                    })
                   })
-                })
-              )
+                )
 
-              return next(null, groups)
-            }
-          })
+                return next(null, groups)
+              }
+            },
+            req.user.organizationId
+          )
         } else {
-          Group.getAllGroupsOfUser(req.user._id, next)
+          Group.getAllGroupsOfUser(req.user._id, next, req.user.organizationId)
         }
       },
       function (groups, next) {
@@ -125,6 +133,7 @@ ticketsV2.get = function (req, res) {
       }
     ],
     function (err, resultObject) {
+      console.log(err)
       if (err) return apiUtils.sendApiError(res, 500, err.message)
 
       return apiUtils.sendApiSuccess(res, {
@@ -142,7 +151,10 @@ ticketsV2.get = function (req, res) {
 ticketsV2.single = function (req, res) {
   var uid = req.params.uid
   if (!uid) return apiUtils.sendApiError(res, 400, 'Invalid Parameters')
-  Ticket.getTicketByUid(uid, function (err, ticket) {
+  var organizationId = req.user.organizationId
+  if (!organizationId) return apiUtils.sendApiError(res, 400, 'Invalid Organization Id')
+
+  Ticket.getTicketByUid(req.user.organizationId, uid, function (err, ticket) {
     if (err) return apiUtils.sendApiError(res, 500, err)
 
     return apiUtils.sendApiSuccess(res, { ticket: ticket })
@@ -165,26 +177,32 @@ ticketsV2.update = function (req, res) {
 ticketsV2.batchUpdate = function (req, res) {
   var batch = req.body.batch
   if (!_.isArray(batch)) return apiUtils.sendApiError_InvalidPostData(res)
+  var organizationId = req.user.organizationId
+  if (!organizationId) return apiUtils.sendApiError(res, 400, 'Invalid Organization Id')
 
   async.each(
     batch,
     function (batchTicket, next) {
-      Ticket.getTicketById(batchTicket.id, function (err, ticket) {
-        if (err) return next(err)
+      Ticket.getTicketById(
+        batchTicket.id,
+        function (err, ticket) {
+          if (err) return next(err)
 
-        if (!_.isUndefined(batchTicket.status)) {
-          ticket.status = batchTicket.status
-          var HistoryItem = {
-            action: 'ticket:set:status',
-            description: 'status set to: ' + batchTicket.status,
-            owner: req.user._id
+          if (!_.isUndefined(batchTicket.status)) {
+            ticket.status = batchTicket.status
+            var HistoryItem = {
+              action: 'ticket:set:status',
+              description: 'status set to: ' + batchTicket.status,
+              owner: req.user._id
+            }
+
+            ticket.history.push(HistoryItem)
           }
 
-          ticket.history.push(HistoryItem)
-        }
-
-        return ticket.save(next)
-      })
+          return ticket.save(next)
+        },
+        organizationId
+      )
     },
     function (err) {
       if (err) return apiUtils.sendApiError(res, 400, err.message)
@@ -198,12 +216,19 @@ ticketsV2.delete = function (req, res) {
   var uid = req.params.uid
   if (!uid) return apiUtils.sendApiError(res, 400, 'Invalid Parameters')
 
-  Ticket.softDeleteUid(uid, function (err, success) {
-    if (err) return apiUtils.sendApiError(res, 500, err.message)
-    if (!success) return apiUtils.sendApiError(res, 500, 'Unable to delete ticket')
+  var organizationId = req.user.organizationId
+  if (!organizationId) return apiUtils.sendApiError(res, 400, 'Invalid Organization Id')
 
-    return apiUtils.sendApiSuccess(res, { deleted: true })
-  })
+  Ticket.softDeleteUid(
+    uid,
+    function (err, success) {
+      if (err) return apiUtils.sendApiError(res, 500, err.message)
+      if (!success) return apiUtils.sendApiError(res, 500, 'Unable to delete ticket')
+
+      return apiUtils.sendApiSuccess(res, { deleted: true })
+    },
+    organizationId
+  )
 }
 
 module.exports = ticketsV2

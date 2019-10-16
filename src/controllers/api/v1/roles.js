@@ -20,7 +20,7 @@ var permissions = require('../../../permissions')
 var rolesV1 = {}
 
 rolesV1.get = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var roleSchema = require('../../../models/role')
@@ -59,7 +59,7 @@ rolesV1.get = function (req, res) {
 }
 
 rolesV1.create = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var name = req.body.name
@@ -101,7 +101,7 @@ rolesV1.create = function (req, res) {
 }
 
 rolesV1.update = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var _id = req.params.id
@@ -131,7 +131,7 @@ rolesV1.update = function (req, res) {
 }
 
 rolesV1.delete = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var _id = req.params.id

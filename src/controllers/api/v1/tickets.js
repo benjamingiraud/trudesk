@@ -137,7 +137,7 @@ function buildAvgResponse (ticketArray, callback) {
  *
  */
 apiTickets.get = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var l = req.query.limit ? req.query.limit : 10
@@ -242,7 +242,7 @@ apiTickets.get = function (req, res) {
 }
 
 apiTickets.getByGroup = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var groupId = req.params.id
@@ -266,7 +266,7 @@ apiTickets.getByGroup = function (req, res) {
 }
 
 apiTickets.getCountByGroup = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var groupId = req.params.id
@@ -333,7 +333,7 @@ apiTickets.getCountByGroup = function (req, res) {
  }
  */
 apiTickets.search = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var searchString = req.query.search
@@ -432,7 +432,7 @@ apiTickets.create = function (req, res) {
   var response = {}
   response.success = true
 
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var postData = req.body
@@ -693,7 +693,7 @@ apiTickets.createPublicTicket = function (req, res) {
  }
  */
 apiTickets.single = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var uid = req.params.uid
@@ -750,103 +750,107 @@ apiTickets.update = function (req, res) {
     }
     var oId = req.params.id
     var reqTicket = req.body
-    var organizationId = req.params.organizationId
+    var organizationId = req.organization._id
 
     if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
     if (_.isUndefined(oId)) return res.status(400).json({ success: false, error: 'Invalid Ticket ObjectID.' })
 
     var ticketModel = require('../../../models/ticket')
-    ticketModel.getTicketById(organizationId, oId, function (err, ticket) {
-      if (err) return res.status(400).json({ success: false, error: err.message })
-      if (!ticket) return res.status(400).json({ success: false, error: 'Unable to locate ticket. Aborting...' })
-      async.parallel(
-        [
-          function (cb) {
-            if (!_.isUndefined(reqTicket.status)) {
-              ticket.status = reqTicket.status
-            }
+    ticketModel.getTicketById(
+      oId,
+      function (err, ticket) {
+        if (err) return res.status(400).json({ success: false, error: err.message })
+        if (!ticket) return res.status(400).json({ success: false, error: 'Unable to locate ticket. Aborting...' })
+        async.parallel(
+          [
+            function (cb) {
+              if (!_.isUndefined(reqTicket.status)) {
+                ticket.status = reqTicket.status
+              }
 
-            return cb()
-          },
-          function (cb) {
-            if (!_.isUndefined(reqTicket.subject)) {
-              ticket.subject = sanitizeHtml(reqTicket.subject).trim()
-            }
-
-            return cb()
-          },
-          function (cb) {
-            if (!_.isUndefined(reqTicket.group)) {
-              ticket.group = reqTicket.group._id || reqTicket.group
-
-              ticket.populate('group', function () {
-                return cb()
-              })
-            } else {
               return cb()
-            }
-          },
-          function (cb) {
-            if (!_.isUndefined(reqTicket.closedDate)) {
-              ticket.closedDate = reqTicket.closedDate
-            }
+            },
+            function (cb) {
+              if (!_.isUndefined(reqTicket.subject)) {
+                ticket.subject = sanitizeHtml(reqTicket.subject).trim()
+              }
 
-            return cb()
-          },
-          function (cb) {
-            if (!_.isUndefined(reqTicket.tags) && !_.isNull(reqTicket.tags)) {
-              ticket.tags = reqTicket.tags
-            }
-
-            return cb()
-          },
-          function (cb) {
-            if (!_.isUndefined(reqTicket.issue) && !_.isNull(reqTicket.issue)) {
-              ticket.issue = sanitizeHtml(reqTicket.issue).trim()
-            }
-
-            return cb()
-          },
-          function (cb) {
-            if (!_.isUndefined(reqTicket.assignee) && !_.isNull(reqTicket.assignee)) {
-              ticket.assignee = reqTicket.assignee
-              ticket.populate('assignee', function (err, t) {
-                if (err) return cb(err)
-
-                var HistoryItem = {
-                  action: 'ticket:set:assignee',
-                  description: t.assignee.fullname + ' was set as assignee',
-                  owner: req.user._id
-                }
-
-                ticket.history.push(HistoryItem)
-
-                return cb()
-              })
-            } else {
               return cb()
-            }
-          }
-        ],
-        function () {
-          ticket.save(function (err, t) {
-            if (err) {
-              return res.status(400).json({ success: false, error: err.message })
-            }
+            },
+            function (cb) {
+              if (!_.isUndefined(reqTicket.group)) {
+                ticket.group = reqTicket.group._id || reqTicket.group
 
-            if (!permissions.canThis(user.role, 'tickets:notes')) {
-              t.notes = []
-            }
+                ticket.populate('group', function () {
+                  return cb()
+                })
+              } else {
+                return cb()
+              }
+            },
+            function (cb) {
+              if (!_.isUndefined(reqTicket.closedDate)) {
+                ticket.closedDate = reqTicket.closedDate
+              }
 
-            return res.json({
-              success: true,
-              error: null,
-              ticket: t
+              return cb()
+            },
+            function (cb) {
+              if (!_.isUndefined(reqTicket.tags) && !_.isNull(reqTicket.tags)) {
+                ticket.tags = reqTicket.tags
+              }
+
+              return cb()
+            },
+            function (cb) {
+              if (!_.isUndefined(reqTicket.issue) && !_.isNull(reqTicket.issue)) {
+                ticket.issue = sanitizeHtml(reqTicket.issue).trim()
+              }
+
+              return cb()
+            },
+            function (cb) {
+              if (!_.isUndefined(reqTicket.assignee) && !_.isNull(reqTicket.assignee)) {
+                ticket.assignee = reqTicket.assignee
+                ticket.populate('assignee', function (err, t) {
+                  if (err) return cb(err)
+
+                  var HistoryItem = {
+                    action: 'ticket:set:assignee',
+                    description: t.assignee.fullname + ' was set as assignee',
+                    owner: req.user._id
+                  }
+
+                  ticket.history.push(HistoryItem)
+
+                  return cb()
+                })
+              } else {
+                return cb()
+              }
+            }
+          ],
+          function () {
+            ticket.save(function (err, t) {
+              if (err) {
+                return res.status(400).json({ success: false, error: err.message })
+              }
+
+              if (!permissions.canThis(user.role, 'tickets:notes')) {
+                t.notes = []
+              }
+
+              return res.json({
+                success: true,
+                error: null,
+                ticket: t
+              })
             })
-          })
-        }
-      )
-    })
+          }
+        )
+      },
+      organizationId
+    )
   } else {
     return res.status(403).json({ success: false, error: 'Invalid Access Token' })
   }
@@ -876,7 +880,7 @@ apiTickets.update = function (req, res) {
 apiTickets.delete = function (req, res) {
   var oId = req.params.id
   var user = req.user
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
@@ -929,51 +933,55 @@ apiTickets.postComment = function (req, res) {
   var comment = commentJson.comment
   var owner = commentJson.ownerId || req.user._id
   var ticketId = commentJson._id
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   if (_.isUndefined(ticketId)) return res.status(400).json({ success: false, error: 'Invalid Post Data' })
   var ticketModel = require('../../../models/ticket')
-  ticketModel.getTicketById(organizationId, ticketId, function (err, t) {
-    if (err) return res.status(400).json({ success: false, error: 'Invalid Post Data' })
+  ticketModel.getTicketById(
+    ticketId,
+    function (err, t) {
+      if (err) return res.status(400).json({ success: false, error: 'Invalid Post Data' })
 
-    if (_.isUndefined(comment)) return res.status(400).json({ success: false, error: 'Invalid Post Data' })
+      if (_.isUndefined(comment)) return res.status(400).json({ success: false, error: 'Invalid Post Data' })
 
-    var marked = require('marked')
-    marked.setOptions({
-      breaks: true
-    })
+      var marked = require('marked')
+      marked.setOptions({
+        breaks: true
+      })
 
-    comment = sanitizeHtml(comment).trim()
+      comment = sanitizeHtml(comment).trim()
 
-    var Comment = {
-      owner: owner,
-      date: new Date(),
-      comment: marked(comment)
-    }
-
-    t.updated = Date.now()
-    t.comments.push(Comment)
-    var HistoryItem = {
-      action: 'ticket:comment:added',
-      description: 'Comment was added',
-      owner: owner
-    }
-    t.history.push(HistoryItem)
-
-    t.save(function (err, tt) {
-      if (err) return res.status(400).json({ success: false, error: err.message })
-
-      if (!permissions.canThis(req.user.role, 'tickets:notes')) {
-        tt.notes = []
+      var Comment = {
+        owner: owner,
+        date: new Date(),
+        comment: marked(comment)
       }
 
-      emitter.emit('ticket:comment:added', tt, Comment, req.headers.host)
+      t.updated = Date.now()
+      t.comments.push(Comment)
+      var HistoryItem = {
+        action: 'ticket:comment:added',
+        description: 'Comment was added',
+        owner: owner
+      }
+      t.history.push(HistoryItem)
 
-      return res.json({ success: true, error: null, ticket: tt })
-    })
-  })
+      t.save(function (err, tt) {
+        if (err) return res.status(400).json({ success: false, error: err.message })
+
+        if (!permissions.canThis(req.user.role, 'tickets:notes')) {
+          tt.notes = []
+        }
+
+        emitter.emit('ticket:comment:added', tt, Comment, req.headers.host)
+
+        return res.json({ success: true, error: null, ticket: tt })
+      })
+    },
+    organizationId
+  )
 }
 
 /**
@@ -1010,46 +1018,50 @@ apiTickets.postComment = function (req, res) {
  */
 apiTickets.postInternalNote = function (req, res) {
   var payload = req.body
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   if (_.isUndefined(payload.ticketid)) return res.status(400).json({ success: false, error: 'Invalid Post Data' })
   var ticketModel = require('../../../models/ticket')
-  ticketModel.getTicketById(organizationId, payload.ticketid, function (err, ticket) {
-    if (err) return res.status(400).json({ success: false, error: err.message })
-
-    if (_.isUndefined(payload.note)) return res.status(400).json({ success: false, error: 'Invalid Post Data' })
-
-    var marked = require('marked')
-    // var note = payload.note.replace(/(\r\n|\n\r|\r|\n)/g, "<br>");
-    var Note = {
-      owner: payload.owner || req.user._id,
-      date: new Date(),
-      note: marked(payload.note)
-    }
-
-    ticket.updated = Date.now()
-    ticket.notes.push(Note)
-    var HistoryItem = {
-      action: 'ticket:note:added',
-      description: 'Internal note was added',
-      owner: payload.owner || req.user._id
-    }
-    ticket.history.push(HistoryItem)
-
-    ticket.save(function (err, savedTicket) {
+  ticketModel.getTicketById(
+    payload.ticketid,
+    function (err, ticket) {
       if (err) return res.status(400).json({ success: false, error: err.message })
 
-      ticketModel.populate(savedTicket, 'subscribers notes.owner history.owner', function (err, savedTicket) {
-        if (err) return res.json({ success: true, ticket: savedTicket })
+      if (_.isUndefined(payload.note)) return res.status(400).json({ success: false, error: 'Invalid Post Data' })
 
-        emitter.emit('ticket:note:added', savedTicket, Note)
+      var marked = require('marked')
+      // var note = payload.note.replace(/(\r\n|\n\r|\r|\n)/g, "<br>");
+      var Note = {
+        owner: payload.owner || req.user._id,
+        date: new Date(),
+        note: marked(payload.note)
+      }
 
-        return res.json({ success: true, ticket: savedTicket })
+      ticket.updated = Date.now()
+      ticket.notes.push(Note)
+      var HistoryItem = {
+        action: 'ticket:note:added',
+        description: 'Internal note was added',
+        owner: payload.owner || req.user._id
+      }
+      ticket.history.push(HistoryItem)
+
+      ticket.save(function (err, savedTicket) {
+        if (err) return res.status(400).json({ success: false, error: err.message })
+
+        ticketModel.populate(savedTicket, 'subscribers notes.owner history.owner', function (err, savedTicket) {
+          if (err) return res.json({ success: true, ticket: savedTicket })
+
+          emitter.emit('ticket:note:added', savedTicket, Note)
+
+          return res.json({ success: true, ticket: savedTicket })
+        })
       })
-    })
-  })
+    },
+    organizationId
+  )
 }
 
 /**
@@ -1067,7 +1079,7 @@ apiTickets.postInternalNote = function (req, res) {
  *
  */
 apiTickets.getTypes = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var ticketType = require('../../../models/tickettype')
@@ -1083,7 +1095,7 @@ apiTickets.getType = function (req, res) {
   var id = req.params.id
   if (!id) return res.status(400).json({ success: false, error: 'Invalid Type ID' })
 
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var ticketType = require('../../../models/tickettype')
@@ -1121,7 +1133,7 @@ apiTickets.createType = function (req, res) {
   var ticketTypeSchema = require('../../../models/tickettype')
   var ticketPrioritiesSchema = require('../../../models/ticketpriority')
 
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   if (_.isUndefined(typeName) || typeName.length < 3)
@@ -1162,7 +1174,7 @@ apiTickets.updateType = function (req, res) {
   var data = req.body
   var ticketTypeSchema = require('../../../models/tickettype')
 
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   if (_.isUndefined(id) || _.isNull(id) || _.isNull(data) || _.isUndefined(data)) {
@@ -1189,7 +1201,7 @@ apiTickets.updateType = function (req, res) {
 apiTickets.typeAddPriority = function (req, res) {
   var id = req.params.id
   var data = req.body
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
   if (!id || !data || !data.priority) {
@@ -1223,7 +1235,7 @@ apiTickets.typeAddPriority = function (req, res) {
 apiTickets.typeRemovePriority = function (req, res) {
   var id = req.params.id
   var data = req.body
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
   if (!id || !data || !data.priority) {
@@ -1276,7 +1288,7 @@ apiTickets.deleteType = function (req, res) {
   var newTypeId = req.body.newTypeId
   var delTypeId = req.params.id
 
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   if (_.isUndefined(newTypeId) || _.isUndefined(delTypeId)) {
@@ -1328,7 +1340,7 @@ apiTickets.deleteType = function (req, res) {
 }
 
 apiTickets.createPriority = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var data = req.body
@@ -1359,7 +1371,7 @@ apiTickets.createPriority = function (req, res) {
 }
 
 apiTickets.getPriorities = function (req, res) {
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var ticketPrioritySchema = require('../../../models/ticketpriority')
@@ -1375,7 +1387,7 @@ apiTickets.getPriorities = function (req, res) {
 apiTickets.updatePriority = function (req, res) {
   var id = req.params.id
   var data = req.body
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (_.isUndefined(id) || _.isNull(id) || _.isNull(data) || _.isUndefined(data)) {
     return res.status(400).json({ success: false, error: 'Invalid Request Data' })
@@ -1407,7 +1419,7 @@ apiTickets.updatePriority = function (req, res) {
 apiTickets.deletePriority = function (req, res) {
   var id = req.params.id
   var newPriority = req.body.newPriority
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!id || !newPriority) {
     return res.status(400).json({ success: false, error: 'Invalid Request Data' })
@@ -1457,6 +1469,9 @@ apiTickets.deletePriority = function (req, res) {
  *
  */
 apiTickets.getTicketStats = function (req, res) {
+  var organizationId = req.organization._id
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
   var timespan = 30
   if (req.params.timespan) {
     timespan = parseInt(req.params.timespan)
@@ -1528,7 +1543,7 @@ apiTickets.getTicketStats = function (req, res) {
       .format('MM-DD-YYYY hh:mm:ssa')
 
     return res.send(obj)
-  })
+  }, organizationId)
   // return res.send(obj);
 }
 
@@ -1599,7 +1614,7 @@ function parseTicketStats (role, tickets, callback) {
  */
 apiTickets.getTicketStatsForGroup = function (req, res) {
   var groupId = req.params.group
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
   if (groupId === 0) return res.status(200).json({ success: false, error: 'Please Select Group.' })
@@ -1685,7 +1700,7 @@ apiTickets.getTicketStatsForGroup = function (req, res) {
  */
 apiTickets.getTicketStatsForUser = function (req, res) {
   var userId = req.params.user
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
   if (userId === 0) return res.status(200).json({ success: false, error: 'Please Select User.' })
@@ -1775,7 +1790,7 @@ apiTickets.getTicketStatsForUser = function (req, res) {
 apiTickets.getTagCount = function (req, res) {
   var cache = global.cache
   var timespan = req.params.timespan
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
@@ -1814,7 +1829,7 @@ apiTickets.getTopTicketGroups = function (req, res) {
   var ticketModel = require('../../../models/ticket')
   var top = req.params.top
   var timespan = req.params.timespan
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
@@ -1850,7 +1865,7 @@ apiTickets.getTopTicketGroups = function (req, res) {
 apiTickets.removeAttachment = function (req, res) {
   var ticketId = req.params.tid
   var attachmentId = req.params.aid
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
   if (_.isUndefined(ticketId) || _.isUndefined(attachmentId))
@@ -1865,25 +1880,29 @@ apiTickets.removeAttachment = function (req, res) {
     return res.status(401).json({ error: 'Invalid Permissions' })
 
   var ticketModel = require('../../../models/ticket')
-  ticketModel.getTicketById(organizationId, ticketId, function (err, ticket) {
-    if (err) return res.status(400).send('Invalid Ticket Id')
-    ticket.getAttachment(attachmentId, function (a) {
-      ticket.removeAttachment(user._id, attachmentId, function (err, ticket) {
-        if (err) return res.status(400).json({ error: 'Invalid Request.' })
-
-        var fs = require('fs')
-        var path = require('path')
-        var dir = path.join(__dirname, '../../../../public', a.path)
-        if (fs.existsSync(dir)) fs.unlinkSync(dir)
-
-        ticket.save(function (err, t) {
+  ticketModel.getTicketById(
+    ticketId,
+    function (err, ticket) {
+      if (err) return res.status(400).send('Invalid Ticket Id')
+      ticket.getAttachment(attachmentId, function (a) {
+        ticket.removeAttachment(user._id, attachmentId, function (err, ticket) {
           if (err) return res.status(400).json({ error: 'Invalid Request.' })
 
-          res.json({ success: true, ticket: t })
+          var fs = require('fs')
+          var path = require('path')
+          var dir = path.join(__dirname, '../../../../public', a.path)
+          if (fs.existsSync(dir)) fs.unlinkSync(dir)
+
+          ticket.save(function (err, t) {
+            if (err) return res.status(400).json({ error: 'Invalid Request.' })
+
+            res.json({ success: true, ticket: t })
+          })
         })
       })
-    })
-  })
+    },
+    organizationId
+  )
 }
 
 /**
@@ -1910,41 +1929,45 @@ apiTickets.removeAttachment = function (req, res) {
 apiTickets.subscribe = function (req, res) {
   var ticketId = req.params.id
   var data = req.body
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
   if (_.isUndefined(data.user) || _.isUndefined(data.subscribe))
     return res.status(400).json({ error: 'Invalid Post Data.' })
 
   var ticketModel = require('../../../models/ticket')
-  ticketModel.getTicketById(organizationId, ticketId, function (err, ticket) {
-    if (err) return res.status(400).json({ error: 'Invalid Ticket Id' })
+  ticketModel.getTicketById(
+    ticketId,
+    function (err, ticket) {
+      if (err) return res.status(400).json({ error: 'Invalid Ticket Id' })
 
-    async.series(
-      [
-        function (callback) {
-          if (data.subscribe) {
-            ticket.addSubscriber(data.user, function () {
-              callback()
-            })
-          } else {
-            ticket.removeSubscriber(data.user, function () {
-              callback()
-            })
+      async.series(
+        [
+          function (callback) {
+            if (data.subscribe) {
+              ticket.addSubscriber(data.user, function () {
+                callback()
+              })
+            } else {
+              ticket.removeSubscriber(data.user, function () {
+                callback()
+              })
+            }
           }
+        ],
+        function () {
+          ticket.save(function (err, ticket) {
+            if (err) return res.status(400).json({ error: err })
+
+            emitter.emit('ticket:subscriber:update', ticket)
+
+            res.json({ success: true, ticket: ticket })
+          })
         }
-      ],
-      function () {
-        ticket.save(function (err, ticket) {
-          if (err) return res.status(400).json({ error: err })
-
-          emitter.emit('ticket:subscriber:update', ticket)
-
-          res.json({ success: true, ticket: ticket })
-        })
-      }
-    )
-  })
+      )
+    },
+    organizationId
+  )
 }
 
 /**
@@ -1964,7 +1987,7 @@ apiTickets.subscribe = function (req, res) {
  */
 apiTickets.getTags = function (req, res) {
   var tagSchema = require('../../../models/tag')
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
@@ -1995,7 +2018,7 @@ apiTickets.getTags = function (req, res) {
  */
 apiTickets.getOverdue = function (req, res) {
   var settingSchema = require('../../../models/setting')
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
@@ -2051,7 +2074,7 @@ apiTickets.getOverdue = function (req, res) {
 
 apiTickets.getDeletedTickets = function (req, res) {
   var ticketSchema = require('../../../models/ticket')
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
@@ -2059,12 +2082,12 @@ apiTickets.getDeletedTickets = function (req, res) {
     if (err) return res.status(500).json({ success: false, error: err })
 
     return res.json({ success: true, count: tickets.length, deletedTickets: tickets })
-  })
+  }, organizationId)
 }
 
 apiTickets.restoreDeleted = function (req, res) {
   var postData = req.body
-  var organizationId = req.params.organizationId
+  var organizationId = req.organization._id
 
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
   if (!postData || !postData._id) return res.status(400).json({ success: false, error: 'Invalid Post Data' })

@@ -21,6 +21,7 @@ import Button from 'components/Button'
 import SingleSelect from 'components/SingleSelect'
 
 import helpers from 'lib/helpers'
+import { withTranslation } from 'react-i18next';
 
 class DeleteTicketTypeModal extends React.Component {
   constructor (props) {
@@ -53,7 +54,7 @@ class DeleteTicketTypeModal extends React.Component {
   }
 
   render () {
-    const { type } = this.props
+    const { type, t } = this.props
     const mappedTypes = this.getTicketTypes()
       .filter(obj => {
         return type.get('name') !== obj.get('name')
@@ -65,9 +66,9 @@ class DeleteTicketTypeModal extends React.Component {
       <BaseModal {...this.props} options={{ bgclose: false }}>
         <form className={'uk-form-stacked'} onSubmit={e => this.onFormSubmit(e)}>
           <div className='uk-margin-medium-bottom uk-clearfix'>
-            <h2>Remove Ticket Type</h2>
+            <h2>{t('Remove Ticket Type')}</h2>
             <span>
-              Please select the ticket type you wish to reassign tickets to in order to delete this ticket type.
+              {t('Please select the ticket type you wish to reassign tickets to in order to delete this ticket type.')}
             </span>
             {/*<hr style={{ margin: '10px 0' }} />*/}
           </div>
@@ -84,15 +85,14 @@ class DeleteTicketTypeModal extends React.Component {
           </div>
           <div className='uk-margin-medium-bottom uk-clearfix'>
             <span className='uk-text-danger'>
-              WARNING: This will change all tickets with type <strong>{type.get('name')}</strong> to the selected ticket
-              type.
+              {t('WarningTT')} <strong>{type.get('name')}</strong> {t('WarningTT2')}
               <br />
-              <strong>This is permanent!</strong>
+              <strong>{t('This is permanent!')}</strong>
             </span>
           </div>
           <div className='uk-modal-footer uk-text-right'>
-            <Button text={'Cancel'} flat={true} waves={true} extraClass={'uk-modal-close'} />
-            <Button text={'Delete'} style={'danger'} flat={true} type={'submit'} />
+            <Button text={t('Cancel')} flat={true} waves={true} extraClass={'uk-modal-close'} />
+            <Button text={t('Delete')} style={'danger'} flat={true} type={'submit'} />
           </div>
         </form>
       </BaseModal>
@@ -110,7 +110,7 @@ const mapStateToProps = state => ({
   settings: state.settings.settings
 })
 
-export default connect(
+export default withTranslation('common')(connect(
   mapStateToProps,
   { deleteTicketType }
-)(DeleteTicketTypeModal)
+)(DeleteTicketTypeModal))
