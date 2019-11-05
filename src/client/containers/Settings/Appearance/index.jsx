@@ -94,16 +94,16 @@ const colorMap = {
 }
 
 class AppearanceSettings extends React.Component {
-  constructor (props) {
+  constructor(props) {
     super(props)
     this.state = {
       selectedColorScheme: 'light'
     }
   }
-  componentDidMount () {
+  componentDidMount() {
     console.log(this.props)
   }
-  componentDidUpdate () {
+  componentDidUpdate() {
     const colorScheme = this.calcColorScheme()
     if (this.state.selectedColorScheme !== colorScheme)
       this.setState({
@@ -111,17 +111,17 @@ class AppearanceSettings extends React.Component {
       })
   }
 
-  getSettingsValue (name) {
+  getSettingsValue(name) {
     return this.props.settings.getIn(['settings', name, 'value'])
       ? this.props.settings.getIn(['settings', name, 'value'])
       : ''
   }
 
-  updateSetting (name, value, stateName) {
+  updateSetting(name, value, stateName) {
     this.props.updateSetting({ name, value, stateName })
   }
 
-  calcColorScheme () {
+  calcColorScheme() {
     let colorScheme = 'light'
     if (this.getSettingsValue('colorSecondary') === '#2f3640') colorScheme = 'dark'
     else if (this.getSettingsValue('colorHeaderBG') === '#112d4e') colorScheme = 'bluejean'
@@ -134,7 +134,7 @@ class AppearanceSettings extends React.Component {
     return colorScheme
   }
 
-  onBuiltInColorSelectChange (e) {
+  onBuiltInColorSelectChange(e) {
     if (!e.target || !e.target.value) return
     this.headerBGColorSelect.setState(
       { selectedColor: colorMap[e.target.value].headerBG },
@@ -162,7 +162,7 @@ class AppearanceSettings extends React.Component {
     )
   }
 
-  saveColorScheme () {
+  saveColorScheme() {
     const colors = [
       { name: 'color:headerbg', value: this.headerBGColorSelect.state.selectedColor },
       { name: 'color:headerprimary', value: this.headerPrimaryColorSelect.state.selectedColor },
@@ -175,7 +175,7 @@ class AppearanceSettings extends React.Component {
     this.props.updateColorScheme(colors)
   }
 
-  render () {
+  render() {
     const { active } = this.props
 
     return (
@@ -190,7 +190,7 @@ class AppearanceSettings extends React.Component {
           component={
             <UploadButtonWithX
               buttonText={'Upload Logo'}
-              uploadAction={`/${this.props.common.organizationId}/settings/general/uploadlogo`}
+              uploadAction={`/${this.props.common.organizationSlug}/settings/general/uploadlogo`}
               extAllowed={'*.(jpg|jpeg|gif|png)'}
               showX={this.getSettingsValue('hasCustomLogo')}
               onXClick={() => {
@@ -213,7 +213,7 @@ class AppearanceSettings extends React.Component {
           component={
             <UploadButtonWithX
               buttonText={'Upload Logo'}
-              uploadAction={`/${this.props.common.organizationId}/settings/general/uploadpagelogo`}
+              uploadAction={`/${this.props.common.organizationSlug}/settings/general/uploadpagelogo`}
               extAllowed={'*.(jpg|jpeg|gif|png)'}
               showX={this.getSettingsValue('hasCustomPageLogo')}
               onXClick={() => {
@@ -229,7 +229,7 @@ class AppearanceSettings extends React.Component {
           component={
             <UploadButtonWithX
               buttonText={'Upload Favicon'}
-              uploadAction={`/${this.props.common.organizationId}/settings/general/uploadfavicon`}
+              uploadAction={`/${this.props.common.organizationSlug}/settings/general/uploadfavicon`}
               extAllowed={'*.(jpg|jpeg|gif|png|ico)'}
               showX={this.getSettingsValue('hasCustomFavicon')}
               onXClick={() => {

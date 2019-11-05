@@ -108,7 +108,7 @@ apiSettings.getSingleSetting = function (req, res) {
  */
 apiSettings.updateSetting = function (req, res) {
   var organizationId = req.organization._id
-  console.log(organizationId)
+  // console.log(organizationId)
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   var postData = req.body
@@ -177,7 +177,7 @@ apiSettings.updateTemplateSubject = function (req, res) {
   var id = req.params.id
   var subject = req.body.subject
   var organizationId = req.organization._id
-  console.log(organizationId)
+  // console.log(organizationId)
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   if (!subject) return res.status(400).json({ sucess: false, error: 'Invalid PUT data' })
@@ -206,7 +206,7 @@ apiSettings.updateRoleOrder = function (req, res) {
   if (!req.body.roleOrder) return res.status(400).json({ success: false, error: 'Invalid PUT Data' })
   var RoleOrderSchema = require('../../../models/roleorder')
   var organizationId = req.organization._id
-  console.log(organizationId)
+  // console.log(organizationId)
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   RoleOrderSchema.getOrder(function (err, order) {

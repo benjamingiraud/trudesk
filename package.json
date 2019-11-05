@@ -30,6 +30,7 @@
     "body-parser": "1.18.3",
     "busboy": "0.2.14",
     "chance": "1.0.18",
+    "change-case": "3.1.0",
     "cheerio": "1.0.0-rc.2",
     "clone": "2.1.2",
     "clsx": "1.0.4",

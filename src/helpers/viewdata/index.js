@@ -25,8 +25,10 @@ viewdata.users = {}
 
 viewController.getData = function (request, cb) {
   const organizationId = request.organization._id
+  const organizationSlug = request.organization.slug
   console.log('in view data')
   viewdata.organizationId = organizationId
+  viewdata.organizationSlug = organizationSlug
   async.parallel(
     [
       function (callback) {

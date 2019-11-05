@@ -45,10 +45,10 @@ export default function (store) {
     )
 
     ReactDOM.render(
-      <Suspense fallback={<Loader/>}>
-        <TicketsContainerWithProvider/>
+      <Suspense fallback={<Loader />}>
+        <TicketsContainerWithProvider />
       </Suspense>
-    , document.getElementById('tickets-container'))
+      , document.getElementById('tickets-container'))
   }
 
   if (document.getElementById('single-ticket-container')) {
@@ -61,10 +61,10 @@ export default function (store) {
     )
 
     ReactDOM.render(
-      <Suspense fallback={<Loader/>}>
-        <SingleTicketContainerWithProvider/>
+      <Suspense fallback={<Loader />}>
+        <SingleTicketContainerWithProvider />
       </Suspense>
-    , document.getElementById('single-ticket-container'))
+      , document.getElementById('single-ticket-container'))
   }
 
   if (document.getElementById('accounts-container')) {

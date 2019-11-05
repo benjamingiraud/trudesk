@@ -526,7 +526,7 @@ class SingleTicketContainer extends React.Component {
                     <ul className='button-group'>
                       <li className='pagination'>
                         <a
-                          href={`/${this.props.common.organizationId}/tickets/print/${this.ticket.uid}`}
+                          href={`/${this.props.common.organizationSlug}/tickets/print/${this.ticket.uid}`}
                           className='btn no-ajaxy'
                           style={{ borderRadius: 3, marginRight: 5 }}
                           rel='noopener noreferrer'

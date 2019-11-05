@@ -85,7 +85,7 @@ class AccountsContainer extends React.Component {
 
   getUsersWithPage (page) {
     this.hasMore = false
-    this.props.fetchAccounts({ page, limit: 25, type: this.props.view, showDeleted: true, organizationId: this.props.common.organizationId }).then(({ response }) => {
+    this.props.fetchAccounts({ page, limit: 25, type: this.props.view, showDeleted: true, organizationId: this.props.common.organizationSlug }).then(({ response }) => {
       this.hasMore = response.count >= 25
     })
   }
@@ -97,7 +97,7 @@ class AccountsContainer extends React.Component {
       if (search.length > 2) {
         this.props.unloadAccounts().then(() => {
           this.hasMore = false
-          this.props.fetchAccounts({ limit: -1, search: search, organizationId: this.props.common.organizationId  }).then(({ response }) => {
+          this.props.fetchAccounts({ limit: -1, search: search, organizationId: this.props.common.organizationSlug  }).then(({ response }) => {
             this.pageStart = -1
             this.hasMore = response.count >= 25
           })

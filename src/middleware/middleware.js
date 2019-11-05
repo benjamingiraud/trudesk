@@ -42,7 +42,7 @@ middleware.checkOrganization = function (req, res, next) {
 
   var organizationSchema = require('../models/organization')
 
-  organizationSchema.getById(organizationId, function (err, organization) {
+  organizationSchema.getBySlug(organizationId, function (err, organization) {
     if (err) return res.redirect(404)
     if (!organization) return res.redirect(404)
 
@@ -54,16 +54,17 @@ middleware.checkOrganization = function (req, res, next) {
 middleware.redirectToDashboardIfLoggedIn = function (req, res, next) {
   if (!req.organization) return res.redirect(404)
   let organizationId = req.organization._id
+  let organizationSlug = req.organization.slug
   if (req.user && req.user.organizationId === organizationId) {
     if (req.user.hasL2Auth) {
       return middleware.ensurel2Auth(req, res, next)
     }
-
+    console.log(req.user)
     if (req.user.role === 'user') {
-      return res.redirect(`/${organizationId}/tickets`)
+      return res.redirect(`/${organizationSlug}/tickets`)
     }
 
-    return res.redirect(`/${organizationId}/dashboard`)
+    return res.redirect(`/${organizationSlug}/dashboard`)
   }
 
   return next()
@@ -75,7 +76,7 @@ middleware.redirectToLogin = function (req, res, next) {
       req.session.redirectUrl = req.url
     }
 
-    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    if (req.organization) return res.redirect(`/${req.organization.slug}`)
     return res.redirect(404)
   }
 
@@ -104,11 +105,11 @@ middleware.redirectIfUser = function (req, res, next) {
       res.session.redirectUrl = req.url
     }
 
-    return res.redirect(`/${req.organization._id}`)
+    return res.redirect(`/${req.organization.slug}`)
   }
 
   if (!req.user.role.isAdmin && !req.user.role.isAgent) {
-    return res.redirect(301, `/${req.organization._id}/tickets`)
+    return res.redirect(301, `/${req.organization.slug}/tickets`)
   }
 
   return next()
@@ -255,7 +256,6 @@ middleware.canUser = function (action) {
 
 middleware.isAdmin = function (req, res, next) {
   var roles = global.roles
-  console.log(roles)
   var role = _.find(roles, { _id: req.user.role._id })
   role.isAdmin = role.grants.indexOf('admin:*') !== -1
 

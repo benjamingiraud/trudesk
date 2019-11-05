@@ -62,7 +62,7 @@ class TicketsContainer extends React.Component {
     socket.socket.on('$trudesk:client:ticket:updated', this.onTicketUpdated)
     socket.socket.on('$trudesk:client:ticket:deleted', this.onTicketDeleted)
 
-    this.props.fetchTickets({ limit: 50, page: this.props.page, type: this.props.view, filter: this.props.filter, organizationId: this.props.common.organizationId })
+    this.props.fetchTickets({ limit: 50, page: this.props.page, type: this.props.view, filter: this.props.filter, organizationId: this.props.common.organizationSlug })
   }
 
   componentDidUpdate() {
@@ -100,7 +100,7 @@ class TicketsContainer extends React.Component {
   }
 
   onTicketCreated(ticket) {
-    if (this.props.page === '0') this.props.ticketEvent({ type: 'created', data: ticket, organizationId: this.props.common.organizationId })
+    if (this.props.page === '0') this.props.ticketEvent({ type: 'created', data: ticket, organizationId: this.props.common.organizationSlug })
   }
 
   onTicketUpdated(data) {
@@ -400,7 +400,7 @@ class TicketsContainer extends React.Component {
                       const td = e.target.closest('td')
                       const input = td.getElementsByTagName('input')
                       if (input.length > 0) return false
-                      History.pushState(null, `Ticket-${ticket.get('uid')}`, `/${ticket.get('organizationId')}/tickets/${ticket.get('uid')}`)
+                      History.pushState(null, `Ticket-${ticket.get('uid')}`, `/${this.props.common.organizationSlug}/tickets/${ticket.get('uid')}`)
                     }}
                   >
                     <TableCell

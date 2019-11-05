@@ -87,7 +87,6 @@ function rolesDefault (callback, organizationId) {
           'User',
           function (err, role) {
             if (err) return done(err)
-            console.log(1, role ? 'roleOk' : 'role.pb')
             if (role) return done()
 
             roleSchema.create(
@@ -127,7 +126,6 @@ function rolesDefault (callback, organizationId) {
           'Support',
           function (err, role) {
             if (err) return done(err)
-            console.log(2, role ? 'roleOk' : 'role.pb')
             if (role) {
               return done()
               // role.updateGrants(supportGrants, done);
@@ -150,7 +148,6 @@ function rolesDefault (callback, organizationId) {
           'Admin',
           function (err, role) {
             if (err) return done(err)
-            console.log(3, role ? 'roleOk' : 'role.pb')
             if (role) return done()
             // role.updateGrants(adminGrants, done);
             else {
@@ -172,7 +169,6 @@ function rolesDefault (callback, organizationId) {
         var roleOrderSchema = require('../models/roleorder')
         roleOrderSchema.getOrder(function (err, roleOrder) {
           if (err) return done(err)
-          console.log(4, roleOrder ? 'roleOrderOk' : 'roleOrder.pb')
           if (roleOrder) return done()
 
           roleSchema.getRoles(function (err, roles) {
@@ -207,7 +203,6 @@ function rolesDefault (callback, organizationId) {
 function defaultUserRole (callback, organizationId) {
   var roleOrderSchema = require('../models/roleorder')
   roleOrderSchema.getOrderLean(function (err, roleOrder) {
-    console.log(5, roleOrder ? 'roleOrderOk' : 'roleOrder.pb')
     if (err) return callback(err)
     if (!roleOrder) return callback()
 
@@ -215,7 +210,6 @@ function defaultUserRole (callback, organizationId) {
       'role:user:default',
       function (err, roleDefault) {
         if (err) return callback(err)
-        console.log(6, roleDefault ? 'roleDefaultOk' : 'roleOrder.pb')
 
         if (roleDefault) return callback()
 

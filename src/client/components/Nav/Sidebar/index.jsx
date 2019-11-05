@@ -31,6 +31,7 @@ class Sidebar extends React.Component {
   }
 
   componentDidMount() {
+    console.log(this.props)
     Helpers.UI.getPlugins((err, result) => {
       if (!err && result.plugins) {
         this.setState({ plugins: result.plugins })
@@ -78,14 +79,14 @@ class Sidebar extends React.Component {
 
   render() {
     const { t } = this.props;
-    const { activeItem, activeSubItem, sessionUser } = this.props
+    const { activeItem, activeSubItem, sessionUser, common } = this.props
     return (
       <ul className='side-nav'>
         {sessionUser && Helpers.canUser('agent:*', true) && (
           <SidebarItem
             text={t('Dashboard')}
             icon='dashboard'
-            href={`/${sessionUser.organizationId}/dashboard`}
+            href={`/${common.organizationSlug}/dashboard`}
             class='navHome'
             active={activeItem === 'dashboard'}
           />
@@ -94,7 +95,7 @@ class Sidebar extends React.Component {
           <SidebarItem
             text={t('Tickets')}
             icon='assignment'
-            href={`/${sessionUser.organizationId}/tickets`}
+            href={`/${common.organizationSlug}/tickets`}
             class='navTickets no-ajaxy'
             hasSubmenu={true}
             subMenuTarget='tickets'
@@ -104,34 +105,34 @@ class Sidebar extends React.Component {
               <SubmenuItem
                 text={t('Active')}
                 icon='timer'
-                href={`/${sessionUser.organizationId}/tickets/active`}
+                href={`/${common.organizationSlug}/tickets/active`}
                 active={activeSubItem === 'tickets-active'}
               />
               <SubmenuItem
                 text={t('Assigned')}
                 icon='assignment_ind'
-                href={`/${sessionUser.organizationId}/tickets/assigned`}
+                href={`/${common.organizationSlug}/tickets/assigned`}
                 active={activeSubItem === 'tickets-assigned'}
               />
               <SubmenuItem
                 text={t('Unassigned')}
                 icon='person_add_disabled'
-                href={`/${sessionUser.organizationId}/tickets/unassigned`}
+                href={`/${common.organizationSlug}/tickets/unassigned`}
                 active={activeSubItem === 'tickets-unassigned'}
               />
               <NavSeparator />
-              <SubmenuItem text={t('New')} icon='&#xE24D;' href={`/${sessionUser.organizationId}/tickets/new`} active={activeSubItem === 'tickets-new'} />
+              <SubmenuItem text={t('New')} icon='&#xE24D;' href={`/${common.organizationSlug}/tickets/new`} active={activeSubItem === 'tickets-new'} />
               <SubmenuItem
                 text={t('Pending')}
                 icon='&#xE629;'
-                href={`/${sessionUser.organizationId}/tickets/pending`}
+                href={`/${common.organizationSlug}/tickets/pending`}
                 active={activeSubItem === 'tickets-pending'}
               />
-              <SubmenuItem text={t('ticket:Open')} icon='&#xE2C8;' href={`/${sessionUser.organizationId}/tickets/open`} active={activeSubItem === 'tickets-open'} />
+              <SubmenuItem text={t('ticket:Open')} icon='&#xE2C8;' href={`/${common.organizationSlug}/tickets/open`} active={activeSubItem === 'tickets-open'} />
               <SubmenuItem
                 text={t('Closed')}
                 icon='&#xE2C7;'
-                href={`/${sessionUser.organizationId}/tickets/closed`}
+                href={`/${common.organizationSlug}/tickets/closed`}
                 active={activeSubItem === 'tickets-closed'}
               />
             </Submenu>
@@ -140,7 +141,7 @@ class Sidebar extends React.Component {
         <SidebarItem
           text={t('Messages')}
           icon='chat'
-          href={`/${sessionUser.organizationId}/messages`}
+          href={`/${common.organizationSlug}/messages`}
           class='navMessages'
           active={activeItem === 'messages'}
         />
@@ -148,7 +149,7 @@ class Sidebar extends React.Component {
           <SidebarItem
             text={t('Accounts')}
             icon='&#xE7FD;'
-            href={`/${sessionUser.organizationId}/accounts`}
+            href={`/${common.organizationSlug}/accounts`}
             class='navAccounts'
             active={activeItem === 'accounts'}
             subMenuTarget='accounts'
@@ -157,14 +158,14 @@ class Sidebar extends React.Component {
             {sessionUser && Helpers.canUser('agent:*', true) && (
               <Submenu id='accounts'>
                 <SubmenuItem
-                  href={`/${sessionUser.organizationId}/accounts/customer`}
+                  href={`/${common.organizationSlug}/accounts/customer`}
                   text={t('Customers')}
                   icon={'account_box'}
                   active={activeSubItem === 'accounts-customers'}
                 />
                 {sessionUser && Helpers.canUser('agent:*', true) && (
                   <SubmenuItem
-                    href={`/${sessionUser.organizationId}/accounts/agents`}
+                    href={`/${common.organizationSlug}/accounts/agents`}
                     text={t('Agents')}
                     icon={'account_circle'}
                     active={activeSubItem === 'accounts-agents'}
@@ -172,7 +173,7 @@ class Sidebar extends React.Component {
                 )}
                 {sessionUser && Helpers.canUser('admin:*') && (
                   <SubmenuItem
-                    href={`/${sessionUser.organizationId}/accounts/admin`}
+                    href={`/${common.organizationSlug}/accounts/admin`}
                     text={t('Admins')}
                     icon={'how_to_reg'}
                     active={activeSubItem === 'accounts-admins'}
@@ -186,19 +187,19 @@ class Sidebar extends React.Component {
           <SidebarItem
             text={t('Customer Groups')}
             icon='supervisor_account'
-            href={`/${sessionUser.organizationId}/groups`}
+            href={`/${common.organizationSlug}/groups`}
             class='navGroups'
             active={activeItem === 'groups'}
           />
         )}
         {sessionUser && Helpers.canUser('teams:view') && (
-          <SidebarItem text={t('Teams')} icon='wc' href={`/${sessionUser.organizationId}/teams`} class='navTeams' active={activeItem === 'teams'} />
+          <SidebarItem text={t('Teams')} icon='wc' href={`/${common.organizationSlug}/teams`} class='navTeams' active={activeItem === 'teams'} />
         )}
         {sessionUser && Helpers.canUser('departments:view') && (
           <SidebarItem
             text={t('Departments')}
             icon='domain'
-            href={`/${sessionUser.organizationId}/departments`}
+            href={`/${common.organizationSlug}/departments`}
             class='navTeams'
             active={activeItem === 'departments'}
           />
@@ -207,7 +208,7 @@ class Sidebar extends React.Component {
           <SidebarItem
             text={t('Reports')}
             icon='assessment'
-            href={`/${sessionUser.organizationId}/reports/generate`}
+            href={`/${common.organizationSlug}/reports/generate`}
             class='navReports no-ajaxy'
             hasSubmenu={true}
             subMenuTarget='reports'
@@ -217,20 +218,20 @@ class Sidebar extends React.Component {
               <SubmenuItem
                 text={t('Generate')}
                 icon='timeline'
-                href={`/${sessionUser.organizationId}/reports/generate`}
+                href={`/${common.organizationSlug}/reports/generate`}
                 active={activeSubItem === 'reports-generate'}
               />
               <NavSeparator />
               <SubmenuItem
                 text={t('Group Breakdown')}
                 icon='supervisor_account'
-                href={`/${sessionUser.organizationId}/reports/breakdown/group`}
+                href={`/${common.organizationSlug}/reports/breakdown/group`}
                 active={activeSubItem === 'reports-breakdown-group'}
               />
               <SubmenuItem
                 text={t('User Breakdown')}
                 icon='perm_identity'
-                href={`/${sessionUser.organizationId}/reports/breakdown/user`}
+                href={`/${common.organizationSlug}/reports/breakdown/user`}
                 active={activeSubItem === 'reports-breakdown-user'}
               />
             </Submenu>
@@ -243,7 +244,7 @@ class Sidebar extends React.Component {
           <SidebarItem
             text={t('Notices')}
             icon='warning'
-            href={`/${sessionUser.organizationId}/notices`}
+            href={`/${common.organizationSlug}/notices`}
             class='navNotices'
             active={activeItem === 'notices'}
           />
@@ -253,41 +254,41 @@ class Sidebar extends React.Component {
           <SidebarItem
             text={t('Settings')}
             icon='settings'
-            href={`/${sessionUser.organizationId}/settings/general`}
+            href={`/${common.organizationSlug}/settings/general`}
             class='navSettings no-ajaxy'
             hasSubmenu={true}
             subMenuTarget='settings'
             active={activeItem === 'settings'}
           >
             <Submenu id='settings'>
-              <SubmenuItem text={t('General')} icon='tune' href={`/${sessionUser.organizationId}/settings/`} active={activeSubItem === 'settings-general'} />
+              <SubmenuItem text={t('General')} icon='tune' href={`/${common.organizationSlug}/settings/`} active={activeSubItem === 'settings-general'} />
               <SubmenuItem
                 text={t('Appearance')}
                 icon='style'
-                href={`/${sessionUser.organizationId}/settings/appearance`}
+                href={`/${common.organizationSlug}/settings/appearance`}
                 active={activeSubItem === 'settings-appearance'}
               />
               <SubmenuItem
                 text={t('Tickets')}
                 icon='assignment'
-                href={`/${sessionUser.organizationId}/settings/tickets`}
+                href={`/${common.organizationSlug}/settings/tickets`}
                 active={activeSubItem === 'settings-tickets'}
               />
               <SubmenuItem
                 text={t('Permissions')}
                 icon='security'
-                href={`/${sessionUser.organizationId}/settings/permissions`}
+                href={`/${common.organizationSlug}/settings/permissions`}
                 active={activeSubItem === 'settings-permissions'}
               />
               <SubmenuItem
                 text={t('Mailer')}
                 icon='email'
-                href={`/${sessionUser.organizationId}/settings/mailer`}
+                href={`/${common.organizationSlug}/settings/mailer`}
                 active={activeSubItem === 'settings-mailer'}
               />
               {/*<SubmenuItem text="Notifications" icon="" href="/settings/notifications" active={activeSubItem === 'settings-notifications'} />*/}
               <SubmenuItem
-                href={`/${sessionUser.organizationId}/settings/elasticsearch`}
+                href={`/${common.organizationSlug}/settings/elasticsearch`}
                 text={t('Elasticsearch')}
                 icon={'search'}
                 active={activeSubItem === 'settings-elasticsearch'}
@@ -295,26 +296,26 @@ class Sidebar extends React.Component {
               <SubmenuItem
                 text={t('Push Service')}
                 icon='mobile_friendly'
-                href={`/${sessionUser.organizationId}/settings/tps`}
+                href={`/${common.organizationSlug}/settings/tps`}
                 active={activeSubItem === 'settings-tps'}
               />
               <SubmenuItem
                 text={t('Backup/Restore')}
                 icon='archive'
-                href={`/${sessionUser.organizationId}/settings/backup`}
+                href={`/${common.organizationSlug}/settings/backup`}
                 active={activeSubItem === 'settings-backup'}
               />
               <SubmenuItem
                 text={t('Legal')}
                 icon='gavel'
-                href={`/${sessionUser.organizationId}/settings/legal`}
+                href={`/${common.organizationSlug}/settings/legal`}
                 active={activeSubItem === 'settings-legal'}
               />
               {sessionUser && Helpers.canUser('settings:logs') && (
                 <SubmenuItem
                   text={t('Logs')}
                   icon='remove_from_queue'
-                  href={`/${sessionUser.organizationId}/settings/logs`}
+                  href={`/${common.organizationSlug}/settings/logs`}
                   hasSeperator={true}
                   active={activeSubItem === 'settings-logs'}
                 />
@@ -335,13 +336,15 @@ Sidebar.propTypes = {
   activeItem: PropTypes.string.isRequired,
   activeSubItem: PropTypes.string.isRequired,
   sessionUser: PropTypes.object,
-  plugins: PropTypes.array
+  plugins: PropTypes.array,
+  common: PropTypes.object
 }
 
 const mapStateToProps = state => ({
   activeItem: state.sidebar.activeItem,
   activeSubItem: state.sidebar.activeSubItem,
-  sessionUser: state.shared.sessionUser
+  sessionUser: state.shared.sessionUser,
+  common: state.common,
 })
 
 export default withTranslation('common')(connect(

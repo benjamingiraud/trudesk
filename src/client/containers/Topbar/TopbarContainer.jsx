@@ -49,7 +49,7 @@ class TopbarContainer extends React.Component {
 
   @observable showInfoBanner = true
 
-  constructor (props) {
+  constructor(props) {
     super(props)
     this.onSocketUpdateNotifications = this.onSocketUpdateNotifications.bind(this)
     this.onSocketUpdateUsers = this.onSocketUpdateUsers.bind(this)
@@ -58,7 +58,7 @@ class TopbarContainer extends React.Component {
     this.onSocketClearNotice = this.onSocketClearNotice.bind(this)
   }
 
-  componentDidMount () {
+  componentDidMount() {
     socket.socket.on('updateNotifications', this.onSocketUpdateNotifications)
     socket.socket.on('updateUsers', this.onSocketUpdateUsers)
     socket.socket.on('$trudesk:notice:show', this.onSocketShowNotice)
@@ -72,24 +72,24 @@ class TopbarContainer extends React.Component {
     this.shouldShowBanner()
   }
 
-  componentWillUnmount () {
+  componentWillUnmount() {
     socket.socket.off('updateNotifications', this.onSocketUpdateNotifications)
     socket.socket.off('updateUsers', this.onSocketUpdateUsers)
     socket.socket.off('$trudesk:notice:show', this.onSocketShowNotice)
     socket.socket.off('updateClearNotice', this.onSocketClearNotice)
   }
 
-  shouldShowBanner () {
+  shouldShowBanner() {
     const hasSeen = Cookies.get('trudesk_info_banner_closed') === 'true'
     if (hasSeen) this.showInfoBanner = false
   }
 
-  closeInfo () {
+  closeInfo() {
     Cookies.set('trudesk_info_banner_closed', 'true')
     this.showInfoBanner = false
   }
 
-  showNotice (notice, cookieName) {
+  showNotice(notice, cookieName) {
     // We Will move this sooner or later to somewhere more appropriate
     this.props.showNotice(notice)
     if (cookieName) {
@@ -105,7 +105,7 @@ class TopbarContainer extends React.Component {
     }
   }
 
-  onSocketShowNotice (data) {
+  onSocketShowNotice(data) {
     this.props.showNotice(data)
     const cookieName = data.name + '_' + helpers.formatDate(data.activeDate, 'MMMDDYYYY_HHmmss')
     this.showNotice(data, cookieName)
@@ -113,30 +113,30 @@ class TopbarContainer extends React.Component {
     helpers.resizeAll()
   }
 
-  onSocketClearNotice () {
+  onSocketClearNotice() {
     this.props.clearNotice()
     this.props.hideModal('NOTICE_ALERT')
 
     helpers.resizeAll()
   }
 
-  onSocketUpdateNotifications (data) {
+  onSocketUpdateNotifications(data) {
     if (data.count !== this.notificationCount) this.notificationCount = data.count
   }
 
-  onSocketUpdateUsers (data) {
+  onSocketUpdateUsers(data) {
     delete data[this.props.sessionUser.username]
     const count = size(data)
     if (count !== this.activeUserCount) this.activeUserCount = count
   }
 
-  static onConversationsClicked (e) {
+  static onConversationsClicked(e) {
     e.preventDefault()
 
     socket.ui.socket.emit('updateMailNotifications') // Pointless right now - No Receiver on server
   }
 
-  render () {
+  render() {
     const { viewdata, sessionUser, t } = this.props
     return (
       <div>
@@ -242,9 +242,9 @@ class TopbarContainer extends React.Component {
                           </a>
                           <Dropdown small={true}>
                             <DropdownHeader text={viewdata.loggedInAccount.fullname} />
-                            <DropdownItem text={t('Profile')} href={`/${sessionUser.organizationId}/profile`} />
+                            <DropdownItem text={t('Profile')} href={`/${this.props.viewdata.organizationSlug}/profile`} />
                             <DropdownSeparator />
-                            <DropdownItem text={t('Logout')} href={`/${sessionUser.organizationId}/logout`} />
+                            <DropdownItem text={t('Logout')} href={`/${this.props.viewdata.organizationSlug}/logout`} />
                           </Dropdown>
                         </DropdownTrigger>
                       </div>
@@ -252,7 +252,7 @@ class TopbarContainer extends React.Component {
                   </ul>
                   <NotificationsDropdownPartial
                     shortDateFormat={viewdata.shortDateFormat}
-                    organizationId={viewdata.organizationId}
+                    organizationId={this.props.viewdata.organizationSlug}
                     timezone={viewdata.timezone}
                     onViewAllNotificationsClick={() => this.props.showModal('VIEW_ALL_NOTIFICATIONS')}
                   />

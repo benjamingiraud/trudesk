@@ -17,6 +17,7 @@ var _ = require('lodash')
 var winston = require('winston')
 var async = require('async')
 var Chance = require('chance')
+var changeCase = require('change-case')
 
 var OrganizationSchema = require('../../../models/organization')
 
@@ -58,212 +59,221 @@ var apiOrganization = {}
 apiOrganization.create = function (req, res) {
   var postData = req.body
   var user = postData.user
+  var swiziApiKey = postData.swiziApiKey
+  var name = postData.name
 
-  if (_.isNil(user)) return res.status(400).send({ success: false, error: 'Invalid Post Data' })
+  if (_.isNil(name) || _.isNil(user) || _.isNil(swiziApiKey))
+    return res.status(400).send({ success: false, error: 'Invalid Post Data' })
+  let slug = changeCase.paramCase(name)
+  OrganizationSchema.find({ slug: slug }, function (err, r) {
+    console.log(err, r)
+    if (r.length) return res.status(409).send({ success: false, error: 'Organization already exists' })
+    else {
+      var organization = new OrganizationSchema(postData)
 
-  var organization = new OrganizationSchema(postData)
+      organization.save(function (err, organization) {
+        if (err) {
+          winston.debug(err)
+          return res.status(400).send({ success: false, error: 'Invalid Post Data' })
+        }
+        const organizationId = organization._id
 
-  organization.save(function (err, organization) {
-    if (err) {
-      winston.debug(err)
-      return res.status(400).send({ success: false, error: 'Invalid Post Data' })
-    }
-    const organizationId = organization._id
+        var roleSchema = require('../../../models/role')
+        var UserSchema = require('../../../models/user')
+        var TicketTypeSchema = require('../../../models/tickettype')
+        var SettingsSchema = require('../../../models/setting')
 
-    var roleSchema = require('../../../models/role')
-    var UserSchema = require('../../../models/user')
-    var TicketTypeSchema = require('../../../models/tickettype')
-    var SettingsSchema = require('../../../models/setting')
-
-    async.waterfall(
-      [
-        function (next) {
-          var s = new SettingsSchema({
-            name: 'gen:version',
-            value: require('../../../../package.json').version,
-            organizationId: organizationId
-          })
-
-          return s.save(function (err) {
-            return next(err)
-          })
-        },
-        function (next) {
-          var type = new TicketTypeSchema({
-            name: 'Issue',
-            organizationId: organizationId
-          })
-
-          type.save(function (err) {
-            return next(err)
-          })
-        },
-        function (next) {
-          var type = new TicketTypeSchema({
-            name: 'Task',
-            organizationId: organizationId
-          })
-
-          type.save(function (err) {
-            return next(err)
-          })
-        },
-        function (next) {
-          var defaults = DefaultSettings
-          var roleResults = {}
-          async.parallel(
-            [
-              function (done) {
-                roleSchema.create(
-                  {
-                    name: 'Admin',
-                    description: 'Default role for admins',
-                    grants: defaults.roleDefaults.adminGrants,
-                    organizationId: organizationId
-                  },
-                  function (err, role) {
-                    if (err) return done(err)
-                    roleResults.adminRole = role
-                    return done()
-                  }
-                )
-              },
-              function (done) {
-                roleSchema.create(
-                  {
-                    name: 'Support',
-                    description: 'Default role for agents',
-                    grants: defaults.roleDefaults.supportGrants,
-                    organizationId: organizationId
-                  },
-                  function (err, role) {
-                    if (err) return done(err)
-                    roleResults.supportRole = role
-                    return done()
-                  }
-                )
-              },
-              function (done) {
-                roleSchema.create(
-                  {
-                    name: 'User',
-                    description: 'Default role for users',
-                    grants: defaults.roleDefaults.userGrants,
-                    organizationId: organizationId
-                  },
-                  function (err, role) {
-                    if (err) return done(err)
-                    roleResults.userRole = role
-                    return done()
-                  }
-                )
-              }
-            ],
-            function (err) {
-              return next(err, roleResults)
-            }
-          )
-        },
-        function (roleResults, next) {
-          var TeamSchema = require('../../../models/team')
-          TeamSchema.create(
-            {
-              name: 'Support (Default)',
-              members: [],
-              organizationId: organizationId
-            },
-            function (err, team) {
-              return next(err, team, roleResults)
-            }
-          )
-        },
-        function (defaultTeam, roleResults, next) {
-          UserSchema.getUserByUsername(
-            user.username,
-            function (err, admin) {
-              if (err) {
-                winston.error('Database Error: ' + err.message)
-                return next('Database Error: ' + err.message)
-              }
-
-              if (!_.isNull(admin) && !_.isUndefined(admin) && !_.isEmpty(admin)) {
-                return next('Username: ' + user.username + ' already exists.')
-              }
-
-              if (user.password !== user.passconfirm) {
-                return next('Passwords do not match!')
-              }
-
-              var chance = new Chance()
-              var adminUser = new UserSchema({
-                username: user.username,
-                password: user.password,
-                fullname: user.fullname,
-                email: user.email,
-                role: roleResults.adminRole._id,
-                title: 'Administrator',
-                accessToken: chance.hash(),
+        async.waterfall(
+          [
+            function (next) {
+              var s = new SettingsSchema({
+                name: 'gen:version',
+                value: require('../../../../package.json').version,
                 organizationId: organizationId
               })
 
-              adminUser.save(function (err, savedUser) {
-                if (err) {
-                  winston.error('Database Error: ' + err.message)
-                  return next('Database Error: ' + err.message)
-                }
+              return s.save(function (err) {
+                return next(err)
+              })
+            },
+            function (next) {
+              var type = new TicketTypeSchema({
+                name: 'Incident',
+                organizationId: organizationId
+              })
 
-                defaultTeam.addMember(savedUser._id, function (err, success) {
+              type.save(function (err) {
+                return next(err)
+              })
+            },
+            function (next) {
+              var type = new TicketTypeSchema({
+                name: 'Demande',
+                organizationId: organizationId
+              })
+
+              type.save(function (err) {
+                return next(err)
+              })
+            },
+            function (next) {
+              var defaults = DefaultSettings
+              var roleResults = {}
+              async.parallel(
+                [
+                  function (done) {
+                    roleSchema.create(
+                      {
+                        name: 'Admin',
+                        description: 'Rôle par défaut pour les administrateur',
+                        grants: defaults.roleDefaults.adminGrants,
+                        organizationId: organizationId
+                      },
+                      function (err, role) {
+                        if (err) return done(err)
+                        roleResults.adminRole = role
+                        return done()
+                      }
+                    )
+                  },
+                  function (done) {
+                    roleSchema.create(
+                      {
+                        name: 'Support',
+                        description: "Rôle par défaut pour l'équipe support",
+                        grants: defaults.roleDefaults.supportGrants,
+                        organizationId: organizationId
+                      },
+                      function (err, role) {
+                        if (err) return done(err)
+                        roleResults.supportRole = role
+                        return done()
+                      }
+                    )
+                  },
+                  function (done) {
+                    roleSchema.create(
+                      {
+                        name: 'Utilisateur',
+                        description: 'Rôle par défaut pour les utilisateurs',
+                        grants: defaults.roleDefaults.userGrants,
+                        organizationId: organizationId
+                      },
+                      function (err, role) {
+                        if (err) return done(err)
+                        roleResults.userRole = role
+                        return done()
+                      }
+                    )
+                  }
+                ],
+                function (err) {
+                  return next(err, roleResults)
+                }
+              )
+            },
+            function (roleResults, next) {
+              var TeamSchema = require('../../../models/team')
+              TeamSchema.create(
+                {
+                  name: 'Support',
+                  members: [],
+                  organizationId: organizationId
+                },
+                function (err, team) {
+                  return next(err, team, roleResults)
+                }
+              )
+            },
+            function (defaultTeam, roleResults, next) {
+              UserSchema.getUserByUsername(
+                user.username,
+                function (err, admin) {
                   if (err) {
                     winston.error('Database Error: ' + err.message)
                     return next('Database Error: ' + err.message)
                   }
 
-                  if (!success) {
-                    return next('Unable to add user to Administrator group!')
+                  if (!_.isNull(admin) && !_.isUndefined(admin) && !_.isEmpty(admin)) {
+                    return next('Username: ' + user.username + ' already exists.')
                   }
 
-                  defaultTeam.save(function (err) {
+                  if (user.password !== user.passconfirm) {
+                    return next('Passwords do not match!')
+                  }
+
+                  var chance = new Chance()
+                  var adminUser = new UserSchema({
+                    username: user.username,
+                    password: user.password,
+                    fullname: user.fullname,
+                    email: user.email,
+                    role: roleResults.adminRole._id,
+                    title: 'Administrateur',
+                    accessToken: chance.hash(),
+                    organizationId: organizationId
+                  })
+
+                  adminUser.save(function (err, savedUser) {
                     if (err) {
                       winston.error('Database Error: ' + err.message)
                       return next('Database Error: ' + err.message)
                     }
 
-                    return next(null, defaultTeam)
+                    defaultTeam.addMember(savedUser._id, function (err, success) {
+                      if (err) {
+                        winston.error('Database Error: ' + err.message)
+                        return next('Database Error: ' + err.message)
+                      }
+
+                      if (!success) {
+                        return next('Unable to add user to Administrator group!')
+                      }
+
+                      defaultTeam.save(function (err) {
+                        if (err) {
+                          winston.error('Database Error: ' + err.message)
+                          return next('Database Error: ' + err.message)
+                        }
+
+                        return next(null, defaultTeam)
+                      })
+                    })
                   })
-                })
-              })
+                },
+                organizationId
+              )
             },
-            organizationId
-          )
-        },
-        function (defaultTeam, next) {
-          var DepartmentSchema = require('../../../models/department')
-          DepartmentSchema.create(
-            {
-              name: 'Support - All Groups (Default)',
-              teams: [defaultTeam._id],
-              allGroups: true,
-              groups: [],
-              organizationId: organizationId
+            function (defaultTeam, next) {
+              var DepartmentSchema = require('../../../models/department')
+              DepartmentSchema.create(
+                {
+                  name: 'Support - Tout les groupes',
+                  teams: [defaultTeam._id],
+                  allGroups: true,
+                  groups: [],
+                  organizationId: organizationId
+                },
+                function (err) {
+                  return next(err)
+                }
+              )
             },
-            function (err) {
-              return next(err)
+            function (next) {
+              DefaultSettings.init(next, organization._id)
             }
-          )
-        },
-        function (next) {
-          DefaultSettings.init(next, organization._id)
-        }
-      ],
-      function (err) {
-        if (err) {
-          return res.status(400).json({ success: false, error: err })
-        }
-        console.log('hey1')
-        res.json({ success: true, organization: organization })
-      }
-    )
-    console.log('hey2')
+          ],
+          function (err) {
+            if (err) {
+              return res.status(400).json({ success: false, error: err })
+            }
+            console.log('hey1')
+            res.json({ success: true, organization: organization })
+          }
+        )
+        console.log('hey2')
+      })
+    }
   })
 }
 
@@ -272,6 +282,15 @@ apiOrganization.get = function (req, res) {
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   OrganizationSchema.find({ _id: organizationId }, function (err, r) {
+    if (err) return res.status(400).json({ success: false, error: err })
+    return res.json({ success: true, organization: r })
+  })
+}
+apiOrganization.getBySlug = function (req, res) {
+  var organizationId = req.params.id
+  if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
+
+  OrganizationSchema.find({ slug: organizationId }, function (err, r) {
     if (err) return res.status(400).json({ success: false, error: err })
     return res.json({ success: true, organization: r })
   })

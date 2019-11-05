@@ -28,8 +28,8 @@ ticketsV2.create = function (req, res) {
 }
 
 ticketsV2.get = function (req, res) {
-  console.log(req.user)
-  console.log(req.user.organizationId)
+  // console.log(req.user)
+  // console.log(req.user.organizationId)
 
   var query = req.query
   var type = query.type || 'all'

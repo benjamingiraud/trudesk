@@ -30,6 +30,7 @@ mainController.index = function (req, res) {
   var content = {}
   content.title = 'Login'
   content.organizationId = organizationId
+  content.organizationSlug = req.organization.slug
   content.layout = false
   content.flash = req.flash('loginMessage')
 
@@ -108,7 +109,6 @@ mainController.loginPost = function (req, res, next) {
   passport.authenticate('local', function (err, user) {
     if (!req.params.organizationId) return res.redirect(404)
     const organizationId = req.params.organizationId
-
     if (err) {
       winston.error(err)
       return next(err)

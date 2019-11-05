@@ -42,7 +42,10 @@ function mainRoutes (router, middleware, controllers) {
   )
 
   router.get('/:organizationId/login', function (req, res) {
-    if (req.organization) res.redirect(`/${req.organization._id}`)
+    if (req.organization) {
+      console.log(req.organization.slug)
+      res.redirect(`/${req.organization.slug}`)
+    }
     return res.redirect(404)
   })
 
