@@ -59,7 +59,7 @@ middleware.redirectToDashboardIfLoggedIn = function (req, res, next) {
     if (req.user.hasL2Auth) {
       return middleware.ensurel2Auth(req, res, next)
     }
-    console.log(req.user)
+    // console.log(req.user)
     if (req.user.role === 'user') {
       return res.redirect(`/${organizationSlug}/tickets`)
     }
@@ -134,7 +134,7 @@ middleware.ensurel2Auth = function (req, res, next) {
 // Common
 middleware.loadCommonData = function (req, res, next) {
   var viewdata = require('../helpers/viewdata')
-  console.log(req.organization)
+  // console.log(req.organization)
   viewdata.getData(req, function (data) {
     req.viewdata = data
     return next()

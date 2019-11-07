@@ -77,7 +77,12 @@ if (!process.env.FORK) {
   winston.info('Server Time: ' + new Date())
 }
 
-var configFile = path.join(__dirname, '/config.json')
+var configFile =
+  global.env === 'local'
+    ? path.join(__dirname, '/config.json')
+    : global.env === 'development'
+    ? path.join(__dirname, '/config-dev.json')
+    : path.join(__dirname, '/config-prod.json')
 var configExists
 
 nconf.defaults({
@@ -137,7 +142,6 @@ function launchServer (db) {
       winston.error(err)
       return
     }
-
     async.series(
       [
         function (next) {

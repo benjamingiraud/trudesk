@@ -1,0 +1,15 @@
+{
+  "mongo": {
+    "host": "dev-tx5mz.mongodb.net",
+    "port": "---",
+    "baseOrganizationId": "5dc2d32ca323c5340d7a5a71",
+    "username": "trudeskdev",
+    "password": "sl434Rj43KJDKkdsjfksl43K4",
+    "database": "trudesk-db-dev",
+    "shard": true
+  },
+  "tokens": {
+    "secret": "0040ff2b94fe28b48d9d7b71327ce7a610e62e3c51684a5b9b48cf69ce4220d9a3c552aa",
+    "expires": 900
+  }
+}

@@ -32,11 +32,11 @@ viewController.getData = function (request, cb) {
   async.parallel(
     [
       function (callback) {
-        if (global.env === 'development') {
-          require('../../sass/buildsass').build(callback, organizationId)
-        } else {
-          return callback()
-        }
+        // if (global.env === 'development') {
+        require('../../sass/buildsass').build(callback, organizationId)
+        // } else {
+        //   return callback()
+        // }
       },
       function (callback) {
         async.parallel(

@@ -91,7 +91,13 @@ installController.existingdb = function (req, res) {
   // Write Configfile
   var fs = require('fs')
   var chance = new Chance()
-  var configFile = path.join(__dirname, '../../config.json')
+  let pathname =
+    process.env.NODE_ENV === 'local'
+      ? `../../config.json`
+      : process.env.NODE_ENV === 'development'
+      ? `../../config-dev.json`
+      : `../../config-prod.json`
+  var configFile = path.join(__dirname, pathname)
 
   var conf = {
     mongo: {
@@ -165,292 +171,319 @@ installController.install = function (req, res) {
           return next(err)
         }, conuri)
       },
-      // function (next) {
-      //   var organization = new organizationSchema(postData)
-
-      //   organization.save(function (err, organization) {
-      //     if (err) {
-      //       winston.debug(err)
-      //       return res.status(400).send({ success: false, error: 'Invalid Post Data' })
-      //     }
-      //     const organizationId = organization._id
-
-      //   next()
-      // },
       function (next) {
-        var s = new SettingsSchema({
-          name: 'gen:version',
-          value: require('../../package.json').version
+        var organization = new OrganizationSchema({
+          name: 'Swizi test',
+          user: user,
+          swiziApiKey: 'sV5rkVP7MRrkeZJWddss9XtvJaR74zqr6gTAu5Jevtzq'
         })
 
-        return s.save(function (err) {
-          return next(err)
-        })
-      },
-      function (next) {
-        if (!eEnabled) return next()
-        async.parallel(
-          [
-            function (done) {
-              SettingsSchema.create(
-                {
-                  name: 'es:enable',
-                  value: true
-                },
-                done
-              )
-            },
-            function (done) {
-              if (!eHost) return done()
-              SettingsSchema.create(
-                {
-                  name: 'es:host',
-                  value: eHost
-                },
-                done
-              )
-            },
-            function (done) {
-              if (!ePort) return done()
-              SettingsSchema.create(
-                {
-                  name: 'es:port',
-                  value: ePort
-                },
-                done
-              )
-            }
-          ],
-          function (err) {
+        organization.save(function (err, organization) {
+          if (err) {
+            winston.debug(err)
             return next(err)
           }
-        )
-      },
-      function (next) {
-        var Counter = new Counters({
-          _id: 'tickets',
-          next: 1001
-        })
-
-        Counter.save(function (err) {
-          return next(err)
-        })
-      },
-      function (next) {
-        var Counter = new Counters({
-          _id: 'reports',
-          next: 1001
-        })
-
-        Counter.save(function (err) {
-          return next(err)
-        })
-      },
-      function (next) {
-        var type = new TicketTypeSchema({
-          name: 'Issue'
-        })
-
-        type.save(function (err) {
-          return next(err)
-        })
-      },
-      function (next) {
-        var type = new TicketTypeSchema({
-          name: 'Task'
-        })
-
-        type.save(function (err) {
-          return next(err)
-        })
-      },
-      function (next) {
-        var defaults = require('../settings/defaults')
-        var roleResults = {}
-        async.parallel(
-          [
-            function (done) {
-              roleSchema.create(
-                {
-                  name: 'Admin',
-                  description: 'Default role for admins',
-                  grants: defaults.roleDefaults.adminGrants
-                },
-                function (err, role) {
-                  if (err) return done(err)
-                  roleResults.adminRole = role
-                  return done()
-                }
-              )
-            },
-            function (done) {
-              roleSchema.create(
-                {
-                  name: 'Support',
-                  description: 'Default role for agents',
-                  grants: defaults.roleDefaults.supportGrants
-                },
-                function (err, role) {
-                  if (err) return done(err)
-                  roleResults.supportRole = role
-                  return done()
-                }
-              )
-            },
-            function (done) {
-              roleSchema.create(
-                {
-                  name: 'User',
-                  description: 'Default role for users',
-                  grants: defaults.roleDefaults.userGrants
-                },
-                function (err, role) {
-                  if (err) return done(err)
-                  roleResults.userRole = role
-                  return done()
-                }
-              )
-            }
-          ],
-          function (err) {
-            return next(err, roleResults)
-          }
-        )
-      },
-      function (roleResults, next) {
-        var TeamSchema = require('../models/team')
-        TeamSchema.create(
-          {
-            name: 'Support (Default)',
-            members: []
-          },
-          function (err, team) {
-            return next(err, team, roleResults)
-          }
-        )
-      },
-      function (defaultTeam, roleResults, next) {
-        UserSchema.getUserByUsername(user.username, function (err, admin) {
-          if (err) {
-            winston.error('Database Error: ' + err.message)
-            return next('Database Error: ' + err.message)
-          }
-
-          if (!_.isNull(admin) && !_.isUndefined(admin) && !_.isEmpty(admin)) {
-            return next('Username: ' + user.username + ' already exists.')
-          }
-
-          if (user.password !== user.passconfirm) {
-            return next('Passwords do not match!')
-          }
-
-          var chance = new Chance()
-          var adminUser = new UserSchema({
-            username: user.username,
-            password: user.password,
-            fullname: user.fullname,
-            email: user.email,
-            role: roleResults.adminRole._id,
-            title: 'Administrator',
-            accessToken: chance.hash()
-          })
-
-          adminUser.save(function (err, savedUser) {
-            if (err) {
-              winston.error('Database Error: ' + err.message)
-              return next('Database Error: ' + err.message)
-            }
-
-            defaultTeam.addMember(savedUser._id, function (err, success) {
-              if (err) {
-                winston.error('Database Error: ' + err.message)
-                return next('Database Error: ' + err.message)
-              }
-
-              if (!success) {
-                return next('Unable to add user to Administrator group!')
-              }
-
-              defaultTeam.save(function (err) {
-                if (err) {
-                  winston.error('Database Error: ' + err.message)
-                  return next('Database Error: ' + err.message)
-                }
-
-                return next(null, defaultTeam)
+          const organizationId = organization._id
+          async.waterfall([
+            function (next) {
+              var s = new SettingsSchema({
+                name: 'gen:version',
+                value: require('../../package.json').version,
+                organizationId
               })
-            })
-          })
+
+              return s.save(function (err) {
+                return next(err)
+              })
+            },
+            function (next) {
+              if (!eEnabled) return next()
+              async.parallel(
+                [
+                  function (done) {
+                    SettingsSchema.create(
+                      {
+                        name: 'es:enable',
+                        value: true,
+                        organizationId
+                      },
+                      done
+                    )
+                  },
+                  function (done) {
+                    if (!eHost) return done()
+                    SettingsSchema.create(
+                      {
+                        name: 'es:host',
+                        value: eHost,
+                        organizationId
+                      },
+                      done
+                    )
+                  },
+                  function (done) {
+                    if (!ePort) return done()
+                    SettingsSchema.create(
+                      {
+                        name: 'es:port',
+                        value: ePort,
+                        organizationId
+                      },
+                      done
+                    )
+                  }
+                ],
+                function (err) {
+                  return next(err)
+                }
+              )
+            },
+            function (next) {
+              var Counter = new Counters({
+                _id: 'tickets',
+                next: 1001
+              })
+
+              Counter.save(function (err) {
+                return next(err)
+              })
+            },
+            function (next) {
+              var Counter = new Counters({
+                _id: 'reports',
+                next: 1001
+              })
+
+              Counter.save(function (err) {
+                return next(err)
+              })
+            },
+            function (next) {
+              var type = new TicketTypeSchema({
+                name: 'Issue',
+                organizationId
+              })
+
+              type.save(function (err) {
+                return next(err)
+              })
+            },
+            function (next) {
+              var type = new TicketTypeSchema({
+                name: 'Task',
+                organizationId
+              })
+
+              type.save(function (err) {
+                return next(err)
+              })
+            },
+            function (next) {
+              var defaults = require('../settings/defaults')
+              var roleResults = {}
+              async.parallel(
+                [
+                  function (done) {
+                    roleSchema.create(
+                      {
+                        name: 'Admin',
+                        description: 'Default role for admins',
+                        grants: defaults.roleDefaults.adminGrants,
+                        organizationId
+                      },
+                      function (err, role) {
+                        if (err) return done(err)
+                        roleResults.adminRole = role
+                        return done()
+                      }
+                    )
+                  },
+                  function (done) {
+                    roleSchema.create(
+                      {
+                        name: 'Support',
+                        description: 'Default role for agents',
+                        grants: defaults.roleDefaults.supportGrants,
+                        organizationId
+                      },
+                      function (err, role) {
+                        if (err) return done(err)
+                        roleResults.supportRole = role
+                        return done()
+                      }
+                    )
+                  },
+                  function (done) {
+                    roleSchema.create(
+                      {
+                        name: 'User',
+                        description: 'Default role for users',
+                        grants: defaults.roleDefaults.userGrants,
+                        organizationId
+                      },
+                      function (err, role) {
+                        if (err) return done(err)
+                        roleResults.userRole = role
+                        return done()
+                      }
+                    )
+                  }
+                ],
+                function (err) {
+                  return next(err, roleResults)
+                }
+              )
+            },
+            function (roleResults, next) {
+              var TeamSchema = require('../models/team')
+              TeamSchema.create(
+                {
+                  name: 'Support (Default)',
+                  members: [],
+                  organizationId
+                },
+                function (err, team) {
+                  return next(err, team, roleResults)
+                }
+              )
+            },
+            function (defaultTeam, roleResults, next) {
+              UserSchema.getUserByUsername(
+                user.username,
+                function (err, admin) {
+                  if (err) {
+                    winston.error('Database Error: ' + err.message)
+                    return next('Database Error: ' + err.message)
+                  }
+
+                  if (!_.isNull(admin) && !_.isUndefined(admin) && !_.isEmpty(admin)) {
+                    return next('Username: ' + user.username + ' already exists.')
+                  }
+
+                  if (user.password !== user.passconfirm) {
+                    return next('Passwords do not match!')
+                  }
+
+                  var chance = new Chance()
+                  var adminUser = new UserSchema({
+                    username: user.username,
+                    password: user.password,
+                    fullname: user.fullname,
+                    email: user.email,
+                    role: roleResults.adminRole._id,
+                    title: 'Administrator',
+                    accessToken: chance.hash(),
+                    organizationId
+                  })
+
+                  adminUser.save(function (err, savedUser) {
+                    if (err) {
+                      winston.error('Database Error: ' + err.message)
+                      return next('Database Error: ' + err.message)
+                    }
+
+                    defaultTeam.addMember(savedUser._id, function (err, success) {
+                      if (err) {
+                        winston.error('Database Error: ' + err.message)
+                        return next('Database Error: ' + err.message)
+                      }
+
+                      if (!success) {
+                        return next('Unable to add user to Administrator group!')
+                      }
+
+                      defaultTeam.save(function (err) {
+                        if (err) {
+                          winston.error('Database Error: ' + err.message)
+                          return next('Database Error: ' + err.message)
+                        }
+
+                        return next(null, defaultTeam)
+                      })
+                    })
+                  })
+                },
+                organizationId
+              )
+            },
+            function (defaultTeam, next) {
+              var DepartmentSchema = require('../models/department')
+              DepartmentSchema.create(
+                {
+                  name: 'Support - All Groups (Default)',
+                  teams: [defaultTeam._id],
+                  allGroups: true,
+                  groups: [],
+                  organizationId
+                },
+                function (err) {
+                  return next(err)
+                }
+              )
+            },
+            function (next) {
+              if (!process.env.TRUDESK_DOCKER) return next()
+              var S = require('../models/setting')
+              var installed = new S({
+                name: 'installed',
+                value: true
+              })
+
+              installed.save(function (err) {
+                if (err) {
+                  winston.error('DB Error: ' + err.message)
+                  return next('DB Error: ' + err.message)
+                }
+
+                return next()
+              })
+            },
+            function (next) {
+              if (process.env.TRUDESK_DOCKER) return next()
+              // Write Configfile
+              var fs = require('fs')
+              let pathname =
+                process.env.NODE_ENV === 'local'
+                  ? `../../config.json`
+                  : process.env.NODE_ENV === 'development'
+                  ? `../../config-dev.json`
+                  : `../../config-prod.json`
+              var configFile = path.join(__dirname, pathname)
+              var chance = new Chance()
+
+              var conf = {
+                mongo: {
+                  host: host,
+                  port: port,
+                  baseOrganizationId: organizationId,
+                  username: username,
+                  password: password,
+                  database: database,
+                  shard: port === '---'
+                },
+                tokens: {
+                  secret: chance.hash() + chance.md5(),
+                  expires: 900 // 15min
+                }
+              }
+
+              fs.writeFile(configFile, JSON.stringify(conf, null, 4), function (err) {
+                if (err) {
+                  winston.error('FS Error: ' + err.message)
+                  return next('FS Error: ' + err.message)
+                }
+                return next(null)
+              })
+            }
+          ])
         })
-      },
-      function (defaultTeam, next) {
-        var DepartmentSchema = require('../models/department')
-        DepartmentSchema.create(
-          {
-            name: 'Support - All Groups (Default)',
-            teams: [defaultTeam._id],
-            allGroups: true,
-            groups: []
-          },
-          function (err) {
-            return next(err)
-          }
-        )
-      },
-      function (next) {
-        if (!process.env.TRUDESK_DOCKER) return next()
-        var S = require('../models/setting')
-        var installed = new S({
-          name: 'installed',
-          value: true
-        })
-
-        installed.save(function (err) {
-          if (err) {
-            winston.error('DB Error: ' + err.message)
-            return next('DB Error: ' + err.message)
-          }
-
-          return next()
-        })
-      },
-      function (next) {
-        if (process.env.TRUDESK_DOCKER) return next()
-        // Write Configfile
-        var fs = require('fs')
-        var configFile = path.join(__dirname, '../../config.json')
-        var chance = new Chance()
-
-        var conf = {
-          mongo: {
-            host: host,
-            port: port,
-            username: username,
-            password: password,
-            database: database,
-            shard: port === '---'
-          },
-          tokens: {
-            secret: chance.hash() + chance.md5(),
-            expires: 900 // 15min
-          }
-        }
-
-        fs.writeFile(configFile, JSON.stringify(conf, null, 4), function (err) {
-          if (err) {
-            winston.error('FS Error: ' + err.message)
-            return next('FS Error: ' + err.message)
-          }
-
-          return next(null)
-        })
+        return next(null)
       }
     ],
     function (err) {
       if (err) {
         return res.status(400).json({ success: false, error: err })
       }
-
       res.json({ success: true })
     }
   )

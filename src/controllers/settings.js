@@ -75,7 +75,7 @@ function renderView (res, content) {
 
 settingsController.general = function (req, res) {
   if (!checkPerms(req, 'settings:view')) {
-    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    if (req.organization) return res.redirect(`/${req.organization.slug}`)
     return res.redirect(404)
   }
 
@@ -86,7 +86,7 @@ settingsController.general = function (req, res) {
 
 settingsController.appearance = function (req, res) {
   if (!checkPerms(req, 'settings:view')) {
-    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    if (req.organization) return res.redirect(`/${req.organization.slug}`)
     return res.redirect(404)
   }
 
@@ -97,7 +97,7 @@ settingsController.appearance = function (req, res) {
 
 settingsController.ticketSettings = function (req, res) {
   if (!checkPerms(req, 'settings:tickets')) {
-    if (req.organization) return res.redirect(`/${req.organization._id}/settings`)
+    if (req.organization) return res.redirect(`/${req.organization.slug}/settings`)
     return res.redirect(404)
   }
 
@@ -108,7 +108,7 @@ settingsController.ticketSettings = function (req, res) {
 
 settingsController.mailerSettings = function (req, res) {
   if (!checkPerms(req, 'settings:mailer')) {
-    if (req.organization) return res.redirect(`/${req.organization._id}/settings`)
+    if (req.organization) return res.redirect(`/${req.organization.slug}/settings`)
     return res.redirect(404)
   }
 
@@ -119,7 +119,7 @@ settingsController.mailerSettings = function (req, res) {
 
 settingsController.permissionsSettings = function (req, res) {
   if (!checkPerms(req, 'settings:permissions')) {
-    if (req.organization) return res.redirect(`/${req.organization._id}/settings`)
+    if (req.organization) return res.redirect(`/${req.organization.slug}/settings`)
     return res.redirect(404)
   }
 
@@ -130,7 +130,7 @@ settingsController.permissionsSettings = function (req, res) {
 
 settingsController.notificationsSettings = function (req, res) {
   if (!checkPerms(req, 'settings:notifications')) {
-    if (req.organization) return res.redirect(`/${req.organization._id}/settings`)
+    if (req.organization) return res.redirect(`/${req.organization.slug}/settings`)
     return res.redirect(404)
   }
 
@@ -141,7 +141,7 @@ settingsController.notificationsSettings = function (req, res) {
 
 settingsController.elasticsearchSettings = function (req, res) {
   if (!checkPerms(req, 'settings:elasticsearch')) {
-    if (req.organization) return res.redirect(`/${req.organization._id}/settings`)
+    if (req.organization) return res.redirect(`/${req.organization.slug}/settings`)
     return res.redirect(404)
   }
 
@@ -152,7 +152,7 @@ settingsController.elasticsearchSettings = function (req, res) {
 
 settingsController.tpsSettings = function (req, res) {
   if (!checkPerms(req, 'settings:tps')) {
-    if (req.organization) return res.redirect(`/${req.organization._id}/settings`)
+    if (req.organization) return res.redirect(`/${req.organization.slug}/settings`)
     return res.redirect(404)
   }
 
@@ -163,7 +163,7 @@ settingsController.tpsSettings = function (req, res) {
 
 settingsController.backupSettings = function (req, res) {
   if (!checkPerms(req, 'settings:backup')) {
-    if (req.organization) return res.redirect(`/${req.organization._id}/settings`)
+    if (req.organization) return res.redirect(`/${req.organization.slug}/settings`)
     return res.redirect(404)
   }
 
@@ -174,7 +174,7 @@ settingsController.backupSettings = function (req, res) {
 
 settingsController.legal = function (req, res) {
   if (!checkPerms(req, 'settings:legal')) {
-    if (req.organization) return res.redirect(`/${req.organization._id}/settings`)
+    if (req.organization) return res.redirect(`/${req.organization.slug}/settings`)
     return res.redirect(404)
   }
 
@@ -185,7 +185,7 @@ settingsController.legal = function (req, res) {
 
 settingsController.logs = function (req, res) {
   if (!checkPerms(req, 'settings:logs')) {
-    if (req.organization) return res.redirect(`/${req.organization._id}/settings`)
+    if (req.organization) return res.redirect(`/${req.organization.slug}/settings`)
     return res.redirect(404)
   }
 

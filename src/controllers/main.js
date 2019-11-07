@@ -168,7 +168,7 @@ mainController.logout = function (req, res) {
   req.logout()
   req.session.l2auth = null
   req.session.destroy()
-  if (req.organization) return res.redirect(`/${req.organization._id}`)
+  if (req.organization) return res.redirect(`/${req.organization.slug}`)
   return res.redirect(404)
 }
 

@@ -295,7 +295,7 @@ ticketsController.processor = function (req, res) {
   var processor = req.processor
   if (_.isUndefined(processor)) {
     if (req.organization) {
-      return res.redirect(`/${req.organization._id}`)
+      return res.redirect(`/${req.organization.slug}`)
     }
     return res.redirect(404)
   }
@@ -330,7 +330,7 @@ ticketsController.print = function (req, res) {
     uid = parseInt(req.params.uid)
   } catch (e) {
     winston.warn(e)
-    if (req.organization) return res.redirect(`/${req.organization._id}/tickets`)
+    if (req.organization) return res.redirect(`/${req.organization.slug}/tickets`)
     return res.redirect(404)
   }
 
@@ -346,7 +346,7 @@ ticketsController.print = function (req, res) {
   ticketSchema.getTicketByUid(req.organization._id, uid, function (err, ticket) {
     if (err) return handleError(res, err)
     if (_.isNull(ticket) || _.isUndefined(ticket)) {
-      if (req.organization) return res.redirect(`/${req.organization._id}/tickets`)
+      if (req.organization) return res.redirect(`/${req.organization.slug}/tickets`)
       return res.redirect(404)
     }
 
@@ -360,7 +360,7 @@ ticketsController.print = function (req, res) {
               user._id,
               function (err, groups) {
                 if (err) {
-                  if (req.organization) return res.redirect(`/${req.organization._id}/tickets`)
+                  if (req.organization) return res.redirect(`/${req.organization.slug}/tickets`)
                   return res.redirect(404)
                 }
                 var gIds = groups.map(function (g) {
@@ -405,7 +405,7 @@ ticketsController.print = function (req, res) {
           if (err === 'UNAUTHORIZED_GROUP_ACCESS')
             winston.warn('User access ticket outside of group - UserId: ' + user._id)
 
-          if (req.organization) return res.redirect(`/${req.organization._id}/tickets`)
+          if (req.organization) return res.redirect(`/${req.organization.slug}/tickets`)
           return res.redirect(404)
         }
 
@@ -446,7 +446,7 @@ ticketsController.single = function (req, res) {
   var user = req.user
   var uid = req.params.id
   if (isNaN(uid)) {
-    if (req.organization) return res.redirect(`/${req.organization._id}/tickets`)
+    if (req.organization) return res.redirect(`/${req.organization.slug}/tickets`)
     return res.redirect(404)
   }
 
@@ -501,7 +501,7 @@ ticketsController.single = function (req, res) {
               // Blank to bypass
             } else {
               winston.warn('User access ticket outside of group - UserId: ' + user._id)
-              if (req.organization) return res.redirect(`/${req.organization._id}/tickets`)
+              if (req.organization) return res.redirect(`/${req.organization.slug}/tickets`)
               return res.redirect(404)
             }
           }
@@ -519,7 +519,7 @@ ticketsController.single = function (req, res) {
       function (err) {
         if (err) {
           winston.warn(err)
-          if (req.organization) return res.redirect(`/${req.organization._id}/tickets`)
+          if (req.organization) return res.redirect(`/${req.organization.slug}/tickets`)
           return res.redirect(404)
         }
 

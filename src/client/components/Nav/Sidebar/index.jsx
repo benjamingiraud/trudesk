@@ -31,12 +31,11 @@ class Sidebar extends React.Component {
   }
 
   componentDidMount() {
-    console.log(this.props)
-    Helpers.UI.getPlugins((err, result) => {
-      if (!err && result.plugins) {
-        this.setState({ plugins: result.plugins })
-      }
-    })
+    // Helpers.UI.getPlugins((err, result) => {
+    //   if (!err && result.plugins) {
+    //     this.setState({ plugins: result.plugins })
+    //   }
+    // })
   }
 
   componentDidUpdate() {
@@ -78,8 +77,7 @@ class Sidebar extends React.Component {
   }
 
   render() {
-    const { t } = this.props;
-    const { activeItem, activeSubItem, sessionUser, common } = this.props
+    const { activeItem, activeSubItem, sessionUser, common, t } = this.props
     return (
       <ul className='side-nav'>
         {sessionUser && Helpers.canUser('agent:*', true) && (
@@ -138,13 +136,13 @@ class Sidebar extends React.Component {
             </Submenu>
           </SidebarItem>
         )}
-        <SidebarItem
+        {/* <SidebarItem
           text={t('Messages')}
           icon='chat'
           href={`/${common.organizationSlug}/messages`}
           class='navMessages'
           active={activeItem === 'messages'}
-        />
+        /> */}
         {sessionUser && Helpers.canUser('accounts:view') && (
           <SidebarItem
             text={t('Accounts')}

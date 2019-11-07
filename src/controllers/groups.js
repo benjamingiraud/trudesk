@@ -26,7 +26,7 @@ groupsController.get = function (req, res) {
   var user = req.user
   if (_.isUndefined(user) || !permissions.canThis(user.role, 'groups:view')) {
     req.flash('message', 'Permission Denied.')
-    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    if (req.organization) return res.redirect(`/${req.organization.slug}`)
     return res.redirect(404)
   }
   console.log(req.organization._id)
@@ -59,7 +59,7 @@ groupsController.getCreate = function (req, res) {
   var user = req.user
   if (_.isUndefined(user) || !permissions.canThis(user.role, 'groups:create')) {
     req.flash('message', 'Permission Denied.')
-    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    if (req.organization) return res.redirect(`/${req.organization.slug}`)
     return res.redirect(404)
   }
 
@@ -86,7 +86,7 @@ groupsController.edit = function (req, res) {
   var user = req.user
   if (_.isUndefined(user) || !permissions.canThis(user.role, 'groups:edit')) {
     req.flash('message', 'Permission Denied.')
-    if (req.organization) return res.redirect(`/${req.organization._id}`)
+    if (req.organization) return res.redirect(`/${req.organization.slug}`)
     return res.redirect(404)
   }
 
@@ -99,7 +99,7 @@ groupsController.edit = function (req, res) {
   content.data.common = req.viewdata
   content.data.users = []
   var groupId = req.params.id
-  if (_.isUndefined(groupId)) return res.redirect(`/${req.organization._id}/groups`)
+  if (_.isUndefined(groupId)) return res.redirect(`/${req.organization.slug}/groups`)
 
   async.parallel(
     {

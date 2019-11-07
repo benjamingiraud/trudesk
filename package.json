@@ -8,6 +8,8 @@
   "bin": "./app.js",
   "scripts": {
     "start": "node ./app",
+    "start:local": "export NODE_ENV=local && node ./app",
+    "start:dev": "export NODE_ENV=development && node ./app",
     "build": "grunt build",
     "test": "mocha --recursive",
     "lint": "standard | snazzy",
