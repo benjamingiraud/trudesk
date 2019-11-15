@@ -28,6 +28,7 @@ import Button from 'components/Button'
 import SettingSubItem from 'components/Settings/SettingSubItem'
 import ButtonGroup from 'components/ButtonGroup'
 import EditPriorityPartial from './editPriorityPartial'
+import { withTranslation } from 'react-i18next';
 
 class TicketTypeBody extends React.Component {
   constructor (props) {
@@ -93,11 +94,11 @@ class TicketTypeBody extends React.Component {
   }
 
   render () {
-    const { type } = this.props
+    const { type, t } = this.props
     return (
       <div>
         <div className={'ticket-type-general-wrapper'}>
-          <h2 className={'text-light'}>General</h2>
+          <h2 className={'text-light'}>{t('General')}</h2>
           <hr style={{ margin: '5px 0 25px 0' }} />
           <form
             onSubmit={e => {
@@ -105,11 +106,11 @@ class TicketTypeBody extends React.Component {
             }}
           >
             <div className='uk-input-group'>
-              <label htmlFor='ticket-type-name'>Type Name</label>
+              <label htmlFor='ticket-type-name'>{t('Type Name')}</label>
               <input name={'name'} type='text' className={'md-input'} defaultValue={type.get('name')} />
               <div className='uk-input-group-addon'>
                 <button type='submit' className={'md-btn md-btn-small'}>
-                  Rename
+                  {t('Rename')}
                 </button>
               </div>
             </div>
@@ -117,19 +118,19 @@ class TicketTypeBody extends React.Component {
         </div>
         <div className='ticket-type-priorities-wrapper uk-margin-medium-top'>
           <h2 className='text-light uk-display-inline-block'>
-            Priorities
+            {t('Priorities')}
             <i
               className='material-icons'
               style={{ color: '#888', fontSize: '16px', cursor: 'pointer', lineHeight: '18px', marginLeft: '5px' }}
               data-uk-tooltip="{cls:'long-text'}"
-              title={'Priorities linked to this type. <br /> Editing a priority will update all types linked.'}
+              title={t('Priorities linked to this type')}
             >
               help
             </i>
           </h2>
           <div className='uk-float-right'>
             <Button
-              text={'Add'}
+              text={t('Add')}
               style={'success'}
               flat={true}
               waves={true}
@@ -151,18 +152,18 @@ class TicketTypeBody extends React.Component {
                       titleCss={{ color: item.get('htmlColor') }}
                       subtitle={
                         <div>
-                          SLA Overdue: <strong>{item.get('durationFormatted')}</strong>
+                          {t('SLA Overdue')} <strong>{item.get('durationFormatted')}</strong>
                         </div>
                       }
                       component={
                         <ButtonGroup classNames={'uk-float-right'}>
                           <Button
-                            text={'Edit'}
+                            text={t('Edit')}
                             small={true}
                             onClick={e => this.toggleEditPriority(e, item.get('_id'))}
                           />
                           <Button
-                            text={'Remove'}
+                            text={t('Remove')}
                             small={true}
                             style={'danger'}
                             onClick={e => this.onRemoveTicketTypePriorityClicked(e, item.get('_id'))}
@@ -178,16 +179,16 @@ class TicketTypeBody extends React.Component {
           </div>
         </div>
         <div className={'uk-margin-large-top'}>
-          <h2 className='text-light'>Danger Zone</h2>
+          <h2 className='text-light'>{t('Danger Zone')}</h2>
           <div className='danger-zone'>
             <div className='dz-box uk-clearfix'>
               <div className='uk-float-left'>
-                <h5>Delete this type</h5>
-                <p>Once you delete a ticket type, there is no going back. Please be certain.</p>
+                <h5>{t('Delete this type')}</h5>
+                <p>{t('Delete this type desc')}</p>
               </div>
               <div className='uk-float-right' style={{ paddingTop: '10px' }}>
                 <Button
-                  text={'Delete'}
+                  text={t('Delete')}
                   small={true}
                   style={'danger'}
                   onClick={e => this.showDeleteTicketTypeModal(e, type)}
@@ -208,7 +209,7 @@ TicketTypeBody.propTypes = {
   showModal: PropTypes.func.isRequired
 }
 
-export default connect(
+export default withTranslation('settings')(connect(
   null,
   { updatePriority, fetchSettings, showModal }
-)(TicketTypeBody)
+)(TicketTypeBody))

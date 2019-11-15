@@ -164,7 +164,6 @@ mainController.l2AuthPost = function (req, res, next) {
 }
 
 mainController.logout = function (req, res) {
-  console.log(req.organization)
   req.logout()
   req.session.l2auth = null
   req.session.destroy()
@@ -565,7 +564,6 @@ mainController.l2authget = function (req, res) {
 }
 
 mainController.uploadFavicon = function (req, res) {
-  console.log(req.organization)
   let organizationId = req.organization._id
 
   var fs = require('fs')
@@ -649,7 +647,6 @@ mainController.uploadFavicon = function (req, res) {
 mainController.uploadLogo = function (req, res) {
   var fs = require('fs')
   var settingUtil = require('../settings/settingsUtil')
-  console.log(req.organization)
   let organizationId = req.organization._id
 
   var Busboy = require('busboy')
@@ -730,7 +727,6 @@ mainController.uploadLogo = function (req, res) {
 }
 
 mainController.uploadPageLogo = function (req, res) {
-  console.log(req.organization)
   let organizationId = req.organization._id
 
   var fs = require('fs')

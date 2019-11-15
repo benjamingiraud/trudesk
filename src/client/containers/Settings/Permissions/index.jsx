@@ -20,10 +20,11 @@ import { showModal, fetchRoles, updateRoleOrder } from 'actions/common'
 import { updateSetting } from 'actions/settings'
 
 import Button from 'components/Button'
-import SettingItem from 'components/Settings/SettingItem'
-import SingleSelect from 'components/SingleSelect'
+// import SettingItem from 'components/Settings/SettingItem'
+// import SingleSelect from 'components/SingleSelect'
 import SplitSettingsPanel from 'components/Settings/SplitSettingsPanel'
 import PermissionBody from './permissionBody'
+// import { withTranslation } from 'react-i18next';
 
 import $ from 'jquery'
 
@@ -71,15 +72,16 @@ class PermissionsSettingsContainer extends React.Component {
   }
 
   render () {
-    const mappedRoles = this.props.roles
-      .map(role => {
-        return { text: role.get('name'), value: role.get('_id') }
-      })
-      .toArray()
+    const { t } = this.props
+    // const mappedRoles = this.props.roles
+    //   .map(role => {
+    //     return { text: role.get('name'), value: role.get('_id') }
+    //   })
+    //   .toArray()
 
     return (
       <div className={this.props.active ? '' : 'hide'}>
-        <SettingItem
+        {/* <SettingItem
           title={'Default New User Role'}
           subtitle={'Role assigned to users created during sign-up and public tickets'}
           component={
@@ -93,19 +95,19 @@ class PermissionsSettingsContainer extends React.Component {
               showTextbox={false}
             />
           }
-        />
+        /> */}
         <SplitSettingsPanel
-          title={'Permissions'}
-          tooltip={'Permission order is top down. ex: Admins at top; Users at bottom.'}
+          title={t('Permissions')}
+          tooltip={t('Permissions_legend')}
           subtitle={
             <div>
-              Create/Modify Role Permissions{' '}
-              <span className={'uk-text-danger'}>Note: Changes take affect after page refresh</span>
+              {t('Create_Role')}
+              <span className={'uk-text-danger'}>{t('Create_Role_Note')}</span>
             </div>
           }
           rightComponent={
             <Button
-              text={'Create'}
+              text={t('Create')}
               style={'success'}
               flat={true}
               waves={true}
@@ -113,7 +115,7 @@ class PermissionsSettingsContainer extends React.Component {
             />
           }
           menuItems={this.getRoleMenu().map(role => {
-            return { key: role.get('_id'), title: role.get('name'), bodyComponent: <PermissionBody role={role} /> }
+            return { key: role.get('_id'), title: role.get('name'), bodyComponent: <PermissionBody role={role} swiziGroups={this.props.swiziGroups} t={t} /> }
           })}
           menuDraggable={true}
           menuOnDrag={e => {
@@ -133,13 +135,15 @@ PermissionsSettingsContainer.propTypes = {
   fetchRoles: PropTypes.func.isRequired,
   updateRoleOrder: PropTypes.func.isRequired,
   showModal: PropTypes.func.isRequired,
-  updateSetting: PropTypes.func.isRequired
+  updateSetting: PropTypes.func.isRequired,
+  swiziGroups: PropTypes.array.isRequired
 }
 
 const mapStateToProps = state => ({
   roles: state.shared.roles,
   roleOrder: state.shared.roleOrder,
-  settings: state.settings.settings
+  settings: state.settings.settings,
+  swiziGroups: state.common.swiziGroups
 })
 
 export default connect(

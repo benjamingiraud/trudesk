@@ -107,11 +107,10 @@ middleware.redirectIfUser = function (req, res, next) {
 
     return res.redirect(`/${req.organization.slug}`)
   }
-
+  console.log(req.user)
   if (!req.user.role.isAdmin && !req.user.role.isAgent) {
     return res.redirect(301, `/${req.organization.slug}/tickets`)
   }
-
   return next()
 }
 
@@ -127,7 +126,6 @@ middleware.ensurel2Auth = function (req, res, next) {
 
     return next()
   }
-
   return res.redirect('/l2auth')
 }
 

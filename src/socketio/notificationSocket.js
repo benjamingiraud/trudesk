@@ -37,7 +37,7 @@ function updateNotifications () {
       [
         function (done) {
           notificationSchema.getForUserWithLimit(
-            socket.request.user._id,
+            socket.request.user.id,
             function (err, items) {
               if (err) return done(err)
 
@@ -49,7 +49,7 @@ function updateNotifications () {
         },
         function (done) {
           notificationSchema.getUnreadCount(
-            socket.request.user._id,
+            socket.request.user.id,
             function (err, count) {
               if (err) return done(err)
 
@@ -76,7 +76,7 @@ function updateAllNotifications (socket) {
   var notifications = {}
   var notificationSchema = require('../models/notification')
   notificationSchema.findAllForUser(
-    socket.request.user._id,
+    socket.request.user.id,
     function (err, items) {
       if (err) return false
 
@@ -124,7 +124,7 @@ events.markNotificationRead = function (socket) {
 
 events.clearNotifications = function (socket) {
   socket.on('clearNotifications', function () {
-    var userId = socket.request.user._id
+    var userId = socket.request.user.id
     if (_.isUndefined(userId)) return true
     var notifications = {}
     notifications.items = []

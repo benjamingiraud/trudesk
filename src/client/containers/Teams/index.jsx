@@ -58,12 +58,12 @@ class TeamsContainer extends React.Component {
   onEditTeamClick (team) {
     if (team.members) {
       team.members = team.members.map(m => {
-        return m._id
+        return m.id
       })
     } else {
       team.members = []
     }
-
+    console.log(team)
     this.props.showModal('EDIT_TEAM', { team })
   }
 
@@ -91,6 +91,8 @@ class TeamsContainer extends React.Component {
     const {t} = this.props
 
     const tableItems = this.props.teamsState.teams.map(team => {
+      console.log(team.members)
+      console.log(team.get('members'))
       return (
         <TableRow key={team.get('_id')} className={'vam nbb'}>
           <TableCell style={{ fontWeight: 500, padding: '18px 15px' }}>{team.get('name')}</TableCell>
@@ -100,25 +102,25 @@ class TeamsContainer extends React.Component {
               team
                 .get('members')
                 .filter(user => {
-                  return !user.get('deleted')
+                  return user.get('enabled')
                 })
                 .map(user => {
-                  const profilePic = user.get('image') || 'defaultProfile.jpg'
+                  const profilePic = 'defaultProfile.jpg'
                   return (
                     <div
-                      key={user.get('_id')}
+                      key={user.get('id')}
                       className={'uk-float-left uk-position-relative mb-10'}
                       data-uk-tooltip={'{pos: "bottom"}'}
-                      title={user.get('fullname')}
+                      title={`${user.get('firstname')} ${user.get('lastname')}`}
                     >
                       <img
                         style={{ width: 25, height: 25, marginRight: 5 }}
                         className={'round'}
                         src={`/uploads/users/${profilePic}`}
-                        alt={user.get('fullname')}
+                        alt={`${user.get('firstname')} ${user.get('lastname')}`}
                       />
                       <span
-                        data-user-status-id={user.get('_id')}
+                        data-user-status-id={user.get('id')}
                         className='user-offline uk-border-circle'
                         style={{ width: 13, height: 13 }}
                       />

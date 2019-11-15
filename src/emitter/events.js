@@ -201,7 +201,7 @@ var notifications = require('../notifications') // Load Push Events
                       async.each(
                         users,
                         function (user, cb) {
-                          ticketPushClone.group.sendMailTo.push(user._id)
+                          ticketPushClone.group.sendMailTo.push(user.id)
                           return saveNotification(user, ticket, cb)
                         },
                         function (err) {

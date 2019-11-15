@@ -19,17 +19,45 @@ var JwtStrategy = require('passport-jwt').Strategy
 var ExtractJwt = require('passport-jwt').ExtractJwt
 var base32 = require('thirty-two')
 var User = require('../models/user')
+var Role = require('../models/role')
 var nconf = require('nconf')
+var SwiziConnector = require('../connectors/SwiziConnector')
 
 module.exports = function () {
   passport.serializeUser(function (user, done) {
-    done(null, user._id)
+    console.log(user)
+    done(null, `${user.id}:${user.swiziApiKey}:${user.organizationId}`)
   })
 
-  passport.deserializeUser(function (id, done) {
-    User.findById(id, function (err, user) {
-      done(err, user)
-    })
+  passport.deserializeUser(async function (infos, done) {
+    let userId = parseInt(infos.split(':')[0])
+    let swiziApiKey = infos.split(':')[1]
+    let organizationId = infos.split(':')[2]
+
+    let Swizi = new SwiziConnector({ apikey: swiziApiKey })
+    try {
+      let authenticatedUser = await Swizi.findUserById(userId)
+      authenticatedUser.swiziApiKey = swiziApiKey
+      authenticatedUser.organizationId = organizationId
+      Role.getRoleBySwiziGroup(
+        authenticatedUser.groups,
+        function (err, role) {
+          if (role) {
+            authenticatedUser.role = role
+            return done(null, authenticatedUser)
+          } else {
+            done(null, false, { message: 'Une erreur est survenue.' })
+          }
+        },
+        organizationId
+      )
+    } catch (err) {
+      done(null, err)
+    }
+    // User.findById(id, function (err, user) {
+    //   console.log(user)
+    //   done(err, user)
+    // })
   })
 
   passport.use(
@@ -40,27 +68,54 @@ module.exports = function () {
         passwordField: 'login-password',
         passReqToCallback: true
       },
-      function (req, username, password, done) {
-        // console.log(req.params)
-
-        User.findOne({ username: new RegExp('^' + username.trim() + '$', 'i') })
-          .select('+password +tOTPKey +tOTPPeriod')
-          .exec(function (err, user) {
-            if (err) {
-              return done(err)
+      async function (req, username, password, done) {
+        let Swizi = new SwiziConnector({ apikey: req.organization.swiziApiKey })
+        let user
+        try {
+          user = await Swizi.authenticate(username, password)
+        } catch (err) {
+          return done(null, false, req.flash('loginMessage', 'Une erreur est survenue.'))
+        }
+        let authenticatedUser
+        try {
+          authenticatedUser = await Swizi.findUserById(user.id)
+        } catch (err) {
+          return done(null, false, req.flash('loginMessage', "Erreur dans le nom d'utilisateur et/ou mot de passe."))
+        }
+        authenticatedUser.swiziApiKey = req.organization.swiziApiKey
+        authenticatedUser.organizationId = req.organization.id
+        Role.getRoleBySwiziGroup(
+          authenticatedUser.groups,
+          function (err, role) {
+            if (role) {
+              authenticatedUser.role = role
+              req.user = authenticatedUser
+              return done(null, authenticatedUser)
+            } else {
+              return done(null, false, req.flash('loginMessage', 'Une erreur est survenue.'))
             }
+          },
+          req.organization.id
+        )
 
-            if (!user || user.deleted) {
-              return done(null, false, req.flash('loginMessage', 'No User Found.'))
-            }
+        // User.findOne({ organizationId: req.organization.id, username: new RegExp('^' + username.trim() + '$', 'i') })
+        //   .select('+password +tOTPKey +tOTPPeriod')
+        //   .exec(function (err, user) {
+        //     if (err) {
+        //       return done(err)
+        //     }
 
-            if (!User.validate(password, user.password)) {
-              return done(null, false, req.flash('loginMessage', 'Incorrect Password.'))
-            }
+        //     if (!user || user.deleted) {
+        //       return done(null, false, req.flash('loginMessage', 'No User Found.'))
+        //     }
 
-            req.user = user
-            return done(null, user)
-          })
+        //     if (!User.validate(password, user.password)) {
+        //       return done(null, false, req.flash('loginMessage', 'Incorrect Password.'))
+        //     }
+
+        //     req.user = user
+        //     return done(null, user)
+        //   })
       }
     )
   )
@@ -74,7 +129,7 @@ module.exports = function () {
       function (user, done) {
         if (!user.hasL2Auth) return done(false)
 
-        User.findOne({ _id: user._id }, '+tOTPKey +tOTPPeriod', function (err, user) {
+        User.findOne({ _id: user.id }, '+tOTPKey +tOTPPeriod', function (err, user) {
           if (err) return done(err)
 
           if (!user.tOTPPeriod) {
@@ -101,7 +156,7 @@ module.exports = function () {
 
         return done(null, jwtPayload.user)
 
-        // User.findOne({ _id: jwtPayload.user._id }, function (err, user) {
+        // User.findOne({ _id: jwtPayload.user.id }, function (err, user) {
         //   if (err) return done(err)
         //   if (user) {
         //     return done(null, jwtPayload.user)

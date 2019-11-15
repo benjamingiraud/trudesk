@@ -651,7 +651,7 @@ var helpers = {
   },
 
   isOwner: function (user, owner, options) {
-    if (user._id.toString() === owner._id.toString()) return options.fn(this)
+    if (user.id.toString() === owner._id.toString()) return options.fn(this)
 
     return options.inverse(this)
   },
@@ -731,7 +731,7 @@ var helpers = {
   checkEditSelf: function (user, owner, perm, options) {
     var P = require('../../permissions')
     if (P.canThis(user.role, perm + ':editSelf')) {
-      if (user._id.toString() === owner._id.toString()) {
+      if (user.id.toString() === owner._id.toString()) {
         return options.fn(this)
       }
 

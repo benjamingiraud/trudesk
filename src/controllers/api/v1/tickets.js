@@ -165,7 +165,7 @@ apiTickets.get = function (req, res) {
       function (callback) {
         if (user.role.isAdmin || user.role.isAgent) {
           departmentModel.getDepartmentGroupsOfUser(
-            user._id,
+            user.id,
             function (err, groups) {
               callback(err, groups)
             },
@@ -173,7 +173,7 @@ apiTickets.get = function (req, res) {
           )
         } else {
           groupModel.getAllGroupsOfUserNoPopulate(
-            user._id,
+            user.id,
             function (err, grps) {
               callback(err, grps)
             },
@@ -346,9 +346,9 @@ apiTickets.search = function (req, res) {
     [
       function (callback) {
         if (req.user.role.isAdmin || req.user.role.isAgent) {
-          return departmentModel.getDepartmentGroupsOfUser(req.user._id, callback)
+          return departmentModel.getDepartmentGroupsOfUser(req.user.id, callback)
         } else {
-          return groupModel.getAllGroupsOfUserNoPopulate(req.user._id, callback)
+          return groupModel.getAllGroupsOfUserNoPopulate(req.user.id, callback)
         }
       },
       function (grps, callback) {
@@ -450,7 +450,7 @@ apiTickets.create = function (req, res) {
   var HistoryItem = {
     action: 'ticket:created',
     description: 'Ticket was created.',
-    owner: req.user._id
+    owner: req.user.id
   }
 
   var TicketSchema = require('../../../models/ticket')
@@ -458,7 +458,7 @@ apiTickets.create = function (req, res) {
   if (!_.isUndefined(postData.owner)) {
     ticket.owner = postData.owner
   } else {
-    ticket.owner = req.user._id
+    ticket.owner = req.user.id
   }
 
   ticket.organizationId = organizationId
@@ -471,7 +471,7 @@ apiTickets.create = function (req, res) {
   tIssue = sanitizeHtml(tIssue).trim()
   ticket.issue = marked(tIssue)
   ticket.history = [HistoryItem]
-  ticket.subscribers = [req.user._id]
+  ticket.subscribers = [req.user.id]
 
   ticket.save(function (err, t) {
     if (err) {
@@ -818,7 +818,7 @@ apiTickets.update = function (req, res) {
                   var HistoryItem = {
                     action: 'ticket:set:assignee',
                     description: t.assignee.fullname + ' was set as assignee',
-                    owner: req.user._id
+                    owner: req.user.id
                   }
 
                   ticket.history.push(HistoryItem)
@@ -931,7 +931,7 @@ apiTickets.delete = function (req, res) {
 apiTickets.postComment = function (req, res) {
   var commentJson = req.body
   var comment = commentJson.comment
-  var owner = commentJson.ownerId || req.user._id
+  var owner = commentJson.ownerId || req.user.id
   var ticketId = commentJson._id
   var organizationId = req.organization._id
 
@@ -1034,7 +1034,7 @@ apiTickets.postInternalNote = function (req, res) {
       var marked = require('marked')
       // var note = payload.note.replace(/(\r\n|\n\r|\r|\n)/g, "<br>");
       var Note = {
-        owner: payload.owner || req.user._id,
+        owner: payload.owner || req.user.id,
         date: new Date(),
         note: marked(payload.note)
       }
@@ -1044,7 +1044,7 @@ apiTickets.postInternalNote = function (req, res) {
       var HistoryItem = {
         action: 'ticket:note:added',
         description: 'Internal note was added',
-        owner: payload.owner || req.user._id
+        owner: payload.owner || req.user.id
       }
       ticket.history.push(HistoryItem)
 
@@ -1885,7 +1885,7 @@ apiTickets.removeAttachment = function (req, res) {
     function (err, ticket) {
       if (err) return res.status(400).send('Invalid Ticket Id')
       ticket.getAttachment(attachmentId, function (a) {
-        ticket.removeAttachment(user._id, attachmentId, function (err, ticket) {
+        ticket.removeAttachment(user.id, attachmentId, function (err, ticket) {
           if (err) return res.status(400).json({ error: 'Invalid Request.' })
 
           var fs = require('fs')
@@ -2040,9 +2040,9 @@ apiTickets.getOverdue = function (req, res) {
       [
         function (next) {
           if (!req.user.role.isAdmin && !req.user.role.isAgent) {
-            return groupSchema.getAllGroupsOfUserNoPopulate(req.user._id, next, organizationId)
+            return groupSchema.getAllGroupsOfUserNoPopulate(req.user.id, next, organizationId)
           } else {
-            return departmentSchema.getDepartmentGroupsOfUser(req.user._id, next, organizationId)
+            return departmentSchema.getDepartmentGroupsOfUser(req.user.id, next, organizationId)
           }
         },
         function (groups, next) {

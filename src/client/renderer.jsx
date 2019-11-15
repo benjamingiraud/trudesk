@@ -23,12 +23,13 @@ import AccountsContainer from 'containers/Accounts'
 import GroupsContainer from 'containers/Groups'
 import TeamsContainer from 'containers/Teams'
 import DepartmentsContainer from 'containers/Departments'
+import Loader from "components/Loader"
 
-const Loader = () => (
-  <div className="App">
-    <div>loading...</div>
-  </div>
-);
+// const Loader = () => (
+//   <div className="App">
+//     <div>loading...</div>
+//   </div>
+// );
 
 
 export default function (store) {
@@ -82,7 +83,9 @@ export default function (store) {
   if (document.getElementById('groups-container')) {
     const GroupsContainerWithProvider = (
       <Provider store={store}>
+        <Suspense fallback={<Loader />}>
         <GroupsContainer />
+        </Suspense>
       </Provider>
     )
 
@@ -92,7 +95,9 @@ export default function (store) {
   if (document.getElementById('teams-container')) {
     const TeamsContainerWithProvider = (
       <Provider store={store}>
+        <Suspense fallback={<Loader />}>
         <TeamsContainer />
+        </Suspense>
       </Provider>
     )
 
@@ -102,7 +107,9 @@ export default function (store) {
   if (document.getElementById('departments-container')) {
     const TeamsContainerWithProvider = (
       <Provider store={store}>
+        <Suspense fallback={<Loader />}>
         <DepartmentsContainer />
+        </ Suspense>
       </Provider>
     )
 
@@ -112,7 +119,9 @@ export default function (store) {
   if (document.getElementById('settings-container')) {
     const SettingsContainerWithProvider = (
       <Provider store={store}>
+        <Suspense fallback={<Loader />}>
         <SettingsContainer />
+        </Suspense>
       </Provider>
     )
 

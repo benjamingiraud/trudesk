@@ -69,9 +69,8 @@ var ticketSchema = mongoose.Schema({
   uid: { type: Number, unique: true, index: true },
   organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
   owner: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-    ref: 'accounts'
+    type: mongoose.Schema.Types.Number,
+    required: true
   },
   group: {
     type: mongoose.Schema.Types.ObjectId,
@@ -79,8 +78,7 @@ var ticketSchema = mongoose.Schema({
     ref: 'groups'
   },
   assignee: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'accounts'
+    type: mongoose.Schema.Types.Number
   },
   date: { type: Date, default: Date.now, required: true, index: true },
   updated: { type: Date },
@@ -106,7 +104,7 @@ var ticketSchema = mongoose.Schema({
   notes: [noteSchema],
   attachments: [attachmentSchema],
   history: [historySchema],
-  subscribers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'accounts' }]
+  subscribers: [{ type: mongoose.Schema.Types.Number }]
 })
 
 ticketSchema.index({ deleted: -1, group: 1, status: 1 })

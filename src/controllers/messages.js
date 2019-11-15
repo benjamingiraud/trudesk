@@ -36,7 +36,7 @@ messagesController.get = function (req, res) {
   content.data.conversations = []
   content.data.showNewConvo = req.showNewConvo
 
-  conversationSchema.getConversationsWithLimit(req.user._id, undefined, function (err, convos) {
+  conversationSchema.getConversationsWithLimit(req.user.id, undefined, function (err, convos) {
     if (err) {
       winston.debug(err)
       return handleError(res, err)
@@ -50,7 +50,7 @@ messagesController.get = function (req, res) {
         var userMeta =
           convo.userMeta[
             _.findIndex(convo.userMeta, function (item) {
-              return item.userId.toString() === req.user._id.toString()
+              return item.userId.toString() === req.user.id.toString()
             })
           ]
         if (!_.isUndefined(userMeta) && !_.isUndefined(userMeta.deletedAt) && userMeta.deletedAt > convo.updatedAt) {
@@ -61,7 +61,7 @@ messagesController.get = function (req, res) {
           if (err) return done(err)
 
           _.each(c.participants, function (p) {
-            if (p._id.toString() !== req.user._id.toString()) {
+            if (p._id.toString() !== req.user.id.toString()) {
               c.partner = p
             }
           })
@@ -110,7 +110,7 @@ messagesController.getConversation = function (req, res) {
   async.parallel(
     [
       function (next) {
-        conversationSchema.getConversationsWithLimit(req.user._id, undefined, function (err, convos) {
+        conversationSchema.getConversationsWithLimit(req.user.id, undefined, function (err, convos) {
           if (err) return next(err)
 
           async.eachSeries(
@@ -119,7 +119,7 @@ messagesController.getConversation = function (req, res) {
               var userMeta =
                 convo.userMeta[
                   _.findIndex(convo.userMeta, function (item) {
-                    return item.userId.toString() === req.user._id.toString()
+                    return item.userId.toString() === req.user.id.toString()
                   })
                 ]
               if (
@@ -136,7 +136,7 @@ messagesController.getConversation = function (req, res) {
                 if (err) return done(err)
 
                 _.each(c.participants, function (p) {
-                  if (p._id.toString() !== req.user._id.toString()) {
+                  if (p._id.toString() !== req.user.id.toString()) {
                     c.partner = p
                   }
                 })
@@ -192,7 +192,7 @@ messagesController.getConversation = function (req, res) {
               if (err) return next(err)
 
               _.each(c.participants, function (p) {
-                if (p._id.toString() !== req.user._id.toString()) {
+                if (p._id.toString() !== req.user.id.toString()) {
                   c.partner = p
                 }
               })
@@ -200,7 +200,7 @@ messagesController.getConversation = function (req, res) {
               c.requestingUserMeta =
                 convo.userMeta[
                   _.findIndex(convo.userMeta, function (item) {
-                    return item.userId.toString() === req.user._id.toString()
+                    return item.userId.toString() === req.user.id.toString()
                   })
                 ]
 

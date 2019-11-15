@@ -16,6 +16,8 @@ var apiUtils = require('../apiUtils')
 var Ticket = require('../../../models/ticket')
 var Group = require('../../../models/group')
 var Department = require('../../../models/department')
+var SwiziConnector = require('../../../connectors/SwiziConnector')
+var _ = require('lodash')
 
 var apiGroups = {}
 
@@ -29,12 +31,22 @@ apiGroups.create = function (req, res) {
 
   Group.create(postGroup, function (err, group) {
     if (err) return apiUtils.sendApiError(res, 500, err.message)
-
-    group.populate('members sendMailTo', function (err, group) {
-      if (err) return apiUtils.sendApiError(res, 500, err.message)
-
+    if (group.members.length) {
+      let Swizi = new SwiziConnector({ apikey: req.user.swiziApiKey })
+      let usersId = _.uniq(group.members)
+      Swizi.findUserByIds(usersId).then(users => {
+        for (let j = 0; j < group.members.length; j++) {
+          if (users.find(u => u.id === group.members[j])) group.members[j] = users.find(u => u.id === group.members[j])
+        }
+        return apiUtils.sendApiSuccess(res, { group: group })
+      })
+    } else {
       return apiUtils.sendApiSuccess(res, { group: group })
-    })
+    }
+    // group.populate('members sendMailTo', function (err, group) {
+    //   if (err) return apiUtils.sendApiError(res, 500, err.message)
+
+    // })
   })
 }
 
@@ -48,13 +60,36 @@ apiGroups.get = function (req, res) {
   if (type === 'all') {
     Group.getWithObject({ limit: limit, page: page, organizationId: organizationId }, function (err, groups) {
       if (err) return apiUtils.sendApiError(res, 500, err.message)
+      let Swizi = new SwiziConnector({ apikey: req.user.swiziApiKey })
 
-      return apiUtils.sendApiSuccess(res, { groups: groups, count: groups.length })
+      let usersId = []
+      for (let i = 0; i < groups.length; i++) {
+        if (groups[i].members.length) {
+          usersId = usersId.concat(groups[i].members)
+        }
+      }
+      usersId = _.uniq(usersId)
+      if (usersId.length) {
+        Swizi.findUserByIds(usersId).then(users => {
+          for (let i = 0; i < groups.length; i++) {
+            if (groups[i].members.length) {
+              for (let j = 0; j < groups[i].members.length; j++) {
+                if (users.find(u => u.id === groups[i].members[j]))
+                  groups[i].members[j] = users.find(u => u.id === groups[i].members[j])
+              }
+            }
+          }
+          console.log(groups)
+          return apiUtils.sendApiSuccess(res, { groups: groups, count: groups.length })
+        })
+      } else {
+        return apiUtils.sendApiSuccess(res, { groups: groups, count: groups.length })
+      }
     })
   } else {
     if (req.user.role.isAdmin || req.user.role.isAgent) {
       Department.getDepartmentGroupsOfUser(
-        req.user._id,
+        req.user.id,
         function (err, groups) {
           if (err) return apiUtils.sendApiError(res, 500, err.message)
 
@@ -64,7 +99,7 @@ apiGroups.get = function (req, res) {
       )
     } else {
       Group.getAllGroupsOfUser(
-        req.user._id,
+        req.user.id,
         function (err, groups) {
           if (err) return apiUtils.sendApiError(res, 500, err.message)
 
@@ -95,12 +130,24 @@ apiGroups.update = function (req, res) {
 
     group.save(function (err, group) {
       if (err) return apiUtils.sendApiError(res, 500, err.message)
-
-      group.populate('members sendMailTo', function (err, group) {
-        if (err) return apiUtils.sendApiError(res, 500, err.message)
-
+      if (group.members.length) {
+        let Swizi = new SwiziConnector({ apikey: req.user.swiziApiKey })
+        let usersId = _.uniq(group.members)
+        Swizi.findUserByIds(usersId).then(users => {
+          for (let j = 0; j < group.members.length; j++) {
+            if (users.find(u => u.id === group.members[j]))
+              group.members[j] = users.find(u => u.id === group.members[j])
+          }
+          return apiUtils.sendApiSuccess(res, { group: group })
+        })
+      } else {
         return apiUtils.sendApiSuccess(res, { group: group })
-      })
+      }
+      // group.populate('members sendMailTo', function (err, group) {
+      //   if (err) return apiUtils.sendApiError(res, 500, err.message)
+
+      //   return apiUtils.sendApiSuccess(res, { group: group })
+      // })
     })
   })
 }

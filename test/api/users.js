@@ -172,7 +172,7 @@ describe('api/users.js', function () {
             groupSchema.getGroupByName('TEST', function (err, grp) {
               expect(err).to.not.exist
 
-              expect(grp.isMember(user._id)).to.equal(true)
+              expect(grp.isMember(user.id)).to.equal(true)
 
               done()
             })
@@ -191,7 +191,7 @@ describe('api/users.js', function () {
       userSchema.getUserByUsername('trudesk', function (err, user) {
         expect(err).to.not.exist
         var u = {
-          aId: user._id,
+          aId: user.id,
           aFullname: user.fullname,
           aEmail: user.email,
           aGrps: [],
@@ -207,7 +207,7 @@ describe('api/users.js', function () {
           .expect(200, { success: true }, function () {
             groupSchema.getGroupByName('TEST', function (err, grp) {
               expect(err).to.not.exist
-              expect(grp.isMember(user._id)).to.equal(false)
+              expect(grp.isMember(user.id)).to.equal(false)
 
               done()
             })

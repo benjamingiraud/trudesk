@@ -19,6 +19,7 @@ import { connect } from 'react-redux'
 import helpers from 'lib/helpers'
 
 import { updateSetting } from 'actions/settings'
+import { withTranslation } from 'react-i18next';
 
 class InputWithSave extends React.Component {
   constructor (props) {
@@ -54,6 +55,7 @@ class InputWithSave extends React.Component {
 
   render () {
     let width = '100%'
+    let { t } = this.props
     if (this.props.width) width = this.props.width
 
     return (
@@ -69,7 +71,7 @@ class InputWithSave extends React.Component {
         </div>
         <div className='uk-width-1-4 uk-float-right' style={{ marginTop: '10px', textAlign: 'center' }}>
           <button className='md-btn md-btn-small' onClick={e => this.onSaveClicked(e)}>
-            {this.props.saveLabel ? this.props.saveLabel : 'Save'}
+            {this.props.saveLabel ? this.props.saveLabel : t('Save')}
           </button>
         </div>
       </div>
@@ -86,7 +88,7 @@ InputWithSave.propTypes = {
   width: PropTypes.string
 }
 
-export default connect(
+export default withTranslation('settings')(connect(
   null,
   { updateSetting }
-)(InputWithSave)
+)(InputWithSave))

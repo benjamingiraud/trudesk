@@ -29,7 +29,7 @@ groupsController.get = function (req, res) {
     if (req.organization) return res.redirect(`/${req.organization.slug}`)
     return res.redirect(404)
   }
-  console.log(req.organization._id)
+  // console.log(req.organization._id)
   var content = {}
   content.title = 'Groups'
   content.nav = 'groups'

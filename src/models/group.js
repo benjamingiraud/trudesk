@@ -31,14 +31,8 @@ var COLLECTION = 'groups'
 var groupSchema = mongoose.Schema({
   name: { type: String, required: true },
   organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
-  members: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'accounts',
-      autopopulate: { select: '-hasL2Auth -preferences -__v' }
-    }
-  ],
-  sendMailTo: [{ type: mongoose.Schema.Types.ObjectId, ref: 'accounts' }],
+  members: { type: [Number], required: true, default: [] },
+  sendMailTo: [{ type: mongoose.Schema.Types.Number }],
   public: { type: Boolean, required: true, default: false }
 })
 groupSchema.index({ name: 1, organizationId: 1 }, { unique: true })
@@ -121,30 +115,34 @@ groupSchema.statics.getWithObject = function (obj, callback) {
   var organizationId = obj.organizationId
 
   if (userId) {
-    return this.model(COLLECTION)
-      .find({ members: userId, organizationId: organizationId })
+    return (
+      this.model(COLLECTION)
+        .find({ members: userId, organizationId: organizationId })
+        .limit(limit)
+        .skip(page * limit)
+        // .populate('members', '_id username fullname email role preferences image title deleted')
+        .populate('sendMailTo', '_id username fullname email role preferences image title deleted')
+        .sort('name')
+        .exec(callback)
+    )
+  }
+
+  return (
+    this.model(COLLECTION)
+      .find({ organizationId: organizationId })
       .limit(limit)
       .skip(page * limit)
-      .populate('members', '_id username fullname email role preferences image title deleted')
+      // .populate('members', '_id username fullname email role preferences image title deleted')
       .populate('sendMailTo', '_id username fullname email role preferences image title deleted')
       .sort('name')
       .exec(callback)
-  }
-
-  return this.model(COLLECTION)
-    .find({ organizationId: organizationId })
-    .limit(limit)
-    .skip(page * limit)
-    .populate('members', '_id username fullname email role preferences image title deleted')
-    .populate('sendMailTo', '_id username fullname email role preferences image title deleted')
-    .sort('name')
-    .exec(callback)
+  )
 }
 
 groupSchema.statics.getAllGroups = function (callback, organizationId) {
   var q = this.model(COLLECTION)
     .find({ organizationId: organizationId })
-    .populate('members', '_id username fullname email role preferences image title deleted')
+    // .populate('members', '_id username fullname email role preferences image title deleted')
     .populate('sendMailTo', '_id username fullname email role preferences image title deleted')
     .sort('name')
 
@@ -172,7 +170,7 @@ groupSchema.statics.getGroups = function (groupIds, callback, organizationId) {
 
   this.model(COLLECTION)
     .find({ _id: { $in: groupIds }, organizationId: organizationId })
-    .populate('members', '_id username fullname email role preferences image title deleted')
+    // .populate('members', '_id username fullname email role preferences image title deleted')
     .sort('name')
     .exec(callback)
 }
@@ -183,7 +181,7 @@ groupSchema.statics.getAllGroupsOfUser = function (userId, callback, organizatio
 
   var q = this.model(COLLECTION)
     .find({ members: userId, organizationId: organizationId })
-    .populate('members', '_id username fullname email role preferences image title deleted')
+    // .populate('members', '_id username fullname email role preferences image title deleted')
     .populate('sendMailTo', '_id username fullname email role preferences image title deleted')
     .sort('name')
 
@@ -206,7 +204,7 @@ groupSchema.statics.getGroupById = function (gId, callback, organizationId) {
 
   var q = this.model(COLLECTION)
     .findOne({ _id: gId, organizationId: organizationId })
-    .populate('members', '_id username fullname email role preferences image title')
+    // .populate('members', '_id username fullname email role preferences image title')
     .populate('sendMailTo', '_id username fullname email role preferences image title')
 
   return q.exec(callback)

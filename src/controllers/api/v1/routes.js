@@ -144,13 +144,13 @@ module.exports = function (middleware, router, controllers) {
   router.post('/api/v1/users/:id/removel2auth', apiv1, apiCtrl.users.removeL2Auth)
 
   // Messages
-  router.get('/api/v1/messages', apiv1, apiCtrl.messages.get)
-  router.post('/api/v1/messages/conversation/start', apiv1, apiCtrl.messages.startConversation)
-  router.get('/api/v1/messages/conversation/:id', apiv1, apiCtrl.messages.getMessagesForConversation)
-  router.delete('/api/v1/messages/conversation/:id', apiv1, apiCtrl.messages.deleteConversation)
-  router.get('/api/v1/messages/conversations', apiv1, apiCtrl.messages.getConversations)
-  router.get('/api/v1//messages/conversations/recent', apiv1, apiCtrl.messages.getRecentConversations)
-  router.post('/api/v1/messages/send', apiv1, apiCtrl.messages.send)
+  // router.get('/api/v1/messages', apiv1, apiCtrl.messages.get)
+  // router.post('/api/v1/messages/conversation/start', apiv1, apiCtrl.messages.startConversation)
+  // router.get('/api/v1/messages/conversation/:id', apiv1, apiCtrl.messages.getMessagesForConversation)
+  // router.delete('/api/v1/messages/conversation/:id', apiv1, apiCtrl.messages.deleteConversation)
+  // router.get('/api/v1/messages/conversations', apiv1, apiCtrl.messages.getConversations)
+  // router.get('/api/v1//messages/conversations/recent', apiv1, apiCtrl.messages.getRecentConversations)
+  // router.post('/api/v1/messages/send', apiv1, apiCtrl.messages.send)
 
   // Notices
   router.post('/api/v1/notices/create', apiv1, canUser('notices:create'), apiCtrl.notices.create)

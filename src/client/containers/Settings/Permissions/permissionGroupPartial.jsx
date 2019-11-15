@@ -24,6 +24,7 @@ import EnableSwitch from 'components/Settings/EnableSwitch'
 import PermSwitchPartial from './permSwitchPartial'
 
 import helpers from 'lib/helpers'
+import { withTranslation } from 'react-i18next';
 
 @observer
 class PermissionGroupPartial extends React.Component {
@@ -104,7 +105,7 @@ class PermissionGroupPartial extends React.Component {
   }
 
   render () {
-    const { title, subtitle, role } = this.props
+    const { title, subtitle, role, t } = this.props
     return (
       <div>
         <SettingItem
@@ -114,32 +115,32 @@ class PermissionGroupPartial extends React.Component {
           component={
             <EnableSwitch
               stateName={`all_perm_${title}_${role.get('_id')}`}
-              label={'All'}
+              label={t('All')}
               checked={this.all}
               onChange={e => this.onEnableSwitchChanged(e, 'all')}
             />
           }
         >
           <PermSwitchPartial
-            title={'Create'}
+            title={t('Create')}
             checked={this.create}
             onChange={e => this.onEnableSwitchChanged(e, 'create')}
             disabled={this.all}
           />
           <PermSwitchPartial
-            title={'View'}
+            title={t('View')}
             onChange={e => this.onEnableSwitchChanged(e, 'view')}
             checked={this.view}
             disabled={this.all}
           />
           <PermSwitchPartial
-            title={'Update'}
+            title={t('Update')}
             onChange={e => this.onEnableSwitchChanged(e, 'update')}
             checked={this.update}
             disabled={this.all}
           />
           <PermSwitchPartial
-            title={'Delete'}
+            title={t('Delete')}
             onChange={e => this.onEnableSwitchChanged(e, 'delete')}
             checked={this.delete}
             disabled={this.all}
@@ -155,7 +156,7 @@ class PermissionGroupPartial extends React.Component {
                       className='text-dark'
                       style={{ padding: '0 0 0 15px', margin: '20px 0', fontSize: '18px', lineHeight: '14px' }}
                     >
-                      Special Permissions
+                      {t('Special_Permissions')}
                     </h6>
                   </div>
                 </div>

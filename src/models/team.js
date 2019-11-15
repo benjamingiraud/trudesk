@@ -24,13 +24,7 @@ var teamSchema = mongoose.Schema({
   name: { type: String, required: true },
   normalized: { type: String, required: true, lowercase: true },
   organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
-  members: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'accounts',
-      autopopulate: { select: '-hasL2Auth -preferences -__v' }
-    }
-  ]
+  members: { type: [Number], required: true, default: [] }
 })
 teamSchema.index({ normalized: 1, organizationId: 1 }, { unique: true })
 

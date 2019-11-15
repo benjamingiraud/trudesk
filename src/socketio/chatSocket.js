@@ -27,7 +27,7 @@ function register (socket) {
   events.onSetUserActive(socket)
   events.onUpdateUsers(socket)
   events.updateOnlineBubbles(socket)
-  events.updateConversationsNotifications(socket)
+  // events.updateConversationsNotifications(socket)
   events.spawnChatWindow(socket)
   events.getOpenChatWindows(socket)
   events.onChatMessage(socket)
@@ -37,14 +37,14 @@ function register (socket) {
   events.onDisconnect(socket)
 
   if (socket.request.user.logged_in) {
-    joinChatServer(socket)
+    // joinChatServer(socket)
   }
 }
 
 function eventLoop () {
   updateUsers()
   updateOnlineBubbles()
-  updateConversationsNotifications()
+  // updateConversationsNotifications()
 }
 
 events.onUpdateUsers = function (socket) {
@@ -106,7 +106,7 @@ function updateUsers () {
             socket.emit('updateUsers', sortedUserList)
           } else {
             var groupSchema = require('../models/group')
-            groupSchema.getAllGroupsOfUser(user._id, function (err, groups) {
+            groupSchema.getAllGroupsOfUser(user.id, function (err, groups) {
               if (!err) {
                 var usersOfGroups = _.map(groups, function (g) {
                   return _.map(g.members, function (m) {
@@ -145,7 +145,7 @@ function updateUsers () {
                     return actual.indexOf(i.user.username) !== -1
                   })
                   .uniqBy(function (i) {
-                    return i.user._id
+                    return i.user.id
                   })
                   .value()
 
@@ -190,85 +190,85 @@ events.updateOnlineBubbles = function (socket) {
   })
 }
 
-function updateConversationsNotifications () {
-  _.each(io.sockets.sockets, function (socket) {
-    if (!socket.request && !socket.request.user) {
-      return
-    }
+// function updateConversationsNotifications () {
+//   _.each(io.sockets.sockets, function (socket) {
+//     if (!socket.request && !socket.request.user) {
+//       return
+//     }
 
-    var userId = socket.request.user._id
-    var messageSchema = require('../models/chat/message')
-    var conversationSchema = require('../models/chat/conversation')
-    conversationSchema.getConversationsWithLimit(userId, 10, function (err, conversations) {
-      if (err) {
-        winston.warn(err.message)
-        return false
-      }
+//     var userId = socket.request.user.id
+//     var messageSchema = require('../models/chat/message')
+//     var conversationSchema = require('../models/chat/conversation')
+//     conversationSchema.getConversationsWithLimit(userId, 10, function (err, conversations) {
+//       if (err) {
+//         winston.warn(err.message)
+//         return false
+//       }
 
-      var convos = []
+//       var convos = []
 
-      async.eachSeries(
-        conversations,
-        function (convo, done) {
-          var c = convo.toObject()
+//       async.eachSeries(
+//         conversations,
+//         function (convo, done) {
+//           var c = convo.toObject()
 
-          var userMeta =
-            convo.userMeta[
-              _.findIndex(convo.userMeta, function (item) {
-                return item.userId.toString() === userId.toString()
-              })
-            ]
-          if (!_.isUndefined(userMeta) && !_.isUndefined(userMeta.deletedAt) && userMeta.deletedAt > convo.updatedAt) {
-            return done()
-          }
+//           var userMeta =
+//             convo.userMeta[
+//               _.findIndex(convo.userMeta, function (item) {
+//                 return item.userId.toString() === userId.toString()
+//               })
+//             ]
+//           if (!_.isUndefined(userMeta) && !_.isUndefined(userMeta.deletedAt) && userMeta.deletedAt > convo.updatedAt) {
+//             return done()
+//           }
 
-          messageSchema.getMostRecentMessage(c._id, function (err, rm) {
-            if (err) return done(err)
+//           messageSchema.getMostRecentMessage(c._id, function (err, rm) {
+//             if (err) return done(err)
 
-            _.each(c.participants, function (p) {
-              if (p._id.toString() !== userId.toString()) {
-                c.partner = p
-              }
-            })
+//             _.each(c.participants, function (p) {
+//               if (p._id.toString() !== userId.toString()) {
+//                 c.partner = p
+//               }
+//             })
 
-            rm = _.first(rm)
+//             rm = _.first(rm)
 
-            if (!_.isUndefined(rm)) {
-              if (!c.partner || !rm.owner) return done()
+//             if (!_.isUndefined(rm)) {
+//               if (!c.partner || !rm.owner) return done()
 
-              if (String(c.partner._id) === String(rm.owner._id)) {
-                c.recentMessage = c.partner.fullname + ': ' + rm.body
-              } else {
-                c.recentMessage = 'You: ' + rm.body
-              }
-            } else {
-              c.recentMessage = 'New Conversation'
-            }
+//               if (String(c.partner._id) === String(rm.owner._id)) {
+//                 c.recentMessage = c.partner.fullname + ': ' + rm.body
+//               } else {
+//                 c.recentMessage = 'You: ' + rm.body
+//               }
+//             } else {
+//               c.recentMessage = 'New Conversation'
+//             }
 
-            convos.push(c)
+//             convos.push(c)
 
-            return done()
-          })
-        },
-        function (err) {
-          if (err) return false
-          return utils.sendToSelf(socket, 'updateConversationsNotifications', {
-            conversations: convos
-          })
-        }
-      )
-    })
-  })
-}
+//             return done()
+//           })
+//         },
+//         function (err) {
+//           if (err) return false
+//           return utils.sendToSelf(socket, 'updateConversationsNotifications', {
+//             conversations: convos
+//           })
+//         }
+//       )
+//     })
+//   })
+// }
 
-events.updateConversationsNotifications = function (socket) {
-  socket.on('updateConversationsNotifications', function () {
-    updateConversationsNotifications(socket)
-  })
-}
+// events.updateConversationsNotifications = function (socket) {
+//   socket.on('updateConversationsNotifications', function () {
+//     updateConversationsNotifications(socket)
+//   })
+// }
 
 function spawnOpenChatWindows (socket) {
-  var loggedInAccountId = socket.request.user._id
+  var loggedInAccountId = socket.request.user.id
   var userSchema = require('../models/user')
   var conversationSchema = require('../models/chat/conversation')
   userSchema.getUser(
@@ -409,11 +409,11 @@ events.onChatTyping = function (socket) {
     var fromUser = null
 
     _.find(sharedVars.usersOnline, function (v) {
-      if (String(v.user._id) === String(to)) {
+      if (String(v.user.id) === String(to)) {
         user = v.user
       }
 
-      if (String(v.user._id) === String(from)) {
+      if (String(v.user.id) === String(from)) {
         fromUser = v.user
       }
     })
@@ -435,7 +435,7 @@ events.onChatStopTyping = function (socket) {
     var user = null
 
     _.find(sharedVars.usersOnline, function (v) {
-      if (String(v.user._id) === String(to)) {
+      if (String(v.user.id) === String(to)) {
         user = v.user
       }
     })
@@ -471,7 +471,7 @@ function joinChatServer (socket) {
       // utils.sendToAllConnectedClients(io, 'updateUsers', sortedUserList)
       sharedVars.sockets.push(socket)
 
-      spawnOpenChatWindows(socket, user._id)
+      spawnOpenChatWindows(socket, user.id)
     }
   } else {
     sharedVars.usersOnline[user.username].sockets.push(socket.id)
@@ -481,7 +481,7 @@ function joinChatServer (socket) {
     // utils.sendToAllConnectedClients(io, 'updateUsers', sortedUserList)
     sharedVars.sockets.push(socket)
 
-    spawnOpenChatWindows(socket, user._id)
+    spawnOpenChatWindows(socket, user.id)
   }
 }
 
@@ -516,7 +516,7 @@ events.onDisconnect = function (socket) {
     }
 
     // Save lastOnline Time
-    userSchema.getUser(user._id, function (err, u) {
+    userSchema.getUser(user.id, function (err, u) {
       if (!err && u) {
         u.lastOnline = new Date()
 

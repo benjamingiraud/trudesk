@@ -41,15 +41,15 @@ function mainRoutes (router, middleware, controllers) {
     controllers.main.dashboard
   )
 
-  router.get('/:organizationId/login', function (req, res) {
+  router.get('/:organizationId/login', middleware.checkOrganization, function (req, res) {
     if (req.organization) {
-      console.log(req.organization.slug)
+      // console.log(req.organization.slug)
       res.redirect(`/${req.organization.slug}`)
     }
     return res.redirect(404)
   })
 
-  router.post('/:organizationId/login', controllers.main.loginPost)
+  router.post('/:organizationId/login', middleware.checkOrganization, controllers.main.loginPost)
   router.get('/l2auth', controllers.main.l2authget)
   router.post('/l2auth', controllers.main.l2AuthPost)
   router.get('/:organizationId/logout', middleware.checkOrganization, controllers.main.logout)

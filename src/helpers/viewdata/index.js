@@ -23,12 +23,20 @@ var viewController = {}
 var viewdata = {}
 viewdata.users = {}
 
-viewController.getData = function (request, cb) {
+viewController.getData = async function (request, cb) {
   const organizationId = request.organization._id
   const organizationSlug = request.organization.slug
+  const swiziApiKey = request.organization.swiziApiKey
+
   console.log('in view data')
+
   viewdata.organizationId = organizationId
   viewdata.organizationSlug = organizationSlug
+
+  let SwiziConnector = require('../../connectors/SwiziConnector')
+  let Swizi = new SwiziConnector({ apikey: swiziApiKey })
+  viewdata.swiziGroups = await Swizi.findGroup({})
+
   async.parallel(
     [
       function (callback) {
@@ -297,19 +305,19 @@ viewController.getData = function (request, cb) {
       //     return callback()
       //   })
       // },
-      function (callback) {
-        viewController.getConversations(
-          request,
-          function (err, conversations) {
-            if (err) return callback(err)
+      // function (callback) {
+      //   viewController.getConversations(
+      //     request,
+      //     function (err, conversations) {
+      //       if (err) return callback(err)
 
-            viewdata.conversations = conversations
+      //       viewdata.conversations = conversations
 
-            return callback()
-          },
-          organizationId
-        )
-      },
+      //       return callback()
+      //     },
+      //     organizationId
+      //   )
+      // },
       function (callback) {
         viewController.getUsers(
           request,
@@ -484,7 +492,7 @@ viewController.getActiveNotice = function (callback, organizationId) {
 
 viewController.getUserNotifications = function (request, callback) {
   var notificationsSchema = require('../../models/notification')
-  notificationsSchema.findAllForUser(request.user._id, function (err, data) {
+  notificationsSchema.findAllForUser(request.user.id, function (err, data) {
     if (err) {
       winston.warn(err.message)
       return callback(err)
@@ -496,7 +504,7 @@ viewController.getUserNotifications = function (request, callback) {
 
 viewController.getUnreadNotificationsCount = function (request, callback) {
   var notificationsSchema = require('../../models/notification')
-  notificationsSchema.getUnreadCount(request.user._id, function (err, count) {
+  notificationsSchema.getUnreadCount(request.user.id, function (err, count) {
     if (err) {
       winston.warn(err.message)
       return callback(err)
@@ -506,73 +514,73 @@ viewController.getUnreadNotificationsCount = function (request, callback) {
   })
 }
 
-viewController.getConversations = function (request, callback, organizationId) {
-  var conversationSchema = require('../../models/chat/conversation')
-  var messageSchema = require('../../models/chat/message')
-  conversationSchema.getConversationsWithLimit(
-    request.user._id,
-    10,
-    function (err, conversations) {
-      if (err) {
-        winston.warn(err.message)
-        return callback(err)
-      }
+// viewController.getConversations = function (request, callback, organizationId) {
+//   var conversationSchema = require('../../models/chat/conversation')
+//   var messageSchema = require('../../models/chat/message')
+//   conversationSchema.getConversationsWithLimit(
+//     request.user.id,
+//     10,
+//     function (err, conversations) {
+//       if (err) {
+//         winston.warn(err.message)
+//         return callback(err)
+//       }
 
-      var convos = []
+//       var convos = []
 
-      async.eachSeries(
-        conversations,
-        function (convo, done) {
-          var c = convo.toObject()
+//       async.eachSeries(
+//         conversations,
+//         function (convo, done) {
+//           var c = convo.toObject()
 
-          var userMeta =
-            convo.userMeta[
-              _.findIndex(convo.userMeta, function (item) {
-                return item.userId.toString() === request.user._id.toString()
-              })
-            ]
-          if (!_.isUndefined(userMeta) && !_.isUndefined(userMeta.deletedAt) && userMeta.deletedAt > convo.updatedAt) {
-            return done()
-          }
+//           var userMeta =
+//             convo.userMeta[
+//               _.findIndex(convo.userMeta, function (item) {
+//                 return item.userId.toString() === request.user.id.toString()
+//               })
+//             ]
+//           if (!_.isUndefined(userMeta) && !_.isUndefined(userMeta.deletedAt) && userMeta.deletedAt > convo.updatedAt) {
+//             return done()
+//           }
 
-          messageSchema.getMostRecentMessage(
-            c._id,
-            function (err, rm) {
-              if (err) return done(err)
+//           messageSchema.getMostRecentMessage(
+//             c._id,
+//             function (err, rm) {
+//               if (err) return done(err)
 
-              _.each(c.participants, function (p) {
-                if (p._id.toString() !== request.user._id.toString()) {
-                  c.partner = p
-                }
-              })
+//               _.each(c.participants, function (p) {
+//                 if (p._id.toString() !== request.user.id.toString()) {
+//                   c.partner = p
+//                 }
+//               })
 
-              rm = _.first(rm)
+//               rm = _.first(rm)
 
-              if (!_.isUndefined(rm)) {
-                if (String(c.partner._id) === String(rm.owner._id)) {
-                  c.recentMessage = c.partner.fullname + ': ' + rm.body
-                } else {
-                  c.recentMessage = 'You: ' + rm.body
-                }
-              } else {
-                c.recentMessage = 'New Conversation'
-              }
+//               if (!_.isUndefined(rm)) {
+//                 if (String(c.partner._id) === String(rm.owner._id)) {
+//                   c.recentMessage = c.partner.fullname + ': ' + rm.body
+//                 } else {
+//                   c.recentMessage = 'You: ' + rm.body
+//                 }
+//               } else {
+//                 c.recentMessage = 'New Conversation'
+//               }
 
-              convos.push(c)
+//               convos.push(c)
 
-              return done()
-            },
-            organizationId
-          )
-        },
-        function (err) {
-          return callback(err, convos)
-        }
-      )
-    },
-    organizationId
-  )
-}
+//               return done()
+//             },
+//             organizationId
+//           )
+//         },
+//         function (err) {
+//           return callback(err, convos)
+//         }
+//       )
+//     },
+//     organizationId
+//   )
+// }
 
 viewController.getUsers = function (request, callback, organizationId) {
   var userSchema = require('../../models/user')
@@ -602,7 +610,7 @@ viewController.getUsers = function (request, callback, organizationId) {
   } else {
     var groupSchema = require('../../models/group')
     groupSchema.getAllGroupsOfUser(
-      request.user._id,
+      request.user.id,
       function (err, groups) {
         if (err) return callback(err)
 
@@ -638,18 +646,19 @@ viewController.getUsers = function (request, callback, organizationId) {
 }
 
 viewController.loggedInAccount = function (request, callback, organizationId) {
-  var userSchema = require('../../models/user')
-  userSchema.getUser(
-    request.user._id,
-    function (err, data) {
-      if (err) {
-        return callback(err)
-      }
+  return callback(request.user)
+  // var userSchema = require('../../models/user')
+  // userSchema.getUser(
+  //   request.user.id,
+  //   function (err, data) {
+  //     if (err) {
+  //       return callback(err)
+  //     }
 
-      return callback(data)
-    },
-    organizationId
-  )
+  //     return callback(data)
+  //   },
+  //   organizationId
+  // )
 }
 
 viewController.getTeams = function (request, callback, organizationId) {
@@ -662,7 +671,7 @@ viewController.getGroups = function (request, callback, organizationId) {
   var Department = require('../../models/department')
   if (request.user.role.isAdmin || request.user.role.isAgent) {
     Department.getDepartmentGroupsOfUser(
-      request.user._id,
+      request.user.id,
       function (err, groups) {
         if (err) {
           winston.debug(err)
@@ -675,7 +684,7 @@ viewController.getGroups = function (request, callback, organizationId) {
     )
   } else {
     groupSchema.getAllGroupsOfUserNoPopulate(
-      request.user._id,
+      request.user.id,
       function (err, data) {
         if (err) {
           winston.debug(err)
@@ -804,7 +813,7 @@ viewController.getShowTourSetting = function (request, callback, organizationId)
 
       var userSchema = require('../../models/user')
       userSchema.getUser(
-        request.user._id,
+        request.user.id,
         function (err, user) {
           if (err) return callback(err)
 

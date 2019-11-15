@@ -545,7 +545,7 @@ define('modules/chat', ['jquery', 'underscore', 'moment', 'modules/helpers', 'ui
       return helpers.UI.showSnackbar('Unable to start chat', true)
     }
 
-    startConversation(loggedInAccountId, user._id, function (err, convo) {
+    startConversation(loggedInAccountId, user.id, function (err, convo) {
       if (err) {
         console.log('[trudesk:chat:openChatWindow] - Error')
         console.log(err)
@@ -555,9 +555,9 @@ define('modules/chat', ['jquery', 'underscore', 'moment', 'modules/helpers', 'ui
       var username = loggedInAccount.username
       if (user.username === username) return true
 
-      var cWindow = $('.chat-box-position').find('.chat-box[data-chat-userid="' + user._id + '"]')
+      var cWindow = $('.chat-box-position').find('.chat-box[data-chat-userid="' + user.id + '"]')
       if (cWindow.length > 0) {
-        // loadChatMessages($('.chat-box-position').find('.chat-box[data-chat-userid="' + user._id + '"]'), convo.messages);
+        // loadChatMessages($('.chat-box-position').find('.chat-box[data-chat-userid="' + user.id + '"]'), convo.messages);
         cWindow.find('textarea').focus()
         helpers.scrollToBottom(cWindow.find('.chat-box-messages'))
         return true
@@ -573,7 +573,7 @@ define('modules/chat', ['jquery', 'underscore', 'moment', 'modules/helpers', 'ui
           })
         ]
       var html = '<div class="chat-box-position">'
-      html += '<div class="chat-box" data-conversation-id="' + convo._id + '" data-chat-userid="' + user._id + '">'
+      html += '<div class="chat-box" data-conversation-id="' + convo._id + '" data-chat-userid="' + user.id + '">'
       html += '<div class="chat-box-title">'
       html += '<div class="chat-box-title-buttons right">'
       html += '<a class="chatCloseBtn"><i class="material-icons material-icons-small">close</i></a>'
@@ -589,7 +589,7 @@ define('modules/chat', ['jquery', 'underscore', 'moment', 'modules/helpers', 'ui
           moment(userMeta.deletedAt).format(helpers.getShortDateFormat() + ' ' + helpers.getTimeFormat()) +
           '</div>'
       }
-      html += '<div class="chat-message-list" data-chat-userid="' + user._id + '">'
+      html += '<div class="chat-message-list" data-chat-userid="' + user.id + '">'
       html += '</div>'
       html += '<div class="user-is-typing-wrapper hide">'
       html +=
@@ -608,12 +608,12 @@ define('modules/chat', ['jquery', 'underscore', 'moment', 'modules/helpers', 'ui
       html += '</div>'
 
       $('.chat-box-wrapper').append(html)
-      $('.chat-box[data-chat-userid="' + user._id + '"] textarea').focus()
-      loadChatMessages($('.chat-box-position').find('.chat-box[data-chat-userid="' + user._id + '"]'), convo.messages)
+      $('.chat-box[data-chat-userid="' + user.id + '"] textarea').focus()
+      loadChatMessages($('.chat-box-position').find('.chat-box[data-chat-userid="' + user.id + '"]'), convo.messages)
       helpers.hideAllpDropDowns()
-      helpers.setupScrollers('.chat-box[data-chat-userid="' + user._id + '"] > div.scrollable')
+      helpers.setupScrollers('.chat-box[data-chat-userid="' + user.id + '"] > div.scrollable')
       bindChatWindowActions(convo._id)
-      helpers.scrollToBottom($('.chat-box[data-chat-userid="' + user._id + '"]').find('.chat-box-messages'))
+      helpers.scrollToBottom($('.chat-box[data-chat-userid="' + user.id + '"]').find('.chat-box-messages'))
 
       socket.emit('saveChatWindow', {
         userId: loggedInAccountId,
@@ -651,7 +651,7 @@ define('modules/chat', ['jquery', 'underscore', 'moment', 'modules/helpers', 'ui
     var idleUserList = usersOnline.sortedIdleList
 
     _.each(onlineUserList, function (v) {
-      var $bubble = $('span[data-user-status-id="' + v.user._id + '"]')
+      var $bubble = $('span[data-user-status-id="' + v.user.id + '"]')
       $bubble.each(function () {
         var self = $(this)
 
@@ -660,7 +660,7 @@ define('modules/chat', ['jquery', 'underscore', 'moment', 'modules/helpers', 'ui
     })
 
     _.each(idleUserList, function (v) {
-      var $bubble = $('span[data-user-status-id="' + v.user._id + '"]')
+      var $bubble = $('span[data-user-status-id="' + v.user.id + '"]')
       $bubble.each(function () {
         var self = $(this)
 

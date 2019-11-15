@@ -5,7 +5,7 @@
         <h2 id="modalTitle" class="uk-margin-medium-bottom">New Message</h2>
         <div class="uk-clearfix">
             <form id="newMessageForm" action="#" method="POST" class="uk-form-stacked">
-                <input type="hidden" name="from" value="{{data.user._id}}"/>
+                <input type="hidden" name="from" value="{{data.user.id}}"/>
                 <label for="newMessageTo" class="uk-form-label">To:</label>
                 <select name="newMessageTo" id="newMessageTo" multiple class="selectize uk-margin-medium-bottom"
                         data-md-selectize-inline

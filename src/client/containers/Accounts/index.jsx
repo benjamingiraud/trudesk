@@ -75,12 +75,12 @@ class AccountsContainer extends React.Component {
 
   onDeleteAccountClicked (e, user) {
     e.preventDefault()
-    this.props.deleteAccount({ username: user.get('username') })
+    this.props.deleteAccount({ username: user.username })
   }
 
   onEnableAccountClicked (e, user) {
     e.preventDefault()
-    this.props.enableAccount({ username: user.get('username') })
+    this.props.enableAccount({ username: user.username })
   }
 
   getUsersWithPage (page) {
@@ -118,23 +118,23 @@ class AccountsContainer extends React.Component {
       this.props.accountsState.accounts.map(user => {
         const userImage = user.get('image') || 'defaultProfile.jpg'
         let actionMenu = [<DropdownItem key={0} text={'Edit'} onClick={e => this.onEditAccountClicked(e, user)} />]
-        if (user.get('deleted'))
-          actionMenu.push(<DropdownItem key={2} text={'Enable'} onClick={e => this.onEnableAccountClicked(e, user)} />)
-        else
-          actionMenu.push(
-            <DropdownItem
-              key={1}
-              text={'Delete'}
-              extraClass={'uk-text-danger'}
-              onClick={e => this.onDeleteAccountClicked(e, user)}
-            />
-          )
+        // if (user.get('deleted'))
+        //   actionMenu.push(<DropdownItem key={2} text={'Enable'} onClick={e => this.onEnableAccountClicked(e, user)} />)
+        // else
+        //   actionMenu.push(
+        //     <DropdownItem
+        //       key={1}
+        //       text={'Delete'}
+        //       extraClass={'uk-text-danger'}
+        //       onClick={e => this.onDeleteAccountClicked(e, user)}
+        //     />
+        //   )
         const isAdmin = user.getIn(['role', 'isAdmin']) || false
         const isAgent = user.getIn(['role', 'isAgent']) || false
         const customer = !isAdmin && !isAgent
-        const isDeleted = user.get('deleted') || false
+        const isDeleted = !user.get(('enabled')) || false
         return (
-          <GridItem key={user.get('_id')} width={'1-5'} xLargeWidth={'1-6'} extraClass={'mb-25'}>
+          <GridItem key={user.id} width={'1-5'} xLargeWidth={'1-6'} extraClass={'mb-25'}>
             <TruCard
               loaderActive={user.get('loading')}
               menu={actionMenu}
@@ -148,12 +148,12 @@ class AccountsContainer extends React.Component {
                   <div className='account-image relative uk-display-inline-block'>
                     <img src={`/uploads/users/${userImage}`} alt='ProfilePic' className={'tru-card-head-avatar'} />
                     <span
-                      data-user-status-id={user.get('_id')}
+                      data-user-status-id={user.get('id')}
                       className='user-status-large user-offline uk-border-circle'
                     />
                   </div>
                   <h3 className='tru-card-head-text uk-text-center'>
-                    {user.get('fullname')}
+                    {`${user.get('firstname')} ${user.get('lastname')}`}
                     <span className='uk-text-truncate'>{user.get('title')}</span>
                   </h3>
                 </div>
@@ -175,12 +175,12 @@ class AccountsContainer extends React.Component {
                     </div>
                   </li>
                   <li>
-                    {customer && user.get('groups') && (
+                    {customer && user.get('tgroups') && (
                       <div className='tru-list-content'>
                         <span className='tru-list-heading'>{t('Groups')}</span>
                         <span className='uk-text-small uk-text-muted uk-text-truncate'>
-                          {user.get('groups').map(group => {
-                            return group.get('name') + (user.get('groups').toArray().length > 1 ? ', ' : '')
+                          {user.get('tgroups').map(group => {
+                            return group.get('name') + (user.get('tgroups').toArray().length > 1 ? ', ' : '')
                           })}
                         </span>
                       </div>
@@ -228,7 +228,7 @@ class AccountsContainer extends React.Component {
               {/*    <div className='md-input-bar' />*/}
               {/*  </div>*/}
               {/*</div>*/}
-              <div className={'uk-width-1-4 uk-push-3-4 mt-15 pr-20 uk-clearfix'}>
+              {/* <div className={'uk-width-1-4 uk-push-3-4 mt-15 pr-20 uk-clearfix'}>
                 <ButtonGroup classNames={'uk-clearfix uk-float-right'}>
                   <Button
                     text={'Create'}
@@ -256,7 +256,7 @@ class AccountsContainer extends React.Component {
                     </DropdownTrigger>
                   )}
                 </ButtonGroup>
-              </div>
+              </div> */}
             </div>
           }
         />

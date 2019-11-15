@@ -25,8 +25,8 @@
             <ion-scroll direction="x" style="overflow-x: hidden;" delegate-handle="activeUsersScroll">
                 <ion-item class="item-x item-avatar"
                     style="min-height: 75px;"
-                    ng-repeat="userObj in onlineUsers track by userObj.user._id | orderBy: 'user'"
-                    ng-click="startConversation(userObj.user._id);">
+                    ng-repeat="userObj in onlineUsers track by userObj.user.id | orderBy: 'user'"
+                    ng-click="startConversation(userObj.user.id);">
                     <div class="avatar avatar-small">
                         <img http-src="/uploads/users/{{userObj.user.image}}" ng-if="userObj.user.image">
                             <img http-src="/uploads/users/defaultProfile.jpg" ng-if="!userObj.user.image">
@@ -52,8 +52,8 @@
         <ion-scroll direction="x" style="overflow-x: hidden;" delegate-handle="activeUsersScroll">
             <ion-item class="item-x item-avatar"
                 style="min-height: 75px;"
-                ng-repeat="userObj in onlineUsers track by userObj.user._id | orderBy: 'user'"
-                ng-click="startConversation(userObj.user._id);">
+                ng-repeat="userObj in onlineUsers track by userObj.user.id | orderBy: 'user'"
+                ng-click="startConversation(userObj.user.id);">
                 <div class="avatar avatar-small">
                     <img http-src="/uploads/users/{{userObj.user.image}}" ng-if="userObj.user.image">
                         <img http-src="/uploads/users/defaultProfile.jpg" ng-if="!userObj.user.image">

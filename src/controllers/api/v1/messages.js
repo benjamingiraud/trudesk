@@ -44,7 +44,7 @@ var apiMessages = {}
  */
 
 apiMessages.getConversations = function (req, res) {
-  ConversationSchema.getConversations(req.user._id, function (err, conversations) {
+  ConversationSchema.getConversations(req.user.id, function (err, conversations) {
     if (err) return res.status(400).json({ success: false, error: err.message })
 
     return res.json({ success: true, conversations: conversations })
@@ -52,7 +52,7 @@ apiMessages.getConversations = function (req, res) {
 }
 
 apiMessages.getRecentConversations = function (req, res) {
-  ConversationSchema.getConversations(req.user._id, function (err, conversations) {
+  ConversationSchema.getConversations(req.user.id, function (err, conversations) {
     if (err) return res.status(400).json({ success: false, error: err.message })
 
     var result = []
@@ -60,7 +60,7 @@ apiMessages.getRecentConversations = function (req, res) {
       conversations,
       function (item, done) {
         var idx = _.findIndex(item.userMeta, function (mItem) {
-          return mItem.userId.toString() === req.user._id.toString()
+          return mItem.userId.toString() === req.user.id.toString()
         })
         if (idx === -1) {
           return res.status(400).json({ success: false, error: 'Unable to attach to userMeta' })
@@ -96,7 +96,7 @@ apiMessages.getRecentConversations = function (req, res) {
 }
 
 apiMessages.get = function (req, res) {
-  ConversationSchema.getConversations(req.user._id, function (err, conversations) {
+  ConversationSchema.getConversations(req.user.id, function (err, conversations) {
     if (err) return res.status(400).json({ success: false, error: err })
     var fullConversations = []
 
@@ -297,7 +297,7 @@ apiMessages.deleteConversation = function (req, res) {
 
     var user = req.user
     var idx = _.findIndex(convo.userMeta, function (item) {
-      return item.userId.toString() === user._id.toString()
+      return item.userId.toString() === user.id.toString()
     })
     if (idx === -1) {
       return res.status(400).json({ success: false, error: 'Unable to attach to userMeta' })

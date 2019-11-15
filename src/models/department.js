@@ -29,7 +29,8 @@ var departmentSchema = mongoose.Schema({
   normalized: { type: String },
   teams: [{ type: mongoose.Schema.Types.ObjectId, ref: 'teams', autopopulate: true }],
   allGroups: { type: Boolean, default: false },
-  groups: [{ type: mongoose.Schema.Types.ObjectId, ref: 'groups', autopopulate: true }]
+  groups: [{ type: mongoose.Schema.Types.ObjectId, ref: 'groups', autopopulate: true }],
+  swiziGroupIds: { type: Array, required: true, default: [] }
 })
 departmentSchema.index({ name: 1, organizationId: 1 }, { unique: true })
 

@@ -57,7 +57,7 @@ events.onUpdateTicketGrid = function (socket) {
 events.onUpdateTicketStatus = function (socket) {
   socket.on('updateTicketStatus', function (data) {
     var ticketId = data.ticketId
-    var ownerId = socket.request.user._id
+    var ownerId = socket.request.user.id
     var organizationId = socket.request.user.organizationId
     var status = data.status
 
@@ -123,7 +123,7 @@ events.onUpdateAssigneeList = function (socket) {
 events.onSetAssignee = function (socket) {
   socket.on('setAssignee', function (data) {
     var userId = data._id
-    var ownerId = socket.request.user._id
+    var ownerId = socket.request.user.id
     var ticketId = data.ticketId
     var organizationId = socket.request.user.organizationId
 
@@ -188,7 +188,7 @@ events.onSetTicketType = function (socket) {
   socket.on('setTicketType', function (data) {
     var ticketId = data.ticketId
     var typeId = data.typeId
-    var ownerId = socket.request.user._id
+    var ownerId = socket.request.user.id
     var organizationId = socket.request.user.organizationId
 
     if (_.isUndefined(ticketId) || _.isUndefined(typeId)) return true
@@ -225,7 +225,7 @@ events.onSetTicketPriority = function (socket) {
   socket.on('setTicketPriority', function (data) {
     var ticketId = data.ticketId
     var priority = data.priority
-    var ownerId = socket.request.user._id
+    var ownerId = socket.request.user.id
     var organizationId = socket.request.user.organizationId
 
     if (_.isUndefined(ticketId) || _.isUndefined(priority)) return true
@@ -262,7 +262,7 @@ events.onSetTicketPriority = function (socket) {
 events.onClearAssignee = function (socket) {
   socket.on('clearAssignee', function (id) {
     var ticketId = id
-    var ownerId = socket.request.user._id
+    var ownerId = socket.request.user.id
     var organizationId = socket.request.user.organizationId
 
     ticketSchema.getTicketById(
@@ -290,7 +290,7 @@ events.onSetTicketGroup = function (socket) {
   socket.on('setTicketGroup', function (data) {
     var ticketId = data.ticketId
     var groupId = data.groupId
-    var ownerId = socket.request.user._id
+    var ownerId = socket.request.user.id
     var organizationId = socket.request.user.organizationId
 
     if (_.isUndefined(ticketId) || _.isUndefined(groupId)) return true
@@ -324,7 +324,7 @@ events.onSetTicketDueDate = function (socket) {
   socket.on('setTicketDueDate', function (data) {
     var ticketId = data.ticketId
     var dueDate = data.dueDate
-    var ownerId = socket.request.user._id
+    var ownerId = socket.request.user.id
     var organizationId = socket.request.user.organizationId
 
     if (_.isUndefined(ticketId)) return true
@@ -355,7 +355,7 @@ events.onSetTicketIssue = function (socket) {
     var ticketId = data.ticketId
     var issue = data.issue
     var subject = data.subject
-    var ownerId = socket.request.user._id
+    var ownerId = socket.request.user.id
     var organizationId = socket.request.user.organizationId
 
     if (_.isUndefined(ticketId) || _.isUndefined(issue)) return true
@@ -386,7 +386,7 @@ events.onSetTicketIssue = function (socket) {
 
 events.onSetCommentText = function (socket) {
   socket.on('setCommentText', function (data) {
-    var ownerId = socket.request.user._id
+    var ownerId = socket.request.user.id
     var ticketId = data.ticketId
     var commentId = data.commentId
     var comment = data.commentText
@@ -423,7 +423,7 @@ events.onSetCommentText = function (socket) {
 
 events.onRemoveComment = function (socket) {
   socket.on('removeComment', function (data) {
-    var ownerId = socket.request.user._id
+    var ownerId = socket.request.user.id
     var ticketId = data.ticketId
     var commentId = data.commentId
     var organizationId = socket.request.user.organizationId
@@ -452,7 +452,7 @@ events.onRemoveComment = function (socket) {
 
 events.onSetNoteText = function (socket) {
   socket.on('$trudesk:tickets:setNoteText', function (data) {
-    var ownerId = socket.request.user._id
+    var ownerId = socket.request.user.id
     var ticketId = data.ticketId
     var noteId = data.noteId
     var note = data.noteText
@@ -486,7 +486,7 @@ events.onSetNoteText = function (socket) {
 
 events.onRemoveNote = function (socket) {
   socket.on('$trudesk:tickets:removeNote', function (data) {
-    var ownerId = socket.request.user._id
+    var ownerId = socket.request.user.id
     var ticketId = data.ticketId
     var noteId = data.noteId
     var organizationId = socket.request.user.organizationId

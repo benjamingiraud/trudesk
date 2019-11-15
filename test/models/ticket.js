@@ -112,7 +112,7 @@ describe('ticket.js', function () {
             expect(user).to.be.a('object')
             expect(user).to.have.property('_id')
 
-            cb(null, user._id)
+            cb(null, user.id)
           })
         },
         function (userId, cb) {

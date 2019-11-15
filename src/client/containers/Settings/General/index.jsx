@@ -26,6 +26,7 @@ import EnableSwitch from 'components/Settings/EnableSwitch'
 import SettingSubItem from 'components/Settings/SettingSubItem'
 import Zone from 'components/ZoneBox/zone'
 import ZoneBox from 'components/ZoneBox'
+// import { withTranslation } from 'react-i18next';
 
 class GeneralSettings extends React.Component {
   constructor (props) {
@@ -67,7 +68,7 @@ class GeneralSettings extends React.Component {
   }
 
   render () {
-    const { active } = this.props
+    const { active, t } = this.props
 
     const SiteTitle = (
       <InputWithSave stateName='siteTitle' settingName='gen:sitetitle' value={this.getSettingsValue('siteTitle')} />
@@ -104,15 +105,15 @@ class GeneralSettings extends React.Component {
     return (
       <div className={active ? 'active' : 'hide'}>
         <SettingItem
-          title='Site Title'
+          title={t('Site_Title')}
           subtitle={
             <div>
-              Title of site. Used as page title. <i>default: Trudesk</i>
+              {t('Site_Title_desc')}
             </div>
           }
           component={SiteTitle}
         />
-        <SettingItem
+        {/* <SettingItem
           title='Site Url'
           subtitle={
             <div>
@@ -120,15 +121,14 @@ class GeneralSettings extends React.Component {
             </div>
           }
           component={SiteUrl}
-        />
+        /> */}
         <SettingItem
-          title='Time Zone'
-          subtitle='Set the local timezone for date display'
-          tooltip='Requires Server Restart'
+          title={t('Time Zone')}
+          subtitle={t('Time Zone Legend')}
           component={Timezone}
         />
         <SettingItem
-          title='Time & Date Format'
+          title={t('Time Date Format')}
           subtitle={
             <a href='https://momentjs.com/docs/#/displaying/format/' rel='noopener noreferrer' target='_blank'>
               Moment.js Format Options
@@ -138,8 +138,8 @@ class GeneralSettings extends React.Component {
           <Zone>
             <ZoneBox>
               <SettingSubItem
-                title='Time Format'
-                subtitle='Set the format for time display'
+                title={t('Time Format')}
+                subtitle={t('Time Format Legend')}
                 component={
                   <InputWithSave
                     stateName='timeFormat'
@@ -152,8 +152,8 @@ class GeneralSettings extends React.Component {
             </ZoneBox>
             <ZoneBox>
               <SettingSubItem
-                title='Short Date Format'
-                subtitle='Set the format for short dates'
+                title={t('Short Date Format')}
+                subtitle={t('Short Date Format Legend')}
                 component={
                   <InputWithSave
                     stateName='shortDateFormat'
@@ -166,8 +166,8 @@ class GeneralSettings extends React.Component {
             </ZoneBox>
             <ZoneBox>
               <SettingSubItem
-                title='Long Date Format'
-                subtitle='Set the format for long dates'
+                title={t('Long Date Format')}
+                subtitle={t('Long Date Format Legend')}
                 component={
                   <InputWithSave
                     stateName='longDateFormat'
@@ -180,11 +180,11 @@ class GeneralSettings extends React.Component {
             </ZoneBox>
           </Zone>
         </SettingItem>
-        <SettingItem
+        {/* <SettingItem
           title='Allow User Registration'
           subtitle='Allow users to create accounts on the login screen.'
           component={AllowUserRegistration}
-        />
+        /> */}
       </div>
     )
   }

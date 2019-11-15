@@ -16,10 +16,11 @@ var _ = require('lodash')
 var async = require('async')
 var apiUtil = require('../apiUtils')
 var User = require('../../../models/user')
+var Role = require('../../../models/role')
 var Group = require('../../../models/group')
 var Team = require('../../../models/team')
 var Department = require('../../../models/department')
-
+var SwiziConnector = require('../../../connectors/SwiziConnector')
 var accountsApi = {}
 
 accountsApi.create = function (req, res) {
@@ -44,7 +45,7 @@ accountsApi.create = function (req, res) {
           function (err, user) {
             if (err) return apiUtil.sendApiError(res, 500, err.message)
 
-            savedId = user._id
+            savedId = user.id
 
             return user.populate('role', next)
           }
@@ -134,7 +135,7 @@ accountsApi.get = function (req, res) {
   var limit = query.limit ? Number(query.limit) : 25
   var page = query.page ? Number(query.page) : 0
   var organizationId = req.user.organizationId
-
+  console.log(req.organization)
   var obj = {
     limit: limit === -1 ? 999999 : limit,
     page: page,
@@ -144,126 +145,282 @@ accountsApi.get = function (req, res) {
 
   switch (type) {
     case 'all':
-      User.getUserWithObject(obj, function (err, accounts) {
+      Role.getRolesLean(function (err, roles) {
         if (err) return apiUtil.sendApiError(res, 500, err.message)
+        if (roles.length) {
+          let swiziGrpsId = []
+          for (let i = 0; i < roles.length; i++) swiziGrpsId = swiziGrpsId.concat(roles[i].swiziGroupIds)
+          swiziGrpsId = _.uniq(swiziGrpsId)
 
-        return apiUtil.sendApiSuccess(res, { accounts: accounts, count: accounts.length })
-      })
+          let Swizi = new SwiziConnector({ apikey: req.user.swiziApiKey })
+          let promsiseUsers = []
+          for (let i = 0; i < swiziGrpsId.length; i++) {
+            promsiseUsers.push(Swizi.findUsersByGroup(swiziGrpsId[i]))
+          }
+          Promise.all(promsiseUsers).then(users => {
+            let resAccounts = _.flatten(users)
+            resAccounts = _.uniqBy(resAccounts, 'id')
+            async.eachSeries(
+              resAccounts,
+              function (account, next) {
+                Role.getRoleBySwiziGroup(
+                  account.groups,
+                  function (err, role) {
+                    if (err) return apiUtil.sendApiError(res, 500, err.message)
+                    if (role) {
+                      account.role = role
+                    }
+                    next()
+                  },
+                  organizationId
+                )
+              },
+              function (err) {
+                if (err) return apiUtil.sendApiError(res, 500, err.message)
+                return apiUtil.sendApiSuccess(res, { accounts: resAccounts, count: resAccounts.length })
+              }
+            )
+          })
+        }
+      }, organizationId)
       break
     case 'customers':
-      User.getCustomers(obj, function (err, accounts) {
+      Role.getCustomerRoles(function (err, roles) {
         if (err) return apiUtil.sendApiError(res, 500, err.message)
+        if (roles.length) {
+          let swiziGrpsId = []
+          for (let i = 0; i < roles.length; i++) swiziGrpsId = swiziGrpsId.concat(roles[i].swiziGroupIds)
+          swiziGrpsId = _.uniq(swiziGrpsId)
 
-        var resAccounts = []
-
-        async.eachSeries(
-          accounts,
-          function (account, next) {
-            Group.getAllGroupsOfUser(
-              account._id,
-              function (err, groups) {
-                if (err) return next(err)
-                var a = account.toObject()
-                a.groups = groups.map(function (group) {
-                  return { name: group.name, _id: group._id }
-                })
-                resAccounts.push(a)
-                next()
-              },
-              organizationId
-            )
-          },
-          function (err) {
-            if (err) return apiUtil.sendApiError(res, 500, err.message)
-
-            return apiUtil.sendApiSuccess(res, { accounts: resAccounts, count: resAccounts.length })
+          let Swizi = new SwiziConnector({ apikey: req.user.swiziApiKey })
+          let promsiseUsers = []
+          for (let i = 0; i < swiziGrpsId.length; i++) {
+            promsiseUsers.push(Swizi.findUsersByGroup(swiziGrpsId[i]))
           }
-        )
-      })
+          Promise.all(promsiseUsers).then(users => {
+            let resAccounts = _.flatten(users)
+            resAccounts = _.uniqBy(resAccounts, 'id')
+            async.eachSeries(
+              resAccounts,
+              function (account, next) {
+                Role.getRoleBySwiziGroup(
+                  account.groups,
+                  function (err, role) {
+                    if (err) return apiUtil.sendApiError(res, 500, err.message)
+                    if (role) {
+                      account.role = role
+                    }
+                    Group.getAllGroupsOfUser(
+                      account.id,
+                      function (err, groups) {
+                        if (err) return apiUtil.sendApiError(res, 500, err.message)
+                        account.tgroups = groups
+                        next()
+                      },
+                      organizationId
+                    )
+                  },
+                  organizationId
+                )
+              },
+              function (err) {
+                if (err) return apiUtil.sendApiError(res, 500, err.message)
+                return apiUtil.sendApiSuccess(res, { accounts: resAccounts, count: resAccounts.length })
+              }
+            )
+          })
+        }
+      }, organizationId)
+
+      // User.getCustomers(obj, function (err, accounts) {
+      //   if (err) return apiUtil.sendApiError(res, 500, err.message)
+
+      //   var resAccounts = []
+
+      //   async.eachSeries(
+      //     accounts,
+      //     function (account, next) {
+      //       Group.getAllGroupsOfUser(
+      //         account._id,
+      //         function (err, groups) {
+      //           if (err) return next(err)
+      //           var a = account.toObject()
+      //           a.groups = groups.map(function (group) {
+      //             return { name: group.name, _id: group._id }
+      //           })
+      //           resAccounts.push(a)
+      //           next()
+      //         },
+      //         organizationId
+      //       )
+      //     },
+      //     function (err) {
+      //       if (err) return apiUtil.sendApiError(res, 500, err.message)
+
+      //       return apiUtil.sendApiSuccess(res, { accounts: resAccounts, count: resAccounts.length })
+      //     }
+      //   )
+      // })
       break
     case 'agents':
-      User.getAgents(obj, function (err, accounts) {
+      Role.getAgentRoles(function (err, roles) {
         if (err) return apiUtil.sendApiError(res, 500, err.message)
+        if (roles.length) {
+          let swiziGrpsId = []
+          for (let i = 0; i < roles.length; i++) swiziGrpsId = swiziGrpsId.concat(roles[i].swiziGroupIds)
+          swiziGrpsId = _.uniq(swiziGrpsId)
 
-        var resAccounts = []
-        async.eachSeries(
-          accounts,
-          function (account, next) {
-            var a = account.toObject()
-            Department.getUserDepartments(
-              account._id,
-              function (err, departments) {
-                if (err) return next(err)
-
-                a.departments = departments.map(function (department) {
-                  return { name: department.name, _id: department._id }
-                })
-
-                Team.getTeamsOfUser(
-                  account._id,
-                  function (err, teams) {
-                    if (err) return next(err)
-                    a.teams = teams.map(function (team) {
-                      return { name: team.name, _id: team._id }
-                    })
-                    resAccounts.push(a)
+          let Swizi = new SwiziConnector({ apikey: req.user.swiziApiKey })
+          let promsiseUsers = []
+          for (let i = 0; i < swiziGrpsId.length; i++) {
+            promsiseUsers.push(Swizi.findUsersByGroup(swiziGrpsId[i]))
+          }
+          Promise.all(promsiseUsers).then(users => {
+            let resAccounts = _.flatten(users)
+            resAccounts = _.uniqBy(resAccounts, 'id')
+            async.eachSeries(
+              resAccounts,
+              function (account, next) {
+                Role.getRoleBySwiziGroup(
+                  account.groups,
+                  function (err, role) {
+                    if (err) return apiUtil.sendApiError(res, 500, err.message)
+                    if (role) {
+                      account.role = role
+                    }
                     next()
                   },
                   organizationId
                 )
               },
-              organizationId
+              function (err) {
+                if (err) return apiUtil.sendApiError(res, 500, err.message)
+                return apiUtil.sendApiSuccess(res, { accounts: resAccounts, count: resAccounts.length })
+              }
             )
-          },
-          function (err) {
-            if (err) return apiUtil.sendApiError(res, 500, err.message)
+          })
+        }
+      }, organizationId)
+      // User.getAgents(obj, function (err, accounts) {
+      //   if (err) return apiUtil.sendApiError(res, 500, err.message)
 
-            return apiUtil.sendApiSuccess(res, { accounts: resAccounts, count: resAccounts.length })
-          }
-        )
-      })
+      //   var resAccounts = []
+      //   async.eachSeries(
+      //     accounts,
+      //     function (account, next) {
+      //       var a = account.toObject()
+      //       Department.getUserDepartments(
+      //         account._id,
+      //         function (err, departments) {
+      //           if (err) return next(err)
+
+      //           a.departments = departments.map(function (department) {
+      //             return { name: department.name, _id: department._id }
+      //           })
+
+      //           Team.getTeamsOfUser(
+      //             account._id,
+      //             function (err, teams) {
+      //               if (err) return next(err)
+      //               a.teams = teams.map(function (team) {
+      //                 return { name: team.name, _id: team._id }
+      //               })
+      //               resAccounts.push(a)
+      //               next()
+      //             },
+      //             organizationId
+      //           )
+      //         },
+      //         organizationId
+      //       )
+      //     },
+      //     function (err) {
+      //       if (err) return apiUtil.sendApiError(res, 500, err.message)
+
+      //       return apiUtil.sendApiSuccess(res, { accounts: resAccounts, count: resAccounts.length })
+      //     }
+      //   )
+      // })
       break
     case 'admins':
-      User.getAdmins(obj, function (err, accounts) {
+      Role.getAdminRoles(function (err, roles) {
         if (err) return apiUtil.sendApiError(res, 500, err.message)
+        if (roles.length) {
+          let swiziGrpsId = []
+          for (let i = 0; i < roles.length; i++) swiziGrpsId = swiziGrpsId.concat(roles[i].swiziGroupIds)
+          swiziGrpsId = _.uniq(swiziGrpsId)
 
-        var resAccounts = []
-        async.eachSeries(
-          accounts,
-          function (account, next) {
-            var a = account.toObject()
-            Department.getUserDepartments(
-              account._id,
-              function (err, departments) {
-                if (err) return next(err)
-
-                a.departments = departments.map(function (department) {
-                  return { name: department.name, _id: department._id }
-                })
-
-                Team.getTeamsOfUser(
-                  account._id,
-                  function (err, teams) {
-                    if (err) return next(err)
-                    a.teams = teams.map(function (team) {
-                      return { name: team.name, _id: team._id }
-                    })
-                    resAccounts.push(a)
+          let Swizi = new SwiziConnector({ apikey: req.user.swiziApiKey })
+          let promsiseUsers = []
+          for (let i = 0; i < swiziGrpsId.length; i++) {
+            promsiseUsers.push(Swizi.findUsersByGroup(swiziGrpsId[i]))
+          }
+          Promise.all(promsiseUsers).then(users => {
+            let resAccounts = _.flatten(users)
+            resAccounts = _.uniqBy(resAccounts, 'id')
+            async.eachSeries(
+              resAccounts,
+              function (account, next) {
+                Role.getRoleBySwiziGroup(
+                  account.groups,
+                  function (err, role) {
+                    if (err) return apiUtil.sendApiError(res, 500, err.message)
+                    if (role) {
+                      account.role = role
+                    }
                     next()
                   },
                   organizationId
                 )
               },
-              organizationId
+              function (err) {
+                if (err) return apiUtil.sendApiError(res, 500, err.message)
+                return apiUtil.sendApiSuccess(res, { accounts: resAccounts, count: resAccounts.length })
+              }
             )
-          },
-          function (err) {
-            if (err) return apiUtil.sendApiError(res, 500, err.message)
+          })
+        }
+      }, organizationId)
+      // User.getAdmins(obj, function (err, accounts) {
+      //   if (err) return apiUtil.sendApiError(res, 500, err.message)
 
-            return apiUtil.sendApiSuccess(res, { accounts: resAccounts, count: resAccounts.length })
-          }
-        )
-      })
+      //   var resAccounts = []
+      //   async.eachSeries(
+      //     accounts,
+      //     function (account, next) {
+      //       var a = account.toObject()
+      //       Department.getUserDepartments(
+      //         account._id,
+      //         function (err, departments) {
+      //           if (err) return next(err)
+
+      //           a.departments = departments.map(function (department) {
+      //             return { name: department.name, _id: department._id }
+      //           })
+
+      //           Team.getTeamsOfUser(
+      //             account._id,
+      //             function (err, teams) {
+      //               if (err) return next(err)
+      //               a.teams = teams.map(function (team) {
+      //                 return { name: team.name, _id: team._id }
+      //               })
+      //               resAccounts.push(a)
+      //               next()
+      //             },
+      //             organizationId
+      //           )
+      //         },
+      //         organizationId
+      //       )
+      //     },
+      //     function (err) {
+      //       if (err) return apiUtil.sendApiError(res, 500, err.message)
+
+      //       return apiUtil.sendApiSuccess(res, { accounts: resAccounts, count: resAccounts.length })
+      //     }
+      //   )
+      // })
       break
     default:
       return apiUtil.sendApiError_InvalidPostData(res)
@@ -285,7 +442,7 @@ accountsApi.update = function (req, res) {
             if (err) return next(err)
             if (!user) return next({ message: 'Invalid User' })
 
-            postData._id = user._id
+            postData._id = user.id
 
             if (
               !_.isUndefined(postData.password) &&

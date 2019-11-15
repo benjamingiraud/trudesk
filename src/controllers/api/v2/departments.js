@@ -53,7 +53,7 @@ apiDepartments.create = function (req, res) {
 }
 
 apiDepartments.test = function (req, res) {
-  Department.getDepartmentGroupsOfUser(req.user._id, function (err, groups) {
+  Department.getDepartmentGroupsOfUser(req.user.id, function (err, groups) {
     if (err) return apiUtils.sendApiError(res, 500, err.message)
 
     return apiUtils.sendApiSuccess(res, { groups: groups, count: groups.length })

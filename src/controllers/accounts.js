@@ -89,7 +89,7 @@ accountsController.getCustomers = function (req, res) {
   }
 
   var content = {}
-  content.title = 'Customers'
+  content.title = 'Utilisateurs'
   content.nav = 'accounts'
   content.subnav = 'accounts-customers'
 
@@ -124,7 +124,7 @@ accountsController.getAgents = function (req, res) {
 accountsController.getAdmins = function (req, res) {
   var user = req.user
   console.log(permissions.canThis(user.role, 'accounts:view'))
-  console.log(req.organization)
+  // console.log(req.organization)
   if (_.isUndefined(user) || !permissions.canThis(user.role, 'accounts:view')) {
     if (req.organization) return res.redirect(`/${req.organization.slug}`)
     return res.redirect(404)
@@ -183,7 +183,7 @@ accountsController.profile = function (req, res) {
   async.parallel(
     {
       account: function (callback) {
-        userSchema.findOne({ _id: req.user._id }, '+accessToken +tOTPKey', function (err, obj) {
+        userSchema.findOne({ _id: req.user.id }, '+accessToken +tOTPKey', function (err, obj) {
           callback(err, obj)
         })
       }
@@ -538,7 +538,7 @@ accountsController.uploadImage = function (req, res) {
         if (err) return handleError(res, err)
 
         emitter.emit('trudesk:profileImageUpdate', {
-          userid: user._id,
+          userid: user.id,
           img: user.image
         })
 

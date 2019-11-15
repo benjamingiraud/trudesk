@@ -113,12 +113,13 @@ rolesV1.update = function (req, res) {
   var hierarchy = data.hierarchy ? data.hierarchy : false
   var cleaned = _.omit(data, ['_id', 'hierarchy'])
   var k = permissions.buildGrants(cleaned)
+  var swiziGroupIds = data.swiziGroupIds ? data.swiziGroupIds : []
   var roleSchema = require('../../../models/role')
   roleSchema.get(
     data._id,
     function (err, role) {
       if (err) return res.status(400).json({ success: false, error: err })
-      role.updateGrantsAndHierarchy(k, hierarchy, function (err) {
+      role.updateGrantsAndHierarchy(k, hierarchy, swiziGroupIds, function (err) {
         if (err) return res.status(400).json({ success: false, error: err })
 
         emitter.emit('$trudesk:flushRoles')

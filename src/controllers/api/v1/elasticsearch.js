@@ -66,7 +66,7 @@ apiElasticSearch.search = function (req, res) {
     limit = 100
   }
 
-  groupSchema.getAllGroupsOfUserNoPopulate(req.user._id, function (err, groups) {
+  groupSchema.getAllGroupsOfUserNoPopulate(req.user.id, function (err, groups) {
     if (err) return res.status(400).json({ success: false, error: err })
 
     var g = _.map(groups, function (i) {

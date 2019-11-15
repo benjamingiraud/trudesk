@@ -25,7 +25,7 @@ var COLLECTION = 'notification'
 var notificationSchema = mongoose.Schema({
   created: { type: Date, default: Date.now },
   organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
-  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'accounts' },
+  owner: { type: mongoose.Schema.Types.Number },
   title: { type: String, required: true },
   message: { type: String, required: true },
   type: Number,

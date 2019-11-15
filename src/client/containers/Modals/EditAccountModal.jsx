@@ -80,7 +80,7 @@ class EditAccountModal extends React.Component {
     const that = this
     let formData = new FormData()
     formData.append('username', this.props.user.username)
-    formData.append('_id', this.props.user._id)
+    formData.append('_id', this.props.user.id)
     formData.append('image', self.files[0])
 
     axios
@@ -163,7 +163,7 @@ class EditAccountModal extends React.Component {
 
     if (!user.teams) user.teams = []
     if (!user.departments) user.departments = []
-    if (!user.groups) user.groups = []
+    if (!user.tgroups) user.tgroups = []
 
     return (
       <BaseModal parentExtraClass={'pt-0'} extraClass={'p-0 pb-25'}>
@@ -173,7 +173,7 @@ class EditAccountModal extends React.Component {
               {edit && (
                 <form className={'form nomargin'} encType={'multipart/form-data'}>
                   <div className='mediumProfilePic' style={{ position: 'relative' }}>
-                    <input name={'_id'} type='hidden' value={user._id} readOnly={true} />
+                    <input name={'_id'} type='hidden' value={user.id} readOnly={true} />
                     <input name={'username'} type='hidden' value={user.username} readOnly={true} />
                     <input
                       type='file'
@@ -288,7 +288,7 @@ class EditAccountModal extends React.Component {
                 <label className='uk-form-label'>{t('Groups')}</label>
                 <MultiSelect
                   items={groups}
-                  initialSelected={user.groups.map(i => i._id)}
+                  initialSelected={user.tgroups.map(i => i._id)}
                   onChange={() => {}}
                   ref={r => (this.groupSelect = r)}
                   disabled={!edit}

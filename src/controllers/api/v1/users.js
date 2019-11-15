@@ -87,7 +87,7 @@ apiUsers.getWithLimit = function (req, res) {
 
                   var groups = _.filter(grps, function (g) {
                     return _.some(g.members, function (m) {
-                      return m._id.toString() === user._id.toString()
+                      return m._id.toString() === user.id.toString()
                     })
                   })
 
@@ -199,7 +199,7 @@ apiUsers.create = function (req, res) {
     if (err) {
       response.success = false
       response.error = err
-      winston.debug(response)
+      // winston.debug(response)
       return res.status(400).json(response)
     }
 
@@ -404,7 +404,7 @@ apiUsers.update = function (req, res) {
             if (err) return done(err)
             if (!user) return done('Invalid User Object')
 
-            obj._id = user._id
+            obj._id = user.id
 
             if (
               !_.isUndefined(obj.password) &&
@@ -633,7 +633,7 @@ apiUsers.deleteUser = function (req, res) {
       },
       function (user, cb) {
         var ticketSchema = require('../../../models/ticket')
-        ticketSchema.find({ owner: user._id, organizationId: organizationId }, function (err, tickets) {
+        ticketSchema.find({ owner: user.id, organizationId: organizationId }, function (err, tickets) {
           if (err) return cb(err)
 
           var hasTickets = _.size(tickets) > 0
@@ -642,7 +642,7 @@ apiUsers.deleteUser = function (req, res) {
       },
       // function (hasTickets, user, cb) {
       //   var conversationSchema = require('../../../models/chat/conversation')
-      //   conversationSchema.getConversationsWithLimit(user._id, 10, function (err, conversations) {
+      //   conversationSchema.getConversationsWithLimit(user.id, 10, function (err, conversations) {
       //     if (err) return cb(err)
 
       //     var hasConversations = _.size(conversations) > 0
@@ -786,7 +786,7 @@ apiUsers.single = function (req, res) {
       },
       function (user, done) {
         groupSchema.getAllGroupsOfUserNoPopulate(
-          user._id,
+          user.id,
           function (err, grps) {
             if (err) return done(err)
 
@@ -832,7 +832,7 @@ apiUsers.notificationCount = function (req, res) {
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   notificationSchema.getUnreadCount(
-    req.user._id,
+    req.user.id,
     function (err, count) {
       if (err) return res.status(400).json({ success: false, error: err.message })
 
@@ -847,7 +847,7 @@ apiUsers.getNotifications = function (req, res) {
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
   notificationSchema.findAllForUser(
-    req.user._id,
+    req.user.id,
     function (err, notifications) {
       if (err) return res.status(500).json({ success: false, error: err.message })
 
@@ -879,7 +879,7 @@ apiUsers.getNotifications = function (req, res) {
 apiUsers.generateApiKey = function (req, res) {
   var id = req.params.id
   if (_.isUndefined(id) || _.isNull(id)) return res.status(400).json({ error: 'Invalid Request' })
-  if (!req.user.role.isAdmin && req.user._id.toString() !== id)
+  if (!req.user.role.isAdmin && req.user.id.toString() !== id)
     return res.status(401).json({ success: false, error: 'Unauthorized' })
 
   UserSchema.getUser(id, function (err, user) {
@@ -918,7 +918,7 @@ apiUsers.removeApiKey = function (req, res) {
   var id = req.params.id
   if (_.isUndefined(id) || _.isNull(id)) return res.status(400).json({ error: 'Invalid Request' })
 
-  if (!req.user.isAdmin && req.user._id.toString() !== id) return res.status(401).json({ success: 'Unauthorized' })
+  if (!req.user.isAdmin && req.user.id.toString() !== id) return res.status(401).json({ success: 'Unauthorized' })
 
   UserSchema.getUser(id, function (err, user) {
     if (err) return res.status(400).json({ error: 'Invalid Request', fullError: err })
@@ -952,7 +952,7 @@ apiUsers.removeApiKey = function (req, res) {
  */
 apiUsers.generateL2Auth = function (req, res) {
   var id = req.params.id
-  if (id.toString() !== req.user._id.toString()) {
+  if (id.toString() !== req.user.id.toString()) {
     return res.status(400).json({ success: false, error: 'Invalid Account Owner!' })
   }
 
@@ -989,7 +989,7 @@ apiUsers.generateL2Auth = function (req, res) {
  */
 apiUsers.removeL2Auth = function (req, res) {
   var id = req.params.id
-  if (id.toString() !== req.user._id.toString()) {
+  if (id.toString() !== req.user.id.toString()) {
     return res.status(400).json({ success: false, error: 'Invalid Account Owner!' })
   }
 
@@ -1101,7 +1101,7 @@ apiUsers.getGroups = function (req, res) {
   if (req.user.role.isAdmin || req.user.role.isAgent) {
     var departmentSchema = require('../../../models/department')
     departmentSchema.getDepartmentGroupsOfUser(
-      req.user._id,
+      req.user.id,
       function (err, groups) {
         if (err) return res.status(400).json({ success: false, error: err.message })
 
@@ -1118,7 +1118,7 @@ apiUsers.getGroups = function (req, res) {
       return res.status(400).json({ success: false, error: 'Invalid API Call' })
 
     groupSchema.getAllGroupsOfUserNoPopulate(
-      req.user._id,
+      req.user.id,
       function (err, groups) {
         if (err) return res.status(400).json({ success: false, error: err.message })
 
@@ -1198,7 +1198,7 @@ apiUsers.uploadProfilePic = function (req, res) {
         if (err) return res.status(500).send(err.message)
 
         emitter.emit('trudesk:profileImageUpdate', {
-          userid: user._id,
+          userid: user.id,
           img: user.image
         })
 

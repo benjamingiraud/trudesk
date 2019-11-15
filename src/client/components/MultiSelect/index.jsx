@@ -28,8 +28,11 @@ class MultiSelect extends React.Component {
     })
 
     if (this.props.initialSelected) {
+      console.log(this.props.initialSelected);
       $select.multiSelect('select', this.props.initialSelected)
       $select.multiSelect('refresh')
+      // console.log(MultiSelect.getSelected())
+
     }
 
     if (this.props.disabled) {

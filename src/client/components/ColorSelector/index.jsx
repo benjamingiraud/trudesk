@@ -17,6 +17,7 @@ import PropTypes from 'prop-types'
 
 import $ from 'jquery'
 import helpers from 'lib/helpers'
+import { withTranslation } from 'react-i18next';
 
 class ColorSelector extends React.Component {
   constructor (props) {
@@ -109,6 +110,7 @@ class ColorSelector extends React.Component {
   }
 
   render () {
+    const { t } = this.props
     return (
       <div className={this.props.parentClass}>
         <div className='uk-float-left uk-width-1-4'>
@@ -164,7 +166,7 @@ class ColorSelector extends React.Component {
               this.revertColor()
             }}
           >
-            Revert
+            {t('Revert')}
           </button>
         )}
       </div>
@@ -187,4 +189,4 @@ ColorSelector.defaultProps = {
   validationEnabled: false
 }
 
-export default ColorSelector
+export default withTranslation('settings')(ColorSelector)

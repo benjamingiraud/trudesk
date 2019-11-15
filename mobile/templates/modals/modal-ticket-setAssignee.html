@@ -12,7 +12,7 @@
           <div class="input-label">
             Ticket Assignee
           </div>
-          <select id="selectedAssignee" name="selectedAssignee" ng-model="selectedAssignee" ng-options="user._id as user.fullname for user in assignees" ng-change="setAssigneeChanged()"></select>
+          <select id="selectedAssignee" name="selectedAssignee" ng-model="selectedAssignee" ng-options="user.id as user.fullname for user in assignees" ng-change="setAssigneeChanged()"></select>
         </label>
       </div>
 

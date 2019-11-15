@@ -212,7 +212,7 @@ class TopbarContainer extends React.Component {
                     </li>
                     <li className='top-bar-icon'>
                       <OffCanvasTrigger target={'online-user-list'}>
-                        <a title={t('Online Users')} className='no-ajaxy'>
+                        <a title={t('Online_Users')} className='no-ajaxy'>
                           <i className='material-icons'>perm_contact_calendar</i>
                           <span
                             className={
@@ -241,9 +241,9 @@ class TopbarContainer extends React.Component {
                             <Avatar image={viewdata.loggedInAccount.image} showOnlineBubble={false} />
                           </a>
                           <Dropdown small={true}>
-                            <DropdownHeader text={viewdata.loggedInAccount.fullname} />
-                            <DropdownItem text={t('Profile')} href={`/${this.props.viewdata.organizationSlug}/profile`} />
-                            <DropdownSeparator />
+                            <DropdownHeader text={`${viewdata.loggedInAccount.firstname} ${viewdata.loggedInAccount.lastname}`} />
+                            {/* <DropdownItem text={t('Profile')} href={`/${this.props.viewdata.organizationSlug}/profile`} />
+                            <DropdownSeparator /> */}
                             <DropdownItem text={t('Logout')} href={`/${this.props.viewdata.organizationSlug}/logout`} />
                           </Dropdown>
                         </DropdownTrigger>

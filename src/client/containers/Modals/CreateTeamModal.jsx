@@ -44,6 +44,7 @@ class CreateTeamModal extends React.Component {
 
   componentDidUpdate () {
     helpers.UI.reRenderInputs()
+    console.log(this.props.accounts)
   }
 
   componentWillUnmount () {
@@ -70,12 +71,13 @@ class CreateTeamModal extends React.Component {
   render () {
     const { t } = this.props
 
-    const mappedAccounts = this.props.accounts
+    let mappedAccounts = this.props.accounts
       .filter(account => {
-        return account.getIn(['role', 'isAgent']) === true && !account.get('deleted')
+        console.log(account)
+        return account.getIn(['role', 'isAgent']) === true && account.get('enabled')
       })
       .map(account => {
-        return { text: account.get('fullname'), value: account.get('_id') }
+        return { text: `${account.get('firstname')} ${account.get('lastname')}` , value: account.get('id') }
       })
       .toArray()
 

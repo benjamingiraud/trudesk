@@ -16,6 +16,7 @@ var _ = require('lodash')
 var async = require('async')
 var GroupSchema = require('../../../models/group')
 var ticketSchema = require('../../../models/ticket')
+var SwiziConnector = require('../../../connectors/SwiziConnector')
 
 var apiGroups = {}
 
@@ -58,7 +59,7 @@ apiGroups.get = function (req, res) {
     }, organizationId)
   } else {
     GroupSchema.getAllGroupsOfUser(
-      user._id,
+      user.id,
       function (err, groups) {
         if (err) return res.status(400).json({ success: false, error: err.message })
 
@@ -191,8 +192,18 @@ apiGroups.create = function (req, res) {
 
   Group.save(function (err, group) {
     if (err) return res.status(400).json({ success: false, error: 'Error: ' + err.message })
-
-    res.json({ success: true, error: null, group: group })
+    if (group.members.length) {
+      let Swizi = new SwiziConnector({ apikey: req.user.swiziApiKey })
+      let usersId = _.uniq(group.members)
+      Swizi.findUserByIds(usersId).then(users => {
+        for (let j = 0; j < group.members.length; j++) {
+          if (users.find(u => u.id === group.members[j])) group.members[j] = users.find(u => u.id === group.members[j])
+        }
+        res.json({ success: true, error: null, group: group })
+      })
+    } else {
+      res.json({ success: true, error: null, group: group })
+    }
   })
 }
 

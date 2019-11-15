@@ -22,17 +22,18 @@ import IndexReducer from './reducers'
 import IndexSagas from './sagas'
 import TopbarContainer from './containers/Topbar/TopbarContainer'
 import Sidebar from './components/Nav/Sidebar/index.jsx'
+import Loader from './components/Loader'
 import ModalRoot from './containers/Modals'
 import renderer from './renderer'
 
 import $ from 'jquery'
 import './i18n';
 
-const Loader = () => (
-  <div className="App">
-    <div>loading...</div>
-  </div>
-);
+// const Loader = () => (
+//   <div className="App">
+//     <div>loading...</div>
+//   </div>
+// );
 
 const sagaMiddleware = createSagaMiddleware()
 

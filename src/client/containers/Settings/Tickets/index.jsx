@@ -41,6 +41,7 @@ import SettingItem from 'components/Settings/SettingItem'
 import SingleSelect from 'components/SingleSelect'
 import SplitSettingsPanel from 'components/Settings/SplitSettingsPanel'
 import SpinLoader from 'components/SpinLoader'
+import { withTranslation } from 'react-i18next';
 
 class TicketsSettings extends React.Component {
   constructor (props) {
@@ -197,7 +198,7 @@ class TicketsSettings extends React.Component {
   }
 
   render () {
-    const { active, viewdata } = this.props
+    const { active, viewdata, t } = this.props
     const mappedTypes = this.getTicketTypes().map(function (type) {
       return { text: type.get('name'), value: type.get('_id') }
     })
@@ -205,8 +206,8 @@ class TicketsSettings extends React.Component {
     return (
       <div className={active ? 'active' : 'hide'}>
         <SettingItem
-          title={'Default Ticket Type'}
-          subtitle={'Default ticket type for newly created tickets.'}
+          title={t('Default Ticket Type')}
+          subtitle={t('Default Ticket Type Desc')}
           component={
             <SingleSelect
               items={mappedTypes}
@@ -219,7 +220,7 @@ class TicketsSettings extends React.Component {
             />
           }
         />
-        <SettingItem
+        {/* <SettingItem
           title={'Allow Public Tickets'}
           subtitle={
             <div>
@@ -237,15 +238,15 @@ class TicketsSettings extends React.Component {
               }}
             />
           }
-        />
+        /> */}
         <SettingItem
-          title={'Show Overdue Tickets'}
-          subtitle={'Enable/Disable flashing of tickets based on SLA time of type priority.'}
-          tooltip={'If disabled, priority SLA times will not mark tickets overdue.'}
+          title={t('Show Overdue Tickets')}
+          subtitle={t('Show Overdue Tickets Desc')}
+          // tooltip={'If disabled, priority SLA times will not mark tickets overdue.'}
           component={
             <EnableSwitch
               stateName={'showOverdueTickets'}
-              label={'Enable'}
+              label={t('Enable')}
               checked={this.getSetting('showOverdueTickets')}
               onChange={e => {
                 this.onShowOverdueChange(e)
@@ -254,8 +255,8 @@ class TicketsSettings extends React.Component {
           }
         />
         <SettingItem
-          title={'Minimum Subject Length'}
-          subtitle={'Minimum character limit for ticket subject'}
+          title={t('Minimum Subject Length')}
+          subtitle={t('Minimum Subject Length Desc')}
           component={
             <NumberWithSave
               stateName={'minSubjectLength'}
@@ -266,8 +267,8 @@ class TicketsSettings extends React.Component {
           }
         />
         <SettingItem
-          title={'Minimum Issue Length'}
-          subtitle={'Minimum character limit for ticket issue'}
+          title={t('Minimum Issue Length')}
+          subtitle={t('Minimum Issue Length Desc')}
           component={
             <NumberWithSave
               stateName={'minIssueLength'}
@@ -278,11 +279,11 @@ class TicketsSettings extends React.Component {
           }
         />
         <SplitSettingsPanel
-          title={'Ticket Types'}
-          subtitle={'Create/Modify Ticket Types'}
+          title={t('Ticket Types')}
+          subtitle={t('Create/Modify Ticket Types')}
           rightComponent={
             <Button
-              text={'Create'}
+              text={t('Create')}
               style={'success'}
               flat={true}
               extraClass={'md-btn-wave'}
@@ -296,11 +297,11 @@ class TicketsSettings extends React.Component {
           })}
         />
         <SettingItem
-          title={'Ticket Priorities'}
-          subtitle={'Ticket priorities set the level of SLAs for each ticket.'}
+          title={t('Ticket Priorities')}
+          subtitle={t('Ticket Priorities Desc')}
           component={
             <Button
-              text={'Create'}
+              text={t('Create')}
               style={'success'}
               flat={true}
               waves={true}
@@ -320,14 +321,14 @@ class TicketsSettings extends React.Component {
                     titleCss={{ color: p.get('htmlColor') }}
                     subtitle={
                       <div>
-                        SLA Overdue: <strong>{p.get('durationFormatted')}</strong>
+                        {t('SLA Overdue')} <strong>{p.get('durationFormatted')}</strong>
                       </div>
                     }
                     component={
                       <ButtonGroup classNames={'uk-float-right'}>
-                        <Button text={'Edit'} small={true} onClick={e => TicketsSettings.toggleEditPriority(e)} />
+                        <Button text={t('Edit')} small={true} onClick={e => TicketsSettings.toggleEditPriority(e)} />
                         <Button
-                          text={'Remove'}
+                          text={t('Remove')}
                           small={true}
                           style={'danger'}
                           disabled={disableRemove}
@@ -343,11 +344,11 @@ class TicketsSettings extends React.Component {
           </Zone>
         </SettingItem>
         <SettingItem
-          title={'Ticket Tags'}
-          subtitle={'Create/Modify Ticket Tags'}
+          title={t('Ticket Tags')}
+          subtitle={t('Create/Modify Ticket Tags')}
           component={
             <Button
-              text={'Create'}
+              text={t('Create')}
               style={'success'}
               flat={true}
               waves={true}
@@ -362,7 +363,7 @@ class TicketsSettings extends React.Component {
           <Grid extraClass={'uk-margin-medium-bottom'}>
             {this.props.tagsSettings.tags.size < 1 && (
               <div style={{ width: '100%', padding: '55px', textAlign: 'center' }}>
-                <h3 style={{ fontSize: '24px', fontWeight: '300' }}>No Tags Found</h3>
+                <h3 style={{ fontSize: '24px', fontWeight: '300' }}>{t('No Tags Found')}</h3>
               </div>
             )}
             <SpinLoader active={this.props.tagsSettings.loading} extraClass={'panel-bg'} />
@@ -391,14 +392,14 @@ class TicketsSettings extends React.Component {
                               <GridItem width={'1-2'} extraClass={'uk-text-right'}>
                                 <ButtonGroup classNames={'mt-5'}>
                                   <Button
-                                    text={'edit'}
+                                    text={t('Edit')}
                                     flat={true}
                                     waves={true}
                                     small={true}
                                     onClick={e => TicketsSettings.toggleEditTag(e)}
                                   />
                                   <Button
-                                    text={'remove'}
+                                    text={t('Remove')}
                                     flat={true}
                                     waves={true}
                                     style={'danger'}
@@ -421,7 +422,7 @@ class TicketsSettings extends React.Component {
                               <GridItem width={'1-3'} style={{ paddingTop: '10px' }}>
                                 <ButtonGroup classNames={'uk-float-right uk-text-right'}>
                                   <Button
-                                    text={'cancel'}
+                                    text={t('Cancel')}
                                     flat={true}
                                     waves={true}
                                     small={true}
@@ -429,7 +430,7 @@ class TicketsSettings extends React.Component {
                                   />
                                   <Button
                                     type={'submit'}
-                                    text={'save'}
+                                    text={t('Save')}
                                     flat={true}
                                     waves={true}
                                     small={true}

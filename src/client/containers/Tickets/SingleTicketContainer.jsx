@@ -46,7 +46,6 @@ import SpinLoader from 'components/SpinLoader'
 import { withTranslation } from 'react-i18next';
 
 const fetchTicket = parent => {
-  console.log(parent.props)
   axios
     .get(`/api/v2/tickets/${parent.props.ticketUid}`)
     .then(res => {

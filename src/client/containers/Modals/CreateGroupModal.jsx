@@ -73,7 +73,7 @@ class CreateGroupModal extends React.Component {
 
     const mappedAccounts = this.props.accounts
       .map(account => {
-        return { text: account.get('fullname'), value: account.get('_id') }
+        return { text: `${account.get('firstname')} ${account.get('lastname')}`, value: account.get('id') }
       })
       .toArray()
     return (

@@ -29,6 +29,7 @@ import helpers from 'lib/helpers'
 import $ from 'jquery'
 import SpinLoader from 'components/SpinLoader'
 import { withTranslation } from 'react-i18next';
+// import Select from 'react-select';
 
 @observer
 class EditGroupModal extends React.Component {
@@ -37,6 +38,12 @@ class EditGroupModal extends React.Component {
     this.props.fetchAccounts({ type: 'customers', limit: -1 })
     this.name = this.props.group.name
 
+    // this.swiziGroups = []
+    // for (let i = 0; i < selectedGroups.length; i++) {
+    //   let swiziGroup = this.props.swiziGroups.find(sw => sw.id === selectedGroups[i])
+    //   if (swiziGroup) this.swiziGroups.push({ label: swiziGroup.label, value: swiziGroup.id })
+    // }
+     
     helpers.UI.inputs()
     helpers.UI.reRenderInputs()
     helpers.formvalidator()
@@ -58,8 +65,8 @@ class EditGroupModal extends React.Component {
     const payload = {
       _id: this.props.group._id,
       name: this.name,
-      members: this.membersSelect.getSelected() || [],
-      sendMailTo: this.sendMailToSelect.getSelected() || []
+      members: this.membersSelect.getSelected().map(m => parseInt(m)) || [],
+      sendMailTo: []
     }
 
     this.props.updateGroup(payload)
@@ -74,16 +81,20 @@ class EditGroupModal extends React.Component {
 
     const mappedAccounts = this.props.accounts
       .map(account => {
-        return { text: account.get('fullname'), value: account.get('_id') }
+        return { text: account.get('firstname') + ' ' + account.get('lastname'), value: account.get('id') }
       })
       .toArray()
 
     const selectedMembers = this.props.group.members.map(member => {
-      return member._id
+      return '' + member.id
     })
-    const selectedSendMailTo = this.props.group.sendMailTo.map(member => {
-      return member._id
-    })
+
+    // const swiziGroups = this.props.swiziGroups.map(group => {
+    //   return { label: group.label, value: group.id }
+    // })
+    // const selectedSendMailTo = this.props.group.sendMailTo.map(member => {
+    //   return member._id
+    // })
     return (
       <BaseModal>
         <SpinLoader active={this.props.accountsLoading} />
@@ -103,16 +114,16 @@ class EditGroupModal extends React.Component {
               data-validation-error-msg={'Please enter a valid Group name. (Must contain 2 characters)'}
             />
           </div>
-          <div className={'uk-margin-medium-bottom'}>
-            <label style={{ marginBottom: 5 }}>{t('Group Members')}</label>
+          <div className='uk-margin-medium-bottom'>
+            <label className='uk-form-label'>{t('SwiziGroups')}</label>
             <MultiSelect
               items={mappedAccounts}
               initialSelected={selectedMembers}
-              onChange={() => {}}
+              onChange={() => { }}
               ref={r => (this.membersSelect = r)}
             />
           </div>
-          <div className={'uk-margin-medium-bottom'}>
+          {/* <div className={'uk-margin-medium-bottom'}>
             <label style={{ marginBottom: 5 }}>{t('Send Notifications To')}</label>
             <MultiSelect
               items={mappedAccounts}
@@ -120,7 +131,7 @@ class EditGroupModal extends React.Component {
               onChange={() => {}}
               ref={r => (this.sendMailToSelect = r)}
             />
-          </div>
+          </div> */}
           <div className='uk-modal-footer uk-text-right'>
             <Button text={t('Close')} flat={true} waves={true} extraClass={'uk-modal-close'} />
             <Button text={t('Save Group')} flat={true} waves={true} style={'primary'} type={'submit'} />

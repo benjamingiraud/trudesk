@@ -20,7 +20,7 @@ var nconf = require('nconf')
 
 // Submodules
 var ticketSocket = require('./socketio/ticketSocket')
-var chatSocket = require('./socketio/chatSocket')
+// var chatSocket = require('./socketio/chatSocket')
 var notificationSocket = require('./socketio/notificationSocket')
 var noticeSocket = require('./socketio/noticeSocket')
 var accountsImportSocket = require('./socketio/accountImportSocket')
@@ -93,8 +93,12 @@ var socketServer = function (ws) {
 
   io.sockets.on('connection', function (socket) {
     // Register Submodules
+    console.log('SOCKET CONNECTED : ')
+    console.log(socket.request.user.organizationId)
+    socket.join(socket.request.user.organizationId)
+
     ticketSocket.register(socket)
-    chatSocket.register(socket)
+    // chatSocket.register(socket)
     notificationSocket.register(socket)
     noticeSocket.register(socket)
     accountsImportSocket.register(socket)
@@ -112,7 +116,7 @@ var socketServer = function (ws) {
         global.socketServer.eventLoop._loop = setInterval(function () {
           // The main socket event loop.
           notificationSocket.eventLoop()
-          chatSocket.eventLoop()
+          // chatSocket.eventLoop()
         }, 5000)
       },
       stop: function () {
@@ -128,8 +132,7 @@ var socketServer = function (ws) {
 
 function onAuthorizeSuccess (data, accept) {
   winston.debug(data.user.preferences)
-  winston.debug('User successfully connected: ' + data.user.username)
-
+  winston.debug('User successfully connected: ' + data.user.firstname + ' ' + data.user.lastname)
   accept()
 }
 

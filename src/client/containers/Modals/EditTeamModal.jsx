@@ -63,7 +63,7 @@ class EditTeamModal extends React.Component {
     const payload = {
       _id: this.props.team._id,
       name: this.name,
-      members: this.membersSelect.getSelected() || []
+      members: this.membersSelect.getSelected().map(id => parseInt(id)) || []
     }
 
     this.props.saveEditTeam(payload)
@@ -72,14 +72,15 @@ class EditTeamModal extends React.Component {
   render () {
     const mappedAccounts = this.props.accounts
       .filter(account => {
-        return account.getIn(['role', 'isAgent']) === true && !account.get('deleted')
+        return account.getIn(['role', 'isAgent']) === true && account.get('enabled')
       })
       .map(account => {
-        return { text: account.get('fullname'), value: account.get('_id') }
+        console.log(typeof account.get('id'))
+        return { text: account.get('firstname') + ' ' + account.get('lastname'), value: '' + account.get('id') }
       })
       .toArray()
-
-    const selectedMembers = this.props.team.members
+    const selectedMembers = this.props.team.members.map(m => '' + m)
+    console.log(selectedMembers)
     const { t } = this.props 
     return (
       <BaseModal {...this.props} options={{ bgclose: false }}>

@@ -89,24 +89,24 @@ class OnlineUserListPartial extends React.Component {
   render () {
     const { timezone, users, t } = this.props
     return (
-      <OffCanvas title={t('Online Users')} id={'online-user-list'}>
+      <OffCanvas title={t('Online_Users')} id={'online-user-list'}>
         <div style={{ padding: '0 5px' }}>
           <div className='active-now'>
             <h5>{t('Active_Now')}</h5>
             <div className='online-list-wrapper'>
               <ul className='online-list'>
                 {entries(this.activeUsers).map(([key, value]) => {
-                  if (this.props.sessionUser && value.user._id === this.props.sessionUser._id) return
+                  if (this.props.sessionUser && value.user.id === this.props.sessionUser._id) return
                   const image = value.user.image || 'defaultProfile.jpg'
                   const isAgentOrAdmin = value.user.role.isAdmin || value.user.role.isAgent
                   return (
                     <li key={key}>
-                      <a className={'no-ajaxy'} onClick={e => OnlineUserListPartial.onUserClicked(e, value.user._id)}>
+                      <a className={'no-ajaxy'} onClick={e => OnlineUserListPartial.onUserClicked(e, value.user.id)}>
                         <div className='user-list-user'>
                           <div className='image'>
                             <img src={`/uploads/users/${image}`} alt='Profile Pic' />
                           </div>
-                          <span className='online-status' data-user-status-id={value.user._id} />
+                          <span className='online-status' data-user-status-id={value.user.id} />
                           <div className={'user-name' + (isAgentOrAdmin ? ' _agent' : '')}>
                             {value.user.fullname + (isAgentOrAdmin ? ' - Agent' : '')}
                           </div>
@@ -117,42 +117,6 @@ class OnlineUserListPartial extends React.Component {
                 })}
               </ul>
             </div>
-          </div>
-
-          <h5>{t('More Conversations')}</h5>
-          <div className='user-list-wrapper' style={{ lineHeight: 'normal' }}>
-            <div
-              className='online-list-search-box search-box'
-              style={{ borderTop: '1px solid rgba(0,0,0,0.1)', borderRight: 'none' }}
-            >
-              <input type='text' placeholder={t('Search')} />
-            </div>
-            <ul className='user-list'>
-              {users.map(user => {
-                if (this.props.sessionUser && user._id === this.props.sessionUser._id) return
-                const image = user.image || 'defaultProfile.jpg'
-                return (
-                  <li key={user._id} data-search-term={user.fullname.toLowerCase()}>
-                    <a className='no-ajaxy' onClick={e => OnlineUserListPartial.onUserClicked(e, user._id)}>
-                      <div className='user-list-user'>
-                        <div className='image'>
-                          <img src={`/uploads/users/${image}`} alt='Profile Picture' />
-                        </div>
-                      </div>
-                      <span
-                        className={'online-status-offline' + (this.isActiveUser(user.username) ? ' success-text' : '')}
-                        data-user-status-id={user._id}
-                      >
-                        {this.isActiveUser(user.username)
-                          ? 'Now'
-                          : OnlineUserListPartial.fromNow(timezone, user.lastOnline)}
-                      </span>
-                      <div className='user-name'>{user.fullname}</div>
-                    </a>
-                  </li>
-                )
-              })}
-            </ul>
           </div>
         </div>
       </OffCanvas>

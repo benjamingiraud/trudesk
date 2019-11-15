@@ -177,7 +177,7 @@ ticketsController.getAssigned = function (req, res, next) {
     page: page,
     status: [0, 1, 2],
     assignedSelf: true,
-    user: req.user._id,
+    user: req.user.id,
     organizationId: req.organization._id
   }
 
@@ -209,7 +209,7 @@ ticketsController.getUnassigned = function (req, res, next) {
     page: page,
     status: [0, 1, 2],
     unassigned: true,
-    user: req.user._id,
+    user: req.user.id,
     organizationId: req.organization._id
   }
 
@@ -274,7 +274,7 @@ ticketsController.filter = function (req, res, next) {
     limit: 50,
     page: page,
     status: filter.status,
-    user: req.user._id,
+    user: req.user.id,
     filter: filter,
     organizationId: req.organization._id
   }
@@ -357,7 +357,7 @@ ticketsController.print = function (req, res) {
         function (next) {
           if (user.role.isAdmin || user.role.isAgent) {
             departmentSchema.getDepartmentGroupsOfUser(
-              user._id,
+              user.id,
               function (err, groups) {
                 if (err) {
                   if (req.organization) return res.redirect(`/${req.organization.slug}/tickets`)
@@ -385,7 +385,7 @@ ticketsController.print = function (req, res) {
         },
         function (next) {
           if (hasAccess) return next()
-          if (!_.some(ticket.group.members, user._id)) {
+          if (!_.some(ticket.group.members, user.id)) {
             if (ticket.group.public && hasPublic) {
               // Blank to bypass
             } else {
@@ -403,7 +403,7 @@ ticketsController.print = function (req, res) {
       function (err) {
         if (err) {
           if (err === 'UNAUTHORIZED_GROUP_ACCESS')
-            winston.warn('User access ticket outside of group - UserId: ' + user._id)
+            winston.warn('User access ticket outside of group - UserId: ' + user.id)
 
           if (req.organization) return res.redirect(`/${req.organization.slug}/tickets`)
           return res.redirect(404)
@@ -468,11 +468,11 @@ ticketsController.single = function (req, res) {
       [
         function (next) {
           if (!req.user.role.isAdmin && !req.user.role.isAgent) {
-            return groupSchema.getAllGroupsOfUserNoPopulate(req.user._id, next, req.organization._id)
+            return groupSchema.getAllGroupsOfUserNoPopulate(req.user.id, next, req.organization._id)
           }
 
           departmentSchema.getUserDepartments(
-            req.user._id,
+            req.user.id,
             function (err, departments) {
               if (err) return next(err)
               if (_.some(departments, { allGroups: true })) {
@@ -500,7 +500,7 @@ ticketsController.single = function (req, res) {
             if (ticket.group.public && hasPublic) {
               // Blank to bypass
             } else {
-              winston.warn('User access ticket outside of group - UserId: ' + user._id)
+              winston.warn('User access ticket outside of group - UserId: ' + user.id)
               if (req.organization) return res.redirect(`/${req.organization.slug}/tickets`)
               return res.redirect(404)
             }
@@ -623,7 +623,7 @@ ticketsController.uploadAttachment = function (req, res) {
   })
 
   var object = {
-    ownerId: req.user._id
+    ownerId: req.user.id
   }
   var error
 

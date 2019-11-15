@@ -25,7 +25,8 @@ var roleSchema = mongoose.Schema(
     normalized: String,
     description: String,
     grants: [{ type: String, required: true }],
-    hierarchy: { type: Boolean, required: true, default: true }
+    hierarchy: { type: Boolean, required: true, default: true },
+    swiziGroupIds: { type: [Number], required: true, default: [] }
   },
   {
     toObject: { getters: true, virtuals: true },
@@ -64,9 +65,10 @@ roleSchema.methods.updateGrants = function (grants, callback) {
   this.save(callback)
 }
 
-roleSchema.methods.updateGrantsAndHierarchy = function (grants, hierarchy, callback) {
+roleSchema.methods.updateGrantsAndHierarchy = function (grants, hierarchy, swiziGroupIds, callback) {
   this.grants = grants
   this.hierarchy = hierarchy
+  this.swiziGroupIds = swiziGroupIds
   this.save(callback)
 }
 
@@ -94,7 +96,15 @@ roleSchema.statics.getRoleByName = function (name, callback, organizationId) {
 
   return q.exec(callback)
 }
+roleSchema.statics.getRoleBySwiziGroup = function (swiziGrps, callback, organizationId) {
+  let swiziGrpIds = []
+  for (let i = 0; i < swiziGrps.length; i++) {
+    swiziGrpIds.push(swiziGrps[i].id)
+  }
+  var q = this.model(COLLECTION).findOne({ organizationId, swiziGroupIds: { $in: swiziGrpIds } })
 
+  return q.exec(callback)
+}
 roleSchema.statics.getAgentRoles = function (callback, organizationId) {
   var q = this.model(COLLECTION).find({ organizationId: organizationId })
   q.exec(function (err, roles) {
@@ -105,6 +115,33 @@ roleSchema.statics.getAgentRoles = function (callback, organizationId) {
     })
 
     return callback(null, rolesWithAgent)
+  })
+}
+
+roleSchema.statics.getAdminRoles = function (callback, organizationId) {
+  var q = this.model(COLLECTION).find({ organizationId: organizationId })
+  q.exec(function (err, roles) {
+    if (err) return callback(err)
+
+    var rolesWithAgent = _.filter(roles, function (role) {
+      return _.indexOf(role.grants, 'admin:*') !== -1
+    })
+
+    return callback(null, rolesWithAgent)
+  })
+}
+roleSchema.statics.getCustomerRoles = function (callback, organizationId) {
+  var q = this.model(COLLECTION).find({ organizationId: organizationId })
+  q.exec(function (err, roles) {
+    if (err) return callback(err)
+
+    var customerRoles = _.filter(roles, function (role) {
+      return _.indexOf(role.grants, 'agent:*') === -1 && _.indexOf(role.grants, 'agent:*') === -1
+    })
+
+    console.log(customerRoles)
+
+    return callback(null, customerRoles)
   })
 }
 

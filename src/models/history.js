@@ -17,7 +17,7 @@ var mongoose = require('mongoose')
 var historySchema = mongoose.Schema({
   action: { type: String, required: true },
   date: { type: Date, default: Date.now, required: true },
-  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'accounts' },
+  owner: { type: mongoose.Schema.Types.Number },
   description: { type: String }
 })
 

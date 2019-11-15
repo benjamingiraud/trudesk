@@ -74,10 +74,10 @@ apiElasticSearch.search = function (req, res) {
     [
       function (next) {
         if (!req.user.role.isAdmin && !req.user.role.isAgent)
-          return groupSchema.getAllGroupsOfUserNoPopulate(req.user._id, next)
+          return groupSchema.getAllGroupsOfUserNoPopulate(req.user.id, next)
 
         var Department = require('../../../models/department')
-        return Department.getDepartmentGroupsOfUser(req.user._id, next)
+        return Department.getDepartmentGroupsOfUser(req.user.id, next)
       },
       function (groups, next) {
         var g = _.map(groups, function (i) {

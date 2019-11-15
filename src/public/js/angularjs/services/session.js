@@ -31,6 +31,7 @@ define(['angular', 'async'], function (angular, async) {
                   .get('/api/v1/login')
                   .success(function (data) {
                     sessionUser = data.user
+                    console.log(data.user)
 
                     return done(null, sessionUser)
                   })
@@ -43,10 +44,11 @@ define(['angular', 'async'], function (angular, async) {
               if (groups !== null && angular.isUndefined(groups)) return done()
 
               $http
-                .get('/api/v1/users/' + sessionUser.username + '/groups')
+                .get('/api/v1/users/' + sessionUser.id + '/groups')
                 .success(function (data) {
                   groups = data.groups
                   sessionUser.groups = groups
+                  console.log(data)
 
                   return done(null, groups)
                 })

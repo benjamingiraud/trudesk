@@ -14,10 +14,11 @@
 
 import React from 'react'
 import PropTypes from 'prop-types'
+import { withTranslation } from 'react-i18next';
 
 class PermSwitchPartial extends React.Component {
   render () {
-    const { title, checked, onChange, disabled } = this.props
+    const { title, checked, onChange, disabled, t } = this.props
     return (
       <div>
         <div style={{ padding: '0 10px' }}>
@@ -28,7 +29,7 @@ class PermSwitchPartial extends React.Component {
             <div className='right' style={{ position: 'relative' }}>
               <div className='md-switch md-green' style={{ margin: '18px 0 0 0' }}>
                 <label>
-                  Allow
+                  {t('Allow')}
                   <input type='checkbox' checked={checked} onChange={onChange} disabled={disabled} />
                   <span className='lever' />
                 </label>
@@ -49,4 +50,4 @@ PermSwitchPartial.propTypes = {
   disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.string])
 }
 
-export default PermSwitchPartial
+export default withTranslation('settings')(PermSwitchPartial)

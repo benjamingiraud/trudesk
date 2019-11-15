@@ -285,7 +285,7 @@ class Sidebar extends React.Component {
                 active={activeSubItem === 'settings-mailer'}
               />
               {/*<SubmenuItem text="Notifications" icon="" href="/settings/notifications" active={activeSubItem === 'settings-notifications'} />*/}
-              <SubmenuItem
+              {/* <SubmenuItem
                 href={`/${common.organizationSlug}/settings/elasticsearch`}
                 text={t('Elasticsearch')}
                 icon={'search'}
@@ -308,7 +308,7 @@ class Sidebar extends React.Component {
                 icon='gavel'
                 href={`/${common.organizationSlug}/settings/legal`}
                 active={activeSubItem === 'settings-legal'}
-              />
+              /> */}
               {sessionUser && Helpers.canUser('settings:logs') && (
                 <SubmenuItem
                   text={t('Logs')}

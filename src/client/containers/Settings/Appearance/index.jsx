@@ -25,6 +25,7 @@ import SingleSelect from 'components/SingleSelect'
 import ColorSelector from 'components/ColorSelector'
 import Zone from 'components/ZoneBox/zone'
 import ZoneBox from 'components/ZoneBox'
+import { withTranslation } from 'react-i18next';
 
 const colorMap = {
   light: {
@@ -176,20 +177,20 @@ class AppearanceSettings extends React.Component {
   }
 
   render() {
-    const { active } = this.props
+    const { active, t } = this.props
 
     return (
       <div className={active ? 'active' : 'hide'}>
         <SettingItem
-          title='Site Logo'
+          title={t('Site Logo')}
           subtitle={
             <div>
-              Upload site logo to display in top navigation. <i>Note: Resize to max width of 140px</i>
+              {t('Site Logo Desc')} <i>{t('Site Logo Note')}</i>
             </div>
           }
           component={
             <UploadButtonWithX
-              buttonText={'Upload Logo'}
+              buttonText={t('Upload Logo')}
               uploadAction={`/${this.props.common.organizationSlug}/settings/general/uploadlogo`}
               extAllowed={'*.(jpg|jpeg|gif|png)'}
               showX={this.getSettingsValue('hasCustomLogo')}
@@ -204,15 +205,15 @@ class AppearanceSettings extends React.Component {
         />
 
         <SettingItem
-          title='Page Logo'
+          title={t('Page Logo')}
           subtitle={
             <div>
-              Upload logo to display within page views. <i>Note: Used on login page (515px x 125px)</i>
+              {t('Page Logo Desc')} <i>{t('Page Logo Note')}</i>
             </div>
           }
           component={
             <UploadButtonWithX
-              buttonText={'Upload Logo'}
+              buttonText={t('Upload Logo')}
               uploadAction={`/${this.props.common.organizationSlug}/settings/general/uploadpagelogo`}
               extAllowed={'*.(jpg|jpeg|gif|png)'}
               showX={this.getSettingsValue('hasCustomPageLogo')}
@@ -224,11 +225,11 @@ class AppearanceSettings extends React.Component {
         />
 
         <SettingItem
-          title='Favicon'
-          subtitle={'Upload a custom favicon'}
+          title={t('Favicon')}
+          subtitle={t('Favicon Desc')}
           component={
             <UploadButtonWithX
-              buttonText={'Upload Favicon'}
+              buttonText={t('Upload Logo')}
               uploadAction={`/${this.props.common.organizationSlug}/settings/general/uploadfavicon`}
               extAllowed={'*.(jpg|jpeg|gif|png|ico)'}
               showX={this.getSettingsValue('hasCustomFavicon')}
@@ -242,11 +243,11 @@ class AppearanceSettings extends React.Component {
           }
         />
         <SettingItem
-          title='Color Scheme'
-          subtitle='Select the colors for your color scheme.'
+          title={t('Color Scheme')}
+          subtitle={t('Color Scheme Desc')}
           component={
             <Button
-              text={'Save'}
+              text={t('Save')}
               flat={true}
               style={'success'}
               extraClass={'uk-float-right mt-10'}
@@ -259,8 +260,8 @@ class AppearanceSettings extends React.Component {
           <Zone>
             <ZoneBox>
               <SettingSubItem
-                title='Built-in Color Scheme'
-                subtitle='Select a predefined color scheme'
+                title={t('Built-in Color Scheme')}
+                subtitle={t('Built-in Color Scheme Desc')}
                 component={
                   <SingleSelect
                     width='60%'
@@ -285,8 +286,8 @@ class AppearanceSettings extends React.Component {
             </ZoneBox>
             <ZoneBox>
               <SettingSubItem
-                title='Header Background'
-                subtitle='Background color of the header'
+                title={t('Header Background')}
+                subtitle={t('Header Background Desc')}
                 component={
                   <ColorSelector
                     ref={cs => {
@@ -300,8 +301,8 @@ class AppearanceSettings extends React.Component {
             </ZoneBox>
             <ZoneBox>
               <SettingSubItem
-                title='Header Primary'
-                subtitle='Text and icon color within the header'
+                title={t('Header Primary')}
+                subtitle={t('Header Primary Desc')}
                 component={
                   <ColorSelector
                     ref={cs => {
@@ -315,8 +316,8 @@ class AppearanceSettings extends React.Component {
             </ZoneBox>
             <ZoneBox>
               <SettingSubItem
-                title='Primary'
-                subtitle='Most text and icons'
+                title={t('Primary')}
+                subtitle={t('Primary Desc')}
                 component={
                   <ColorSelector
                     ref={cs => {
@@ -330,8 +331,8 @@ class AppearanceSettings extends React.Component {
             </ZoneBox>
             <ZoneBox>
               <SettingSubItem
-                title='Secondary'
-                subtitle='The main background color'
+                title={t('Secondary')}
+                subtitle={t('Secondary Desc')}
                 component={
                   <ColorSelector
                     ref={cs => {
@@ -345,8 +346,8 @@ class AppearanceSettings extends React.Component {
             </ZoneBox>
             <ZoneBox>
               <SettingSubItem
-                title='Tertiary'
-                subtitle='Accent color, used for links, some buttons, and notifications'
+                title={t('Tertiary')}
+                subtitle={t('Tertiary Desc')}
                 component={
                   <ColorSelector
                     ref={cs => {
@@ -360,8 +361,8 @@ class AppearanceSettings extends React.Component {
             </ZoneBox>
             <ZoneBox>
               <SettingSubItem
-                title='Quaternary'
-                subtitle='Sidebar background color'
+                title={t('Sidebar')}
+                subtitle={t('Sidebar Desc')}
                 component={
                   <ColorSelector
                     ref={cs => {

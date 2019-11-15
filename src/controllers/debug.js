@@ -422,7 +422,7 @@ debugController.populatedatabase = function (req, res) {
                     // uid: res.value.next,
                     uid: i + 1000,
                     date: randomDate(new Date(2015, 0, 1), new Date()),
-                    owner: user._id,
+                    owner: user.id,
                     group: group._id,
                     type: type._id,
                     tags: ticketTags,

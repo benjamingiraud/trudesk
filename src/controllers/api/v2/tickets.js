@@ -53,7 +53,7 @@ ticketsV2.get = function (req, res) {
       function (next) {
         if (req.user.role.isAdmin || req.user.role.isAgent) {
           Department.getUserDepartments(
-            req.user._id,
+            req.user.id,
             function (err, departments) {
               if (err) return next(err)
 
@@ -74,7 +74,7 @@ ticketsV2.get = function (req, res) {
             req.user.organizationId
           )
         } else {
-          Group.getAllGroupsOfUser(req.user._id, next, req.user.organizationId)
+          Group.getAllGroupsOfUser(req.user.id, next, req.user.organizationId)
         }
       },
       function (groups, next) {
@@ -88,7 +88,7 @@ ticketsV2.get = function (req, res) {
             break
           case 'assigned':
             queryObject.filter = {
-              assignee: [req.user._id]
+              assignee: [req.user.id]
             }
             break
           case 'unassigned':
@@ -193,7 +193,7 @@ ticketsV2.batchUpdate = function (req, res) {
             var HistoryItem = {
               action: 'ticket:set:status',
               description: 'status set to: ' + batchTicket.status,
-              owner: req.user._id
+              owner: req.user.id
             }
 
             ticket.history.push(HistoryItem)

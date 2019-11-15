@@ -25,6 +25,8 @@ import Button from 'components/Button'
 import SettingItem from 'components/Settings/SettingItem'
 import EnableSwitch from 'components/Settings/EnableSwitch'
 import PermissionGroupPartial from './permissionGroupPartial'
+// import { withTranslation } from 'react-i18next';
+import Select from 'react-select';
 
 import helpers from 'lib/helpers'
 
@@ -45,7 +47,7 @@ class PermissionBody extends React.Component {
   @observable isAgent = ''
   @observable hasHierarchy = ''
   grants = []
-
+  @observable swiziGroups = []
   @observable ticketGrants = defaultGrants()
   @observable commentGrants = defaultGrants()
   @observable accountGrants = defaultGrants()
@@ -60,7 +62,12 @@ class PermissionBody extends React.Component {
     this.isAgent = this.props.role.get('isAgent') || false
     this.hasHierarchy = this.props.role.get('hierarchy') || false
     this.grants = this.props.role.get('grants').toArray() || []
-
+    let selectedGroups = this.props.role.get('swiziGroupIds').toArray() || []
+    this.swiziGroups = []
+    for (let i = 0; i < selectedGroups.length; i++) {
+      let swiziGroup = this.props.swiziGroups.find(sw => sw.id === selectedGroups[i])
+      if (swiziGroup) this.swiziGroups.push({ label: swiziGroup.label, value: swiziGroup.id })
+    }
     this.parseGrants()
   }
 
@@ -69,6 +76,13 @@ class PermissionBody extends React.Component {
     if (this.isAgent === '') this.isAgent = this.props.role.get('isAgent') || false
     if (this.hasHierarchy === '') this.hasHierarchy = this.props.role.get('hierarchy') || false
     if (this.grants.length < 1) this.grants = this.props.role.get('grants').toArray() || []
+    if (this.swiziGroups.length < 1) {
+      let selectedGroups = this.props.role.get('swiziGroupIds').toArray() || []
+      for (let i = 0; i < selectedGroups.length; i++) {
+        let swiziGroup = this.props.swiziGroups.find(sw => sw.id === selectedGroups[i])
+        if (swiziGroup) this.swiziGroups.push({ label: swiziGroup.label, value: swiziGroup.id })
+      }
+    }
 
     this.parseGrants()
   }
@@ -100,6 +114,7 @@ class PermissionBody extends React.Component {
 
   onEnableSwitchChanged (e, name) {
     this[name] = e.target.checked
+
   }
 
   static mapTicketSpecials () {
@@ -133,6 +148,9 @@ class PermissionBody extends React.Component {
     obj.departments = PermissionBody.buildPermArray(this.departmentPermGroup)
     obj.reports = PermissionBody.buildPermArray(this.reportPermGroup)
     obj.notices = PermissionBody.buildPermArray(this.noticePermGroup)
+    
+
+    obj.swiziGroupIds = this.swiziGroups.map(g => g.value)
 
     this.props.updatePermissions(obj)
   }
@@ -157,30 +175,47 @@ class PermissionBody extends React.Component {
   }
 
   render () {
+    const { t } = this.props
+    let swiziGroups = this.props.swiziGroups.map(group => {
+      return { label: group.label, value: group.id }
+    })
     return (
       <div>
         <form onSubmit={e => this.onSubmit(e)}>
+          <div className='uk-margin-medium-bottom'>
+            <label className='uk-form-label'>{t('SwiziGroups')}</label>
+            <Select
+              className={"react-select-container"}
+              classNamePrefix={'react-select'}
+              options={swiziGroups}
+              value={this.swiziGroups}
+              defaultValue={this.swiziGroups}
+              onChange={(e) => (this.swiziGroups = e)} 
+              isMulti
+              placeholder='Sélectionnez un/des groupe(s) Swizi'
+            />
+          </div>
           <SettingItem
-            title={'Admin'}
-            tooltip={'Role is considered an admin. Enabling management of the trudesk instance.'}
-            subtitle={'Is this role defined as an admin role?'}
+            title={t('Admin')}
+            tooltip={t('Admin_Note')}
+            subtitle={t('Admin_Legend')}
             component={
               <EnableSwitch
                 stateName={'isAdmin_' + this.props.role.get('_id')}
-                label={'Enable'}
+                label={t('Enable')}
                 checked={this.isAdmin}
                 onChange={e => this.onEnableSwitchChanged(e, 'isAdmin')}
               />
             }
           />
           <SettingItem
-            title={'Support Agent'}
-            subtitle={'Is this role defined as an agent role?'}
-            tooltip={'Role is considered an agent role. Enabling agent views and displaying in agent lists.'}
+            title={t('Support_Agent')}
+            subtitle={t('Support_Agent_Note')}
+            tooltip={t('Support_Agent_Legend')}
             component={
               <EnableSwitch
                 stateName={'isAgent_' + this.props.role.get('_id')}
-                label={'Enable'}
+                label={t('Enable')}
                 checked={this.isAgent}
                 onChange={e => this.onEnableSwitchChanged(e, 'isAgent')}
               />
@@ -188,68 +223,85 @@ class PermissionBody extends React.Component {
           />
           <SettingItem
             title={'Enable Hierarchy'}
-            subtitle={'Allow this role to manage resources owned by roles defined under it.'}
+            subtitle={t('Enable_Hierarchy_Legend')}
             component={
               <EnableSwitch
                 stateName={'hasHierarchy_' + this.props.role.get('_id')}
-                label={'Enable'}
+                label={t('Enable')}
                 checked={this.hasHierarchy}
                 onChange={e => this.onEnableSwitchChanged(e, 'hasHierarchy')}
               />
             }
           />
           <PermissionGroupPartial
-            ref={i => (this.ticketPermGroup = i)}
+            t={this.props.t}
+            ref={i => {
+              this.ticketPermGroup = i
+            }}
             title={'Tickets'}
             role={this.props.role}
             grants={this.ticketGrants}
             roleSpecials={PermissionBody.mapTicketSpecials()}
-            subtitle={'Ticket Permissions'}
+            subtitle={t('Ticket Permissions')}
           />
           <PermissionGroupPartial
+            t={this.props.t}
+
             ref={i => (this.commentPermGroup = i)}
             title={'Comments'}
             role={this.props.role}
             grants={this.commentGrants}
-            subtitle={'Ticket Comments Permissions'}
+            subtitle={t('Ticket Comments Permissions')}
           />
           <PermissionGroupPartial
+            t={this.props.t}
+
             ref={i => (this.accountPermGroup = i)}
             title={'Accounts'}
             role={this.props.role}
             roleSpecials={PermissionBody.mapAccountSpecials()}
             grants={this.accountGrants}
-            subtitle={'Account Permissions'}
+            subtitle={t('Account Permissions')}
           />
           <PermissionGroupPartial
+            t={this.props.t}
+
             ref={i => (this.groupPermGroup = i)}
             title={'Groups'}
             role={this.props.role}
             grants={this.groupGrants}
-            subtitle={'Group Permissions'}
+            subtitle={t('Group Permissions')}
           />
           <PermissionGroupPartial
+            t={this.props.t}
+
             ref={i => (this.teamPermGroup = i)}
             title={'Teams'}
             role={this.props.role}
             grants={this.teamGrants}
-            subtitle={'Team Permissions'}
+            subtitle={t('Team Permissions')}
           />
           <PermissionGroupPartial
+            t={this.props.t}
+
             ref={i => (this.departmentPermGroup = i)}
             title={'Departments'}
             role={this.props.role}
             grants={this.departmentGrants}
-            subtitle={'Department Permissions'}
+            subtitle={t('Department Permissions')}
           />
           <PermissionGroupPartial
+            t={this.props.t}
+
             ref={i => (this.reportPermGroup = i)}
             title={'Reports'}
             role={this.props.role}
             grants={this.reportGrants}
-            subtitle={'Report Permissions'}
+            subtitle={t('Report Permissions')}
           />
           <PermissionGroupPartial
+            t={this.props.t}
+
             ref={i => (this.noticePermGroup = i)}
             title={'Notices'}
             role={this.props.role}
@@ -258,16 +310,16 @@ class PermissionBody extends React.Component {
             subtitle={'Notice Permissions'}
           />
           <div className={'uk-margin-large-bottom'}>
-            <h2 className='text-light'>Danger Zone</h2>
+            <h2 className='text-light'>{t('Danger Zone')}</h2>
             <div className='danger-zone'>
               <div className='dz-box uk-clearfix'>
                 <div className='uk-float-left'>
-                  <h5>Delete this permission role?</h5>
-                  <p>Once you delete a permission role, there is no going back. Please be certain.</p>
+                  <h5>{t('Delete_role')}</h5>
+                  <p>{t('Delete_role_warning')}</p>
                 </div>
                 <div className='uk-float-right' style={{ paddingTop: '10px' }}>
                   <Button
-                    text={'Delete'}
+                    text={t('Delete')}
                     small={true}
                     style={'danger'}
                     onClick={e => this.showDeletePermissionRole(e)}
@@ -280,7 +332,7 @@ class PermissionBody extends React.Component {
           <div>
             <div className='box uk-clearfix'>
               <div className='uk-float-right' style={{ paddingTop: '10px' }}>
-                <Button type={'submit'} style={'success'} waves={true} text={'Save Permissions'} />
+                <Button type={'submit'} style={'success'} waves={true} text={t('Save_Permissions')} />
               </div>
             </div>
           </div>
@@ -293,7 +345,8 @@ class PermissionBody extends React.Component {
 PermissionBody.propTypes = {
   role: PropTypes.object.isRequired,
   updatePermissions: PropTypes.func.isRequired,
-  showModal: PropTypes.func.isRequired
+  showModal: PropTypes.func.isRequired,
+  swiziGroups: PropTypes.array.isRequired
 }
 
 export default connect(

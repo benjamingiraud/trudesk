@@ -16,7 +16,7 @@
     "format": "prettier-standard \"./*.js\" \"src/*.js\" \"src/**/*.js\" \"src/**/*.jsx\" \"!src/public/js/vendor/**/*.js\" \"!src/public/js/plugins/**/*.js\"",
     "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- --recursive",
     "codacy": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- --recursive -R spec && cat ./coverage/lcov.info | cross-env CODACY_PROJECT_TOKEN=65070aca43cc4fba96eaabd4033c9528 codacy-coverage && rm -rf ./coverage",
-    "webpackwatch": "webpack --config webpack.config.js --watch",
+    "webpackwatch": "export NODE_ENV=development && webpack --config webpack.config.js --watch",
     "webpackdev": "webpack --config webpack.config.js",
     "webpackdist": "rimraf public/js/* && webpack --env.production -p --config webpack.config.js",
     "snyk-protect": "snyk protect"
@@ -103,6 +103,7 @@
     "react-i18next": "10.11.4",
     "react-infinite-scroller": "1.2.4",
     "react-redux": "6.0.0",
+    "react-select": "3.0.8",
     "redis": "2.8.0",
     "redux": "4.0.1",
     "redux-actions": "2.6.4",
