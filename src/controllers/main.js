@@ -47,6 +47,7 @@ mainController.index = function (req, res) {
     content.colorPrimary = settings.colorPrimary.value
     content.colorSecondary = settings.colorSecondary.value
     content.colorTertiary = settings.colorTertiary.value
+    content.colorHeaderBG = settings.colorHeaderBG.value
 
     content.pageLogo = '/img/defaultLogoDark.png'
     if (settings.hasCustomPageLogo.value && settings.customPageLogoFilename.value.length > 0) {

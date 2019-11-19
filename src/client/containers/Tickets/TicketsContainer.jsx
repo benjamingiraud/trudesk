@@ -119,19 +119,20 @@ class TicketsContainer extends React.Component {
   }
 
   onSetStatus(status) {
+    const { t } = this.props
     let statusText = ''
     switch (status) {
       case 0:
-        statusText = 'New'
+        statusText = t('New')
         break
       case 1:
-        statusText = 'Open'
+        statusText = t('Open')
         break
       case 2:
-        statusText = 'Pending'
+        statusText = t('Pending')
         break
       case 3:
-        statusText = 'Closed'
+        statusText = t('Closed')
     }
 
     const batch = this.selectedTickets.map(id => {
@@ -335,7 +336,7 @@ class TicketsContainer extends React.Component {
               <TableHeader key={3} width={'23%'} text={t('Subject')} />,
               <TableHeader key={4} width={110} text={t('Created')} />,
               <TableHeader key={5} width={125} text={t('Requester')} />,
-              <TableHeader key={6} width={175} text={t('Customer')} />,
+              <TableHeader key={6} width={175} text={t('Group')} />,
               <TableHeader key={7} text={t('Assignee')} />,
               <TableHeader key={8} width={110} text={t('Due Date')} />,
               <TableHeader key={9} text={t('Updated')} />
@@ -354,19 +355,19 @@ class TicketsContainer extends React.Component {
                 const status = () => {
                   switch (ticket.get('status')) {
                     case 0:
-                      return 'new'
+                      return t('new')
                     case 1:
-                      return 'open'
+                      return t('open')
                     case 2:
-                      return 'pending'
+                      return t('pending')
                     case 3:
-                      return 'closed'
+                      return t('closed')
                   }
                 }
 
                 const assignee = () => {
                   const a = ticket.get('assignee')
-                  return !a ? '--' : a.get('fullname')
+                  return !a ? '--' : a.get('firstname') + ' ' + a.get('lastname')
                 }
 
                 const updated = ticket.get('updated')
@@ -430,7 +431,7 @@ class TicketsContainer extends React.Component {
                     <TableCell className={'vam nbb'}>
                       {helpers.formatDate(ticket.get('date'), helpers.getShortDateFormat())}
                     </TableCell>
-                    <TableCell className={'vam nbb'}>{ticket.getIn(['owner', 'fullname'])}</TableCell>
+                    <TableCell className={'vam nbb'}>{ticket.getIn(['owner', 'firstname'])} {ticket.getIn(['owner', 'lastname'])}</TableCell>
                     <TableCell className={'vam nbb'}>{ticket.getIn(['group', 'name'])}</TableCell>
                     <TableCell className={'vam nbb'}>{assignee()}</TableCell>
                     <TableCell className={'vam nbb'}>{dueDate}</TableCell>

@@ -439,7 +439,7 @@ apiTickets.create = function (req, res) {
   if (!_.isObject(postData) || !postData.subject || !postData.issue)
     return res.status(400).json({ success: false, error: 'Invalid Post Data' })
 
-  var socketId = _.isUndefined(postData.socketId) ? '' : postData.socketId
+  var socketId = _.isUndefined(postData.socketid) ? '' : postData.socketid
 
   if (_.isUndefined(postData.tags) || _.isNull(postData.tags)) {
     postData.tags = []
@@ -481,7 +481,7 @@ apiTickets.create = function (req, res) {
       return res.status(400).json(response)
     }
 
-    t.populate('group owner priority', function (err, tt) {
+    t.populate('group priority', function (err, tt) {
       if (err) {
         response.success = false
         response.error = err
@@ -533,142 +533,142 @@ apiTickets.create = function (req, res) {
      "error": "Invalid Post Data"
  }
  */
-apiTickets.createPublicTicket = function (req, res) {
-  var Chance = require('chance')
+// apiTickets.createPublicTicket = function (req, res) {
+//   var Chance = require('chance')
 
-  var chance = new Chance()
-  var response = {}
-  response.success = true
-  var postData = req.body
-  if (!_.isObject(postData)) return res.status(400).json({ success: false, error: 'Invalid Post Data' })
+//   var chance = new Chance()
+//   var response = {}
+//   response.success = true
+//   var postData = req.body
+//   if (!_.isObject(postData)) return res.status(400).json({ success: false, error: 'Invalid Post Data' })
 
-  var user, group, ticket, plainTextPass
+//   var user, group, ticket, plainTextPass
 
-  async.waterfall(
-    [
-      function (next) {
-        var settingSchmea = require('../../../models/setting')
-        settingSchmea.getSetting('role:user:default', function (err, roleDefault) {
-          if (err) return next(err)
-          if (!roleDefault) {
-            winston.error('No Default User Role Set. (Settings > Permissions > Default User Role)')
-            return next('No Default Role Set')
-          }
+//   async.waterfall(
+//     [
+//       function (next) {
+//         var settingSchmea = require('../../../models/setting')
+//         settingSchmea.getSetting('role:user:default', function (err, roleDefault) {
+//           if (err) return next(err)
+//           if (!roleDefault) {
+//             winston.error('No Default User Role Set. (Settings > Permissions > Default User Role)')
+//             return next('No Default Role Set')
+//           }
 
-          return next(null, roleDefault)
-        })
-      },
-      function (roleDefault, next) {
-        var UserSchema = require('../../../models/user')
-        plainTextPass = chance.string({
-          length: 6,
-          pool: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890'
-        })
+//           return next(null, roleDefault)
+//         })
+//       },
+//       function (roleDefault, next) {
+//         var UserSchema = require('../../../models/user')
+//         plainTextPass = chance.string({
+//           length: 6,
+//           pool: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890'
+//         })
 
-        user = new UserSchema({
-          username: postData.user.email,
-          password: plainTextPass,
-          fullname: postData.user.fullname,
-          email: postData.user.email,
-          accessToken: chance.hash(),
-          role: roleDefault.value
-        })
+//         user = new UserSchema({
+//           username: postData.user.email,
+//           password: plainTextPass,
+//           fullname: postData.user.fullname,
+//           email: postData.user.email,
+//           accessToken: chance.hash(),
+//           role: roleDefault.value
+//         })
 
-        user.save(function (err, savedUser) {
-          if (err) return next(err)
+//         user.save(function (err, savedUser) {
+//           if (err) return next(err)
 
-          return next(null, savedUser)
-        })
-      },
+//           return next(null, savedUser)
+//         })
+//       },
 
-      function (savedUser, next) {
-        // Group Creation
-        var GroupSchema = require('../../../models/group')
-        group = new GroupSchema({
-          name: savedUser.email,
-          members: [savedUser._id],
-          sendMailTo: [savedUser._id],
-          public: true
-        })
+//       function (savedUser, next) {
+//         // Group Creation
+//         var GroupSchema = require('../../../models/group')
+//         group = new GroupSchema({
+//           name: savedUser.email,
+//           members: [savedUser._id],
+//           sendMailTo: [savedUser._id],
+//           public: true
+//         })
 
-        group.save(function (err, group) {
-          if (err) return next(err)
+//         group.save(function (err, group) {
+//           if (err) return next(err)
 
-          return next(null, group, savedUser)
-        })
-      },
+//           return next(null, group, savedUser)
+//         })
+//       },
 
-      function (group, savedUser, next) {
-        var settingsSchema = require('../../../models/setting')
-        settingsSchema.getSettingByName('ticket:type:default', function (err, defaultType) {
-          if (err) return next(err)
+//       function (group, savedUser, next) {
+//         var settingsSchema = require('../../../models/setting')
+//         settingsSchema.getSettingByName('ticket:type:default', function (err, defaultType) {
+//           if (err) return next(err)
 
-          if (defaultType.value) {
-            return next(null, defaultType.value, group, savedUser)
-          }
+//           if (defaultType.value) {
+//             return next(null, defaultType.value, group, savedUser)
+//           }
 
-          return next('Failed: Invalid Default Ticket Type.')
-        })
-      },
+//           return next('Failed: Invalid Default Ticket Type.')
+//         })
+//       },
 
-      function (defaultTicketType, group, savedUser, next) {
-        // Create Ticket
-        var ticketTypeSchema = require('../../../models/tickettype')
-        ticketTypeSchema.getType(defaultTicketType, function (err, ticketType) {
-          if (err) return next(err)
+//       function (defaultTicketType, group, savedUser, next) {
+//         // Create Ticket
+//         var ticketTypeSchema = require('../../../models/tickettype')
+//         ticketTypeSchema.getType(defaultTicketType, function (err, ticketType) {
+//           if (err) return next(err)
 
-          var TicketSchema = require('../../../models/ticket')
-          var HistoryItem = {
-            action: 'ticket:created',
-            description: 'Ticket was created.',
-            owner: savedUser._id
-          }
-          ticket = new TicketSchema({
-            owner: savedUser._id,
-            group: group._id,
-            type: ticketType._id,
-            priority: _.first(ticketType.priorities)._id, // TODO: change when priority order is complete!
-            subject: sanitizeHtml(postData.ticket.subject).trim(),
-            issue: sanitizeHtml(postData.ticket.issue).trim(),
-            history: [HistoryItem],
-            subscribers: [savedUser._id]
-          })
+//           var TicketSchema = require('../../../models/ticket')
+//           var HistoryItem = {
+//             action: 'ticket:created',
+//             description: 'Ticket was created.',
+//             owner: savedUser._id
+//           }
+//           ticket = new TicketSchema({
+//             owner: savedUser._id,
+//             group: group._id,
+//             type: ticketType._id,
+//             priority: _.first(ticketType.priorities)._id, // TODO: change when priority order is complete!
+//             subject: sanitizeHtml(postData.ticket.subject).trim(),
+//             issue: sanitizeHtml(postData.ticket.issue).trim(),
+//             history: [HistoryItem],
+//             subscribers: [savedUser._id]
+//           })
 
-          var marked = require('marked')
-          var tIssue = ticket.issue
-          tIssue = tIssue.replace(/(\r\n|\n\r|\r|\n)/g, '<br>')
-          tIssue = sanitizeHtml(tIssue).trim()
-          ticket.issue = marked(tIssue)
+//           var marked = require('marked')
+//           var tIssue = ticket.issue
+//           tIssue = tIssue.replace(/(\r\n|\n\r|\r|\n)/g, '<br>')
+//           tIssue = sanitizeHtml(tIssue).trim()
+//           ticket.issue = marked(tIssue)
 
-          ticket.save(function (err, t) {
-            if (err) return next(err)
+//           ticket.save(function (err, t) {
+//             if (err) return next(err)
 
-            emitter.emit('ticket:created', {
-              hostname: req.headers.host,
-              socketId: '',
-              ticket: t
-            })
+//             emitter.emit('ticket:created', {
+//               hostname: req.headers.host,
+//               socketId: '',
+//               ticket: t
+//             })
 
-            return next(null, { user: savedUser, group: group, ticket: t })
-          })
-        })
-      }
-    ],
-    function (err, result) {
-      if (err) winston.debug(err)
-      if (err) return res.status(400).json({ success: false, error: err.message })
+//             return next(null, { user: savedUser, group: group, ticket: t })
+//           })
+//         })
+//       }
+//     ],
+//     function (err, result) {
+//       if (err) winston.debug(err)
+//       if (err) return res.status(400).json({ success: false, error: err.message })
 
-      delete result.user.password
-      result.user.password = undefined
+//       delete result.user.password
+//       result.user.password = undefined
 
-      return res.json({
-        success: true,
-        userData: { savedUser: result.user, chancepass: plainTextPass },
-        ticket: result.ticket
-      })
-    }
-  )
-}
+//       return res.json({
+//         success: true,
+//         userData: { savedUser: result.user, chancepass: plainTextPass },
+//         ticket: result.ticket
+//       })
+//     }
+//   )
+// }
 
 /**
  * @api {get} /api/v1/tickets/:uid Get Single Ticket

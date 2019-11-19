@@ -320,7 +320,7 @@ var notifications = require('../notifications') // Load Push Events
     switch (data.type) {
       case 1:
         title = 'Ticket #' + ticket.uid + ' Created'
-        content = ticket.owner.fullname + ' submitted a ticket'
+        content = ticket.owner.firstname + ' ' + ticket.owner.lastname + ' submitted a ticket'
         users = _.map(ticket.group.sendMailTo, function (o) {
           return o._id
         })
@@ -331,8 +331,8 @@ var notifications = require('../notifications') // Load Push Events
         var comment = _.last(ticket.comments)
         users = _.compact(
           _.map(ticket.subscribers, function (o) {
-            if (comment.owner._id.toString() !== o._id.toString()) {
-              return o._id
+            if (comment.owner.id !== o) {
+              return o
             }
           })
         )
@@ -431,9 +431,8 @@ var notifications = require('../notifications') // Load Push Events
         async.parallel(
           [
             function (cb) {
-              if (ticket.owner._id.toString() === comment.owner.toString()) return cb
-              if (!_.isUndefined(ticket.assignee) && ticket.assignee._id.toString() === comment.owner.toString())
-                return cb
+              if (ticket.owner.id === comment.owner) return cb
+              if (!_.isUndefined(ticket.assignee) && ticket.assignee.id === comment.owner) return cb
 
               var notification = new NotificationSchema({
                 organizationId: ticket.organizationId,
@@ -451,8 +450,8 @@ var notifications = require('../notifications') // Load Push Events
             },
             function (cb) {
               if (_.isUndefined(ticket.assignee)) return cb()
-              if (ticket.assignee._id.toString() === comment.owner.toString()) return cb
-              if (ticket.owner._id.toString() === ticket.assignee._id.toString()) return cb()
+              if (ticket.assignee.id === comment.owner) return cb
+              if (ticket.owner.id === ticket.assignee.id) return cb()
 
               var notification = new NotificationSchema({
                 owner: ticket.assignee,

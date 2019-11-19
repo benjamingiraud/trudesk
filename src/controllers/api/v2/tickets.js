@@ -18,7 +18,9 @@ var winston = require('winston')
 var apiUtils = require('../apiUtils')
 var Ticket = require('../../../models/ticket')
 var Group = require('../../../models/group')
+var Role = require('../../../models/role')
 var Department = require('../../../models/department')
+var SwiziConnector = require('../../../connectors/SwiziConnector')
 
 var ticketsV2 = {}
 
@@ -118,7 +120,49 @@ ticketsV2.get = function (req, res) {
 
         Ticket.getTicketsWithObject(mappedGroups, queryObject, function (err, tickets) {
           if (err) return next(err)
-          return next(null, mappedGroups, tickets)
+          let Swizi = new SwiziConnector({ apikey: req.user.swiziApiKey })
+          let userIds = []
+          for (let i = 0; i < tickets.length; i++) {
+            userIds.push(tickets[i].owner)
+            if (tickets[i].assignee) userIds.push(tickets[i].assignee)
+            userIds = userIds.concat(tickets[i].subscribers)
+            for (let j = 0; j < tickets[i].history.length; j++) {
+              userIds.push(tickets[i].history[j].owner)
+            }
+            for (let j = 0; j < tickets[i].comments.length; j++) {
+              userIds.push(tickets[i].history[j].owner)
+            }
+            for (let j = 0; j < tickets[i].notes.length; j++) {
+              userIds.push(tickets[i].history[j].owner)
+            }
+          }
+          userIds = _.uniq(userIds)
+          console.log(userIds)
+          tickets = JSON.parse(JSON.stringify(tickets))
+          if (userIds.length) {
+            Swizi.findUserByIds(userIds).then(users => {
+              for (let i = 0; i < tickets.length; i++) {
+                tickets[i].owner = users.find(u => u.id === tickets[i].owner)
+                console.log(users.find(u => u.id === tickets[i].owner))
+                console.log(tickets[i].owner)
+                if (tickets[i].assignee) tickets[i].assignee = users.find(u => u.id === tickets[i].assignee)
+                tickets[i].subscribers = tickets[i].subscribers.map(t => users.find(u => u.id === t))
+                for (let j = 0; j < tickets[i].history.length; j++) {
+                  tickets[i].history[j].owner = users.find(u => u.id === tickets[i].history[j].owner)
+                }
+                for (let j = 0; j < tickets[i].comments.length; j++) {
+                  tickets[i].comments[j].owner = users.find(u => u.id === tickets[i].comments[j].comments)
+                }
+                for (let j = 0; j < tickets[i].notes.length; j++) {
+                  tickets[i].notes[j].owner = users.find(u => u.id === tickets[i].notes[j].notes)
+                }
+              }
+              console.log(users)
+              return next(null, mappedGroups, tickets)
+            })
+          } else {
+            return next(null, mappedGroups, tickets)
+          }
         })
       },
       function (mappedGroups, tickets, done) {
@@ -156,8 +200,69 @@ ticketsV2.single = function (req, res) {
 
   Ticket.getTicketByUid(req.user.organizationId, uid, function (err, ticket) {
     if (err) return apiUtils.sendApiError(res, 500, err)
-
-    return apiUtils.sendApiSuccess(res, { ticket: ticket })
+    ticket = JSON.parse(JSON.stringify(ticket))
+    let Swizi = new SwiziConnector({ apikey: req.user.swiziApiKey })
+    let userIds = []
+    userIds.push(ticket.owner)
+    if (ticket.assignee) userIds.push(ticket.assignee)
+    userIds = userIds.concat(ticket.subscribers)
+    for (let j = 0; j < ticket.history.length; j++) {
+      userIds.push(ticket.history[j].owner)
+    }
+    for (let j = 0; j < ticket.comments.length; j++) {
+      userIds.push(ticket.comments[j].owner)
+    }
+    for (let j = 0; j < ticket.notes.length; j++) {
+      userIds.push(ticket.notes[j].owner)
+    }
+    userIds = _.uniq(userIds)
+    console.log(userIds)
+    if (userIds.length) {
+      Swizi.findUserByIds(userIds).then(users => {
+        async.eachSeries(
+          users,
+          function (account, next) {
+            Role.getRoleBySwiziGroup(
+              account.groups,
+              function (err, role) {
+                if (err) return apiUtils.sendApiError(res, 500, err.message)
+                if (role) {
+                  account.role = role
+                }
+                Group.getAllGroupsOfUser(
+                  account.id,
+                  function (err, groups) {
+                    if (err) return apiUtils.sendApiError(res, 500, err.message)
+                    account.tgroups = groups
+                    next()
+                  },
+                  organizationId
+                )
+              },
+              organizationId
+            )
+          },
+          function (err) {
+            if (err) return apiUtils.sendApiError(res, 500, err.message)
+            ticket.owner = users.find(u => u.id === ticket.owner)
+            if (ticket.assignee) ticket.assignee = users.find(u => u.id === ticket.assignee)
+            ticket.subscribers = ticket.subscribers.map(t => users.find(u => u.id === t))
+            for (let j = 0; j < ticket.history.length; j++) {
+              ticket.history[j].owner = users.find(u => u.id === ticket.history[j].owner)
+            }
+            for (let j = 0; j < ticket.comments.length; j++) {
+              ticket.comments[j].owner = users.find(u => u.id === ticket.comments[j].owner)
+            }
+            for (let j = 0; j < ticket.notes.length; j++) {
+              ticket.notes[j].owner = users.find(u => u.id === ticket.notes[j].owner)
+            }
+            return apiUtils.sendApiSuccess(res, { ticket: ticket })
+          }
+        )
+      })
+    } else {
+      return apiUtils.sendApiSuccess(res, { ticket: ticket })
+    }
   })
 }
 

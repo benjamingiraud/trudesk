@@ -19,20 +19,20 @@ import socket from 'lib/socket'
 import { observer } from 'mobx-react'
 import { observable } from 'mobx'
 
+import { withTranslation } from 'react-i18next';
+
 const statusToName = (status, t) => {
   switch (status) {
     case 0:
       return t && t('New') || 'New'
     case 1:
-      return t && t('ticket:Open') || 'Open'
+      return t && t('Open') || 'Open'
     case 2:
       return t && t('Pending') || 'Pending'
     case 3:
       return t && t('Closed') || 'Closed'
   }
 }
-
-import { withTranslation } from 'react-i18next';
 
 @observer
 class StatusSelector extends React.Component {
@@ -122,7 +122,7 @@ class StatusSelector extends React.Component {
               <span>{t('New')}</span>
             </li>
             <li className='ticket-status ticket-open' onClick={() => this.changeStatus(1)}>
-              <span>{t('ticket:Open')}</span>
+              <span>{t('Open')}</span>
             </li>
             <li className='ticket-status ticket-pending' onClick={() => this.changeStatus(2)}>
               <span>{t('Pending')}</span>

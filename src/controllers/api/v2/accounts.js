@@ -288,7 +288,29 @@ accountsApi.get = function (req, res) {
                     if (role) {
                       account.role = role
                     }
-                    next()
+                    Department.getUserDepartments(
+                      account.id,
+                      function (err, departments) {
+                        if (err) return next(err)
+
+                        account.departments = departments.map(function (department) {
+                          return { name: department.name, _id: department._id }
+                        })
+
+                        Team.getTeamsOfUser(
+                          account.id,
+                          function (err, teams) {
+                            if (err) return next(err)
+                            account.teams = teams.map(function (team) {
+                              return { name: team.name, _id: team._id }
+                            })
+                            next()
+                          },
+                          organizationId
+                        )
+                      },
+                      organizationId
+                    )
                   },
                   organizationId
                 )
@@ -368,7 +390,29 @@ accountsApi.get = function (req, res) {
                     if (role) {
                       account.role = role
                     }
-                    next()
+                    Department.getUserDepartments(
+                      account.id,
+                      function (err, departments) {
+                        if (err) return next(err)
+
+                        account.departments = departments.map(function (department) {
+                          return { name: department.name, _id: department._id }
+                        })
+
+                        Team.getTeamsOfUser(
+                          account.id,
+                          function (err, teams) {
+                            if (err) return next(err)
+                            account.teams = teams.map(function (team) {
+                              return { name: team.name, _id: team._id }
+                            })
+                            next()
+                          },
+                          organizationId
+                        )
+                      },
+                      organizationId
+                    )
                   },
                   organizationId
                 )

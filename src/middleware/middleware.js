@@ -37,14 +37,13 @@ middleware.db = function (req, res, next) {
 }
 middleware.checkOrganization = function (req, res, next) {
   var organizationId = req.params.organizationId
-
+  if (organizationId && parseInt(organizationId) === 404) return res.render('404', { layout: false })
   if (_.isUndefined(organizationId) || _.isNil(organizationId)) return res.redirect(404)
 
   var organizationSchema = require('../models/organization')
 
   organizationSchema.getBySlug(organizationId, function (err, organization) {
-    if (err) return res.redirect(404)
-    if (!organization) return res.redirect(404)
+    if (err || !organization) return res.redirect(404)
 
     req.organization = organization
 
@@ -107,7 +106,6 @@ middleware.redirectIfUser = function (req, res, next) {
 
     return res.redirect(`/${req.organization.slug}`)
   }
-  console.log(req.user)
   if (!req.user.role.isAdmin && !req.user.role.isAgent) {
     return res.redirect(301, `/${req.organization.slug}/tickets`)
   }

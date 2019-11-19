@@ -175,8 +175,8 @@ const reducer = handleActions(
       const inView = hasInView(
         state.viewType,
         ticket.status,
-        ticket.assignee ? ticket.assignee._id : undefined,
-        action.sessionUser._id,
+        ticket.assignee ? ticket.assignee.id : undefined,
+        action.sessionUser.id,
         userGroupIds,
         ticket.group._id
       )

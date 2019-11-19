@@ -100,10 +100,9 @@ groupSchema.methods.removeSendMailTo = function (memberId, callback) {
 groupSchema.statics.getGroupByName = function (name, callback) {
   if (_.isUndefined(name) || name.length < 1) return callback('Invalid Group Name - GroupSchema.GetGroupByName()')
 
-  var q = this.model(COLLECTION)
-    .findOne({ name: name })
-    .populate('members', '_id username fullname email role preferences image title deleted')
-    .populate('sendMailTo', '_id username fullname email role preferences image title deleted')
+  var q = this.model(COLLECTION).findOne({ name: name })
+  // .populate('members', '_id username fullname email role preferences image title deleted')
+  // .populate('sendMailTo', '_id username fullname email role preferences image title deleted')
 
   return q.exec(callback)
 }

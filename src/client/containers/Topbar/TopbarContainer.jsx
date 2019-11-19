@@ -210,7 +210,7 @@ class TopbarContainer extends React.Component {
                         </a>
                       </PDropdownTrigger>
                     </li>
-                    <li className='top-bar-icon'>
+                    {/* <li className='top-bar-icon'>
                       <OffCanvasTrigger target={'online-user-list'}>
                         <a title={t('Online_Users')} className='no-ajaxy'>
                           <i className='material-icons'>perm_contact_calendar</i>
@@ -224,7 +224,7 @@ class TopbarContainer extends React.Component {
                           </span>
                         </a>
                       </OffCanvasTrigger>
-                    </li>
+                    </li> */}
                     <li className='top-bar-icon nopadding nohover'>
                       <i className='material-icons separator'>remove</i>
                     </li>

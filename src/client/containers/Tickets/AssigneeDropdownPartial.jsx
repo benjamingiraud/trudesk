@@ -43,6 +43,7 @@ class AssigneeDropdownPartial extends React.Component {
   }
 
   onUpdateAssigneeList (data) {
+    console.log(data)
     this.agents = data || []
   }
 
@@ -71,20 +72,21 @@ class AssigneeDropdownPartial extends React.Component {
         }
       >
         {this.agents.map(agent => {
+          console.log(agent)
           return (
             <li
-              key={agent._id}
+              key={agent.id}
               onClick={() => {
                 if (this.props.onAssigneeClick) this.props.onAssigneeClick({ agent })
                 helpers.hideAllpDropDowns()
-                socket.socket.emit('setAssignee', { _id: agent._id, ticketId: this.props.ticketId })
+                socket.socket.emit('setAssignee', { _id: agent.id, ticketId: this.props.ticketId })
               }}
             >
               <a className='messageNotification no-ajaxy' role='button'>
                 <div className='uk-clearfix'>
-                  <Avatar userId={agent._id} image={agent.image} size={50} />
+                  <Avatar userId={agent.id} image={agent.image} size={50} />
                   <div className='messageAuthor'>
-                    <strong>{agent.fullname}</strong>
+                    <strong>{agent.fistname} {agent.lastname}</strong>
                   </div>
                   <div className='messageSnippet'>
                     <span>{agent.email}</span>

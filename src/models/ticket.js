@@ -141,41 +141,41 @@ ticketSchema.pre('save', function (next) {
   })
 })
 
-ticketSchema.post('save', function (doc, next) {
-  if (!this.wasNew) {
-    var emitter = require('../emitter')
-    doc
-      .populate(
-        'owner assignee comments.owner notes.owner subscribers history.owner',
-        '_id username fullname email role image title'
-      )
-      .populate('type tags')
-      .populate({
-        path: 'group',
-        model: groupSchema,
-        populate: [
-          {
-            path: 'members',
-            model: userSchema,
-            select: '-__v -accessToken -tOTPKey'
-          },
-          {
-            path: 'sendMailTo',
-            model: userSchema,
-            select: '-__v -accessToken -tOTPKey'
-          }
-        ]
-      })
-      .execPopulate(function (err, savedTicket) {
-        if (err) return winston.warn(err)
-        emitter.emit('ticket:updated', savedTicket)
+// ticketSchema.post('save', function (doc, next) {
+//   if (!this.wasNew) {
+//     var emitter = require('../emitter')
+//     doc
+//       .populate(
+//         'owner assignee comments.owner notes.owner subscribers history.owner',
+//         '_id username fullname email role image title'
+//       )
+//       .populate('type tags')
+//       .populate({
+//         path: 'group',
+//         model: groupSchema,
+//         populate: [
+//           {
+//             path: 'members',
+//             model: userSchema,
+//             select: '-__v -accessToken -tOTPKey'
+//           },
+//           {
+//             path: 'sendMailTo',
+//             model: userSchema,
+//             select: '-__v -accessToken -tOTPKey'
+//           }
+//         ]
+//       })
+//       .execPopulate(function (err, savedTicket) {
+//         if (err) return winston.warn(err)
+//         emitter.emit('ticket:updated', savedTicket)
 
-        return next()
-      })
-  } else {
-    return next()
-  }
-})
+//         return next()
+//       })
+//   } else {
+//     return next()
+//   }
+// })
 
 ticketSchema.virtual('statusFormatted').get(function () {
   var s = this.status
@@ -682,7 +682,7 @@ ticketSchema.statics.getAll = function (callback) {
   var q = self
     .model(COLLECTION)
     .find({ deleted: false })
-    .populate('owner assignee', '-password -__v -preferences -iOSDeviceTokens -tOTPKey')
+    // .populate('owner assignee', '-password -__v -preferences -iOSDeviceTokens -tOTPKey')
     .populate('type tags group')
     .sort({ status: 1 })
     .lean()
@@ -729,10 +729,10 @@ ticketSchema.statics.getAllByStatus = function (status, callback) {
   var q = self
     .model(COLLECTION)
     .find({ status: { $in: status }, deleted: false })
-    .populate(
-      'owner assignee comments.owner notes.owner subscribers history.owner',
-      'username fullname email role image title'
-    )
+    // .populate(
+    //   'owner assignee comments.owner notes.owner subscribers history.owner',
+    //   'username fullname email role image title'
+    // )
     .populate('type tags group')
     .sort({ status: 1 })
     .lean()
@@ -765,10 +765,10 @@ ticketSchema.statics.getTickets = function (grpIds, callback, organizationId) {
   var q = self
     .model(COLLECTION)
     .find({ group: { $in: grpIds }, deleted: false, organizationId: organizationId })
-    .populate(
-      'owner assignee comments.owner notes.owner subscribers history.owner',
-      'username fullname email role image title'
-    )
+    // .populate(
+    //   'owner assignee comments.owner notes.owner subscribers history.owner',
+    //   'username fullname email role image title'
+    // )
     .populate('type tags group')
     .sort({ status: 1 })
 
@@ -846,11 +846,11 @@ ticketSchema.statics.getTicketsWithObject = function (grpId, object, callback) {
   var q = self
     .model(COLLECTION)
     .find({ organizationId: object.organizationId, group: { $in: grpId }, deleted: false })
-    .populate(
-      'owner assignee subscribers comments.owner notes.owner history.owner',
-      'username fullname email role image title'
-    )
-    .populate('assignee', 'username fullname email role image title')
+    // .populate(
+    //   'owner assignee subscribers comments.owner notes.owner history.owner',
+    //   'username fullname email role image title'
+    // )
+    // .populate('assignee', 'username fullname email role image title')
     .populate('type tags group')
     .sort({ uid: -1 })
 
@@ -1002,10 +1002,10 @@ ticketSchema.statics.getTicketsByStatus = function (grpId, status, callback) {
   var q = self
     .model(COLLECTION)
     .find({ group: { $in: grpId }, status: status, deleted: false })
-    .populate(
-      'owner assignee comments.owner notes.owner subscribers history.owner',
-      'username fullname email role image title'
-    )
+    // .populate(
+    //   'owner assignee comments.owner notes.owner subscribers history.owner',
+    //   'username fullname email role image title'
+    // )
     .populate('type tags group')
     .sort({ uid: -1 })
 
@@ -1029,10 +1029,10 @@ ticketSchema.statics.getTicketByUid = function (organizationId, uid, callback) {
   var q = self
     .model(COLLECTION)
     .findOne({ organizationId: organizationId, uid: uid, deleted: false })
-    .populate(
-      'owner assignee comments.owner notes.owner subscribers history.owner',
-      'username fullname email role image title'
-    )
+    // .populate(
+    //   'owner assignee comments.owner notes.owner subscribers history.owner',
+    //   'username fullname email role image title'
+    // )
     .populate('type tags group')
 
   return q.exec(callback)
@@ -1055,26 +1055,26 @@ ticketSchema.statics.getTicketById = function (id, callback, organizationId) {
   var q = self
     .model(COLLECTION)
     .findOne({ organizationId: organizationId, _id: id, deleted: false })
-    .populate(
-      'owner assignee comments.owner notes.owner subscribers history.owner',
-      'username fullname email role image title'
-    )
+    // .populate(
+    //   'owner assignee comments.owner notes.owner subscribers history.owner',
+    //   'username fullname email role image title'
+    // )
     .populate('type tags')
     .populate({
       path: 'group',
-      model: groupSchema,
-      populate: [
-        {
-          path: 'members',
-          model: userSchema,
-          select: '-__v -iOSDeviceTokens -accessToken -tOTPKey'
-        },
-        {
-          path: 'sendMailTo',
-          model: userSchema,
-          select: '-__v -iOSDeviceTokens -accessToken -tOTPKey'
-        }
-      ]
+      model: groupSchema
+      // populate: [
+      //   {
+      //     path: 'members',
+      //     model: userSchema,
+      //     select: '-__v -iOSDeviceTokens -accessToken -tOTPKey'
+      //   },
+      //   {
+      //     path: 'sendMailTo',
+      //     model: userSchema,
+      //     select: '-__v -iOSDeviceTokens -accessToken -tOTPKey'
+      //   }
+      // ]
     })
 
   return q.exec(callback)
@@ -1100,26 +1100,26 @@ ticketSchema.statics.getTicketsByRequester = function (userId, callback, organiz
     .model(COLLECTION)
     .find({ owner: userId, deleted: false, organizationId: organizationId })
     .limit(10000)
-    .populate(
-      'owner assignee comments.owner notes.owner subscribers history.owner',
-      'username fullname email role image title'
-    )
+    // .populate(
+    //   'owner assignee comments.owner notes.owner subscribers history.owner',
+    //   'username fullname email role image title'
+    // )
     .populate('type tags')
     .populate({
       path: 'group',
-      model: groupSchema,
-      populate: [
-        {
-          path: 'members',
-          model: userSchema,
-          select: '-__v -iOSDeviceTokens -accessToken -tOTPKey'
-        },
-        {
-          path: 'sendMailTo',
-          model: userSchema,
-          select: '-__v -iOSDeviceTokens -accessToken -tOTPKey'
-        }
-      ]
+      model: groupSchema
+      // populate: [
+      //   {
+      //     path: 'members',
+      //     model: userSchema,
+      //     select: '-__v -iOSDeviceTokens -accessToken -tOTPKey'
+      //   },
+      //   {
+      //     path: 'sendMailTo',
+      //     model: userSchema,
+      //     select: '-__v -iOSDeviceTokens -accessToken -tOTPKey'
+      //   }
+      // ]
     })
 
   return q.exec(callback)
@@ -1144,10 +1144,10 @@ ticketSchema.statics.getTicketsWithSearchString = function (organizationId, grps
             deleted: false,
             $where: '/^' + search + '.*/.test(this.uid)'
           })
-          .populate(
-            'owner assignee comments.owner notes.owner subscribers history.owner',
-            'username fullname email role image title'
-          )
+          // .populate(
+          //   'owner assignee comments.owner notes.owner subscribers history.owner',
+          //   'username fullname email role image title'
+          // )
           .populate('type tags group')
           .limit(100)
 
@@ -1167,10 +1167,10 @@ ticketSchema.statics.getTicketsWithSearchString = function (organizationId, grps
             deleted: false,
             subject: { $regex: search, $options: 'i' }
           })
-          .populate(
-            'owner assignee comments.owner notes.owner subscribers history.owner',
-            'username fullname email role image title'
-          )
+          // .populate(
+          //   'owner assignee comments.owner notes.owner subscribers history.owner',
+          //   'username fullname email role image title'
+          // )
           .populate('type tags group')
           .limit(100)
 
@@ -1190,10 +1190,10 @@ ticketSchema.statics.getTicketsWithSearchString = function (organizationId, grps
             deleted: false,
             issue: { $regex: search, $options: 'i' }
           })
-          .populate(
-            'owner assignee comments.owner notes.owner subscribers history.owner',
-            'username fullname email role image title'
-          )
+          // .populate(
+          //   'owner assignee comments.owner notes.owner subscribers history.owner',
+          //   'username fullname email role image title'
+          // )
           .populate('type tags group')
           .limit(100)
 
@@ -1472,10 +1472,10 @@ ticketSchema.statics.getAssigned = function (userId, callback) {
   var q = self
     .model(COLLECTION)
     .find({ assignee: userId, deleted: false, status: { $ne: 3 } })
-    .populate(
-      'owner assignee comments.owner notes.owner subscribers history.owner',
-      'username fullname email role image title'
-    )
+    // .populate(
+    //   'owner assignee comments.owner notes.owner subscribers history.owner',
+    //   'username fullname email role image title'
+    // )
     .populate('type tags group')
 
   return q.exec(callback)

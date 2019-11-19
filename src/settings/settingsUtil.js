@@ -56,7 +56,7 @@ util.getSettings = function (callback, organizationId) {
 
     s.siteTitle = parseSetting(settings, 'gen:sitetitle', 'Trudesk')
     s.siteUrl = parseSetting(settings, 'gen:siteurl', '')
-    s.timezone = parseSetting(settings, 'gen:timezone', 'America/New_York')
+    s.timezone = parseSetting(settings, 'gen:timezone', 'Europe/Paris')
     s.timeFormat = parseSetting(settings, 'gen:timeFormat', 'hh:mma')
     s.shortDateFormat = parseSetting(settings, 'gen:shortDateFormat', 'MM/DD/YYYY')
     s.longDateFormat = parseSetting(settings, 'gen:longDateFormat', 'MMM DD, YYYY')

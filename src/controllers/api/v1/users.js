@@ -1114,7 +1114,7 @@ apiUsers.getGroups = function (req, res) {
       organizationId
     )
   } else {
-    if (req.user.username !== req.params.username)
+    if (req.user.id !== parseInt(req.params.username))
       return res.status(400).json({ success: false, error: 'Invalid API Call' })
 
     groupSchema.getAllGroupsOfUserNoPopulate(

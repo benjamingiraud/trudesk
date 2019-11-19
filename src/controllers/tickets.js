@@ -103,7 +103,8 @@ ticketsController.getByStatus = function (req, res, next) {
   var arr = pathname.split('/')
   var tType = 'new'
   var s = 0
-  if (_.size(arr) > 2) tType = arr[2]
+  console.log(arr)
+  if (_.size(arr) === 4) tType = arr[3]
 
   switch (tType) {
     case 'open':

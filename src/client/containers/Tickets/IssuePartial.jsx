@@ -126,12 +126,12 @@ class IssuePartial extends React.Component {
   render () {
     return (
       <div className='initial-issue uk-clearfix'>
-        <Avatar image={this.owner.image} userId={this.owner._id} />
+        <Avatar image={this.owner.image} userId={this.owner.id} />
         {/* Issue */}
         <div className='issue-text'>
           <h3 className='subject-text'>{this.subject}</h3>
           <a href={`mailto:${this.owner.email}`}>
-            {this.owner.fullname} &lt;{this.owner.email}&gt;
+            {this.owner.firstname} {this.owner.lastname} &lt;{this.owner.email}&gt;
           </a>
           <br />
           <time dateTime={helpers.formatDate(this.props.date, 'YYYY-MM-DD HH:mm')}>

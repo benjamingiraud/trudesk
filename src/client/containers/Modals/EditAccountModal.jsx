@@ -46,7 +46,7 @@ class EditAccountModal extends React.Component {
   @observable isAgentRole = false
 
   componentDidMount () {
-    this.name = this.props.user.fullname
+    this.name = this.props.user.fistname + ' ' + this.props.user.lastname
     this.title = this.props.user.title
     this.email = this.props.user.email
     this.isAgentRole = this.props.user.role.isAdmin || this.props.user.role.isAgent

@@ -10,7 +10,7 @@
       "name": "Launch Program",
       "program": "${workspaceFolder}/app",
       "env": {
-        "NODE_ENV" : "local"
+        "NODE_ENV": "development"
       }
     }
   ]

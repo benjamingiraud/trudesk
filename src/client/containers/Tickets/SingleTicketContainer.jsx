@@ -129,7 +129,7 @@ class SingleTicketContainer extends React.Component {
   onUpdateAssignee (data) {
     if (this.ticket._id === data._id) {
       this.ticket.assignee = data.assignee
-      if (this.ticket.assignee && this.ticket.assignee._id === this.props.shared.sessionUser._id)
+      if (this.ticket.assignee && this.ticket.assignee.id === this.props.shared.sessionUser.id)
         this.isSubscribed = true
     }
   }
@@ -284,7 +284,7 @@ class SingleTicketContainer extends React.Component {
                               <Avatar
                                 image={this.ticket.assignee && this.ticket.assignee.image}
                                 showOnlineBubble={this.ticket.assignee !== undefined}
-                                userId={this.ticket.assignee && this.ticket.assignee._id}
+                                userId={this.ticket.assignee && this.ticket.assignee.id}
                               />
                               <span className='drop-icon material-icons'>keyboard_arrow_down</span>
                             </PDropdownTrigger>
@@ -294,14 +294,14 @@ class SingleTicketContainer extends React.Component {
                           <Avatar
                             image={this.ticket.assignee && this.ticket.assignee.image}
                             showOnlineBubble={this.ticket.assignee !== undefined}
-                            userId={this.ticket.assignee && this.ticket.assignee._id}
+                            userId={this.ticket.assignee && this.ticket.assignee.id}
                           />
                         )}
                         <div className='ticket-assignee-details'>
                           {!this.ticket.assignee && <h3>{t('No User Assigned')}</h3>}
                           {this.ticket.assignee && (
                             <Fragment>
-                              <h3>{this.ticket.assignee.fullname}</h3>
+                              <h3>{this.ticket.assignee.firstname} {this.ticket.assignee.lastname}</h3>
                               <a
                                 className='comment-email-link uk-text-truncate uk-display-inline-block'
                                 href={`mailto:${this.ticket.assignee.email}`}
@@ -477,7 +477,7 @@ class SingleTicketContainer extends React.Component {
                                 <div key={item._id} className='history-item'>
                                   <time dateTime={helpers.formatDate(item.date, this.props.common.longDateFormat)} />
                                   <em>
-                                    {t('Action by')}: <span>{item.owner.fullname}</span>
+                                    {t('Action by')}: <span>{item.owner.firstname} {item.owner.lastname}</span>
                                   </em>
                                   <p>{item.description}</p>
                                 </div>

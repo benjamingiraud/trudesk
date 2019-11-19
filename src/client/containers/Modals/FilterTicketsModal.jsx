@@ -112,7 +112,7 @@ class FilterTicketsModal extends React.Component {
 
     const assignees = this.props.accountsState.accounts
       .map(a => {
-        return { text: a.get('fullname'), value: a.get('_id') }
+        return { text: a.get('fistname') + ' ' + a.get('lastname'), value: a.get('id') }
       })
       .toArray()
 

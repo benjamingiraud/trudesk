@@ -18,7 +18,7 @@ var path = require('path')
 var async = require('async')
 var winston = require('winston')
 var moment = require('moment-timezone')
-
+require('moment-duration-format')(moment)
 var SettingsSchema = require('../models/setting')
 var PrioritySchema = require('../models/ticketpriority')
 
@@ -303,7 +303,7 @@ function timezoneDefault (callback, organizationId) {
       if (!setting) {
         var defaultTimezone = new SettingsSchema({
           name: 'gen:timezone',
-          value: 'America/New_York',
+          value: 'Europe/Paris',
           organizationId: organizationId
         })
 

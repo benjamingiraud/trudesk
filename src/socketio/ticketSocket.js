@@ -23,6 +23,7 @@ var prioritySchema = require('../models/ticketpriority')
 var userSchema = require('../models/user')
 var roleSchema = require('../models/role')
 var permissions = require('../permissions')
+var SwiziConnector = require('../connectors/SwiziConnector')
 
 var events = {}
 
@@ -109,10 +110,27 @@ events.onUpdateAssigneeList = function (socket) {
 
     roleSchema.getAgentRoles(function (err, roles) {
       if (err) return true
+      let swiziGrpsId = []
+      for (let i = 0; i < roles.length; i++) swiziGrpsId = swiziGrpsId.concat(roles[i].swiziGroupIds)
+      swiziGrpsId = _.uniq(swiziGrpsId)
+
+      let Swizi = new SwiziConnector({ apikey: socket.request.user.swiziApiKey })
+      let promsiseUsers = []
+      for (let i = 0; i < swiziGrpsId.length; i++) {
+        promsiseUsers.push(Swizi.findUsersByGroup(swiziGrpsId[i]))
+      }
+      Promise.all(promsiseUsers).then(users => {
+        let resAccounts = _.flatten(users)
+        resAccounts = _.uniqBy(resAccounts, 'id')
+        var sortedUser = _.sortBy(resAccounts, 'firstname')
+
+        utils.sendToSelf(socket, 'updateAssigneeList', sortedUser)
+      })
+
       userSchema.find({ role: { $in: roles }, deleted: false, organizationId: organizationId }, function (err, users) {
         if (err) return true
 
-        var sortedUser = _.sortBy(users, 'fullname')
+        var sortedUser = _.sortBy(users, 'firstname')
 
         utils.sendToSelf(socket, 'updateAssigneeList', sortedUser)
       })
@@ -165,7 +183,7 @@ events.onSetAssignee = function (socket) {
                   organizationId: organizationId
                 })
                 emitter.emit('ticket:setAssignee', {
-                  assigneeId: ticket.assignee._id,
+                  assigneeId: ticket.assignee.id,
                   ticketId: ticket._id,
                   ticketUid: ticket.uid,
                   hostname: socket.handshake.headers.host,

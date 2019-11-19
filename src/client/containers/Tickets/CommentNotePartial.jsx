@@ -40,11 +40,11 @@ class CommentNotePartial extends React.Component {
     const dateFormatted = helpers.formatDate(comment.date, dateFormat)
     return (
       <div className='ticket-comment'>
-        <Avatar image={comment.owner.image} userId={comment.owner._id} />
+        <Avatar image={comment.owner.image} userId={comment.owner.id} />
         <div className='issue-text'>
           <h3>Re: {ticketSubject}</h3>
           <a className='comment-email-link' href={`mailto:${comment.owner.email}`}>
-            {comment.owner.fullname} &lt;{comment.owner.email}&gt;
+            {comment.owner.firstname} {comment.owner.lastname} &lt;{comment.owner.email}&gt;
           </a>
           <br />
           <time dateTime={dateFormatted} title={dateFormatted} data-uk-tooltip='{delay: 200}'>

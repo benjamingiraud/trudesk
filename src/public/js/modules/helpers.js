@@ -1457,7 +1457,7 @@ define([
     var $timezone = $('#__timezone')
     var timezone
     if ($timezone.length < 1) {
-      Cookies.set('$trudesk:timezone', 'America/New_York')
+      Cookies.set('$trudesk:timezone', 'Europe/Paris')
     } else {
       timezone = Cookies.get('$trudesk:timezone')
       var __timezone = $timezone.text()
@@ -1477,7 +1477,7 @@ define([
   helpers.getTimezone = function () {
     var timezone = Cookies.get('$trudesk:timezone')
     if (!timezone) {
-      timezone = 'America/New_York'
+      timezone = 'Europe/Paris'
     }
 
     return timezone
@@ -1529,7 +1529,7 @@ define([
   helpers.formatDate = function (date, format) {
     var timezone = this.getTimezone()
     if (!timezone) {
-      timezone = 'America/New_York'
+      timezone = 'Europe/Paris'
     }
     console.log(global.timezone)
 

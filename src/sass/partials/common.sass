@@ -16,6 +16,10 @@
   max-width: 140px !important
 .site-logo-login
   width: 100px !important
+  background: white
+  margin-top: -50px
+  box-shadow: 2px 2px 10px rgba(0,0,0,0.125)
+  border-radius: 50%
 
 .accent-text
   color: $accent_color !important
@@ -302,7 +306,6 @@ a.hoverUnderline
 .page-title-right
   min-height: 69px
   background: $page_content_title_bg
-  border-bottom: 1px solid $page_content_border_color
   //+boxShadow2(inset 0 1px 0px #fff, 2px 2px 2px 0px rgba(44,62,80,0.1))
   box-shadow: $page_content_title_shadow
   padding: 0 15px 0 35px
@@ -325,10 +328,8 @@ a.hoverUnderline
   box-shadow: 0 3px 6px rgba(0,0,0,.1),0 3px 6px rgba(0,0,0,.15) !important
 
 .page-title-border-right
-  border-right: 1px solid $page_content_title_border_color
 
 .page-title-border-bottom
-  border-bottom: 1px solid $page_content_title_border_color
 
 .page-content
   //background: $page_content_bg
@@ -337,12 +338,13 @@ a.hoverUnderline
 
 .page-content-right
   background: $page_content_right_bg
+  margin: 8px
+  border-radius: 5px
+  box-shadow: 2px 2px 10px rgba(0,0,0,0.125)
 //overflow: auto
 
 .page-content-left
   background: $page_content_left_bg
-  border-top: 1px solid $page_content_border_color
-  border-right: 1px solid $page_content_border_color
 
 .fa-large
   font-size: 24px
