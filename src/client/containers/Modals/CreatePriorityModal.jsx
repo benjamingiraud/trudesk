@@ -28,12 +28,14 @@ import { withTranslation } from 'react-i18next';
 
 @observer
 class CreatePriorityModal extends React.Component {
-  @observable name = ''
+  @observable name = new Map()
   @observable overdueIn = 2880
   @observable htmlColor = '#29B995'
 
   componentDidMount () {
     helpers.UI.inputs()
+    this.name.set('fr', '')
+    this.name.set('en', '')
     helpers.formvalidator()
   }
 
@@ -63,19 +65,31 @@ class CreatePriorityModal extends React.Component {
           <div>
             <div className='uk-clearfix'>
               <div className='z-box uk-grid uk-grid-collpase uk-clearfix'>
-                <div className='uk-width-1-3'>
-                  <label>{t('Priority Name')}</label>
+                <div className='uk-width-1-4'>
+                  <label>{t('Priority Name')} (fr)</label>
                   <input
                     type='text'
                     className={'md-input'}
-                    value={this.name}
-                    onChange={e => (this.name = e.target.value)}
+                    value={this.name.get('fr')}
+                    onChange={e => (this.name.set('fr', e.target.value))}
                     data-validation='length'
                     data-validation-length='min3'
                     data-validation-error-msg='Invalid name (3+ characters)'
                   />
                 </div>
-                <div className='uk-width-1-3'>
+                <div className='uk-width-1-4'>
+                  <label>{t('Priority Name')} (en)</label>
+                  <input
+                    type='text'
+                    className={'md-input'}
+                    value={this.name.get('en')}
+                    onChange={e => (this.name.set('en', e.target.value))}
+                    data-validation='length'
+                    data-validation-length='min3'
+                    data-validation-error-msg='Invalid name (3+ characters)'
+                  />
+                </div>
+                <div className='uk-width-1-4'>
                   <label>{t('SLA Overdue (minutes)')}</label>
                   <input
                     type='text'
@@ -87,7 +101,7 @@ class CreatePriorityModal extends React.Component {
                     data-validation-error-msg='Invalid SLA Time (1-525600)'
                   />
                 </div>
-                <div className='uk-width-1-3'>
+                <div className='uk-width-1-4'>
                   <ColorSelector
                     hideRevert={true}
                     defaultColor={'#29B995'}

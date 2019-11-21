@@ -33,11 +33,13 @@ import { withTranslation } from 'react-i18next';
 
 @observer
 class EditGroupModal extends React.Component {
-  @observable name = ''
+  @observable name = new Map()
   componentDidMount () {
     this.props.fetchAccounts({ type: 'customers', limit: -1 })
-    this.name = this.props.group.name
-
+    this.name = new Map()
+    console.log(this.props.group.name)
+    this.name.set('fr', this.props.group.name.fr)
+    this.name.set('en', this.props.group.name.en)
     // this.swiziGroups = []
     // for (let i = 0; i < selectedGroups.length; i++) {
     //   let swiziGroup = this.props.swiziGroups.find(sw => sw.id === selectedGroups[i])
@@ -72,8 +74,8 @@ class EditGroupModal extends React.Component {
     this.props.updateGroup(payload)
   }
 
-  onInputChange (e) {
-    this.name = e.target.value
+  onInputChange(e, code) {
+    this.name.set(code, e.target.value)
   }
 
   render () {
@@ -103,12 +105,22 @@ class EditGroupModal extends React.Component {
         </div>
         <form className={'uk-form-stacked'} onSubmit={e => this.onFormSubmit(e)}>
           <div className={'uk-margin-medium-bottom'}>
-            <label>{t('Group Name')}</label>
+            <label>{t('Group Name')} (fr)</label>
             <input
               type='text'
               className={'md-input'}
-              value={this.name}
-              onChange={e => this.onInputChange(e)}
+              value={this.name.get('fr')}
+              onChange={e => this.onInputChange(e, 'fr')}
+              data-validation='length'
+              data-validation-length={'min2'}
+              data-validation-error-msg={'Please enter a valid Group name. (Must contain 2 characters)'}
+            />
+            <label>{t('Group Name')} (en)</label>
+            <input
+              type='text'
+              className={'md-input'}
+              value={this.name.get('en')}
+              onChange={e => this.onInputChange(e, 'en')}
               data-validation='length'
               data-validation-length={'min2'}
               data-validation-error-msg={'Please enter a valid Group name. (Must contain 2 characters)'}

@@ -71,13 +71,18 @@ export default function (store) {
   if (document.getElementById('accounts-container')) {
     const title = document.getElementById('accounts-container').getAttribute('data-title')
     const view = document.getElementById('accounts-container').getAttribute('data-view')
-    const AccountsContainerWithProvider = (
-      <Provider store={store}>
-        <AccountsContainer title={title} view={view} />
-      </Provider>
-    )
+    // const AccountsContainerWithProvider = (
+    //   <Provider store={store}>
+    //     <AccountsContainer title={title} view={view} />
+    //   </Provider>
+    // )
 
-    ReactDOM.render(AccountsContainerWithProvider, document.getElementById('accounts-container'))
+    ReactDOM.render(
+      <Suspense fallback={<Loader />}>
+        <Provider store={store}>
+          <AccountsContainer title={title} view={view} />
+        </Provider>
+      </Suspense>, document.getElementById('accounts-container'))
   }
 
   if (document.getElementById('groups-container')) {

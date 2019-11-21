@@ -1086,7 +1086,9 @@ apiTickets.getTypes = function (req, res) {
 
   ticketType.getTypes(function (err, types) {
     if (err) return res.status(400).json({ success: false, error: 'Invalid Post Data' })
-
+    if (req.query.locale) {
+      types = types.map(d => d.localize(req.query.locale))
+    }
     return res.json(types)
   }, organizationId)
 }
@@ -1136,8 +1138,8 @@ apiTickets.createType = function (req, res) {
   var organizationId = req.organization._id
   if (!organizationId) return res.status(400).json({ success: false, error: 'Invalid Organization Id' })
 
-  if (_.isUndefined(typeName) || typeName.length < 3)
-    return res.status(400).json({ success: false, error: 'Invalid Type Name!' })
+  if (_.isUndefined(typeName) || typeName['fr'].length < 3 || typeName['en'].length < 3)
+    return res.status(400).json({ success: false, error: 'Invalid Type Name! (at least 3 character required)' })
 
   ticketPrioritiesSchema.find({ default: true, organizationId: organizationId }, function (err, priorities) {
     if (err) return res.status(400).json({ success: false, error: err.message })

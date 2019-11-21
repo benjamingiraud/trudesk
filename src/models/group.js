@@ -29,7 +29,7 @@ var COLLECTION = 'groups'
  * @property {Array} sendMailTo Members to email when a new / updated ticket has triggered
  */
 var groupSchema = mongoose.Schema({
-  name: { type: String, required: true },
+  name: { type: Map, of: String },
   organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
   members: { type: [Number], required: true, default: [] },
   sendMailTo: [{ type: mongoose.Schema.Types.Number }],
@@ -39,11 +39,14 @@ groupSchema.index({ name: 1, organizationId: 1 }, { unique: true })
 
 groupSchema.plugin(require('mongoose-autopopulate'))
 
-groupSchema.pre('save', function (next) {
-  this.name = this.name.trim()
-
-  next()
-})
+// groupSchema.pre('save', function (next) {
+//   next()
+// })
+groupSchema.methods.localize = function (locale) {
+  let toReturn = this.toJSON()
+  toReturn.name = this.name.get(locale) || this.name
+  return toReturn
+}
 
 groupSchema.methods.addMember = function (memberId, callback) {
   if (_.isUndefined(memberId)) return callback('Invalid MemberId - $Group.AddMember()')

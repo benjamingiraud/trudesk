@@ -43,7 +43,6 @@ util.setSetting = function (setting, value, callback, organizationId) {
 
 util.getSettings = function (callback, organizationId) {
   settingSchema.getSettings(function (err, settings) {
-    console.warn(organizationId)
     if (err) return callback('Invalid Settings')
 
     var s = {}
@@ -171,11 +170,8 @@ util.getSettings = function (callback, organizationId) {
         },
         function (done) {
           roleSchema.getRoles(function (err, roles) {
-            console.warn(organizationId)
             if (err) return done(err)
             roleOrderSchema.getOrder(function (err, roleOrder) {
-              console.warn(organizationId, roles)
-
               if (err) return done(err)
               roleOrder = roleOrder.order
 

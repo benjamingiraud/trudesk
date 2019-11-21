@@ -34,15 +34,25 @@ class TicketTypeBody extends React.Component {
   constructor (props) {
     super(props)
     this.prioritiesRef = {}
+    this.state = {
+      lng: 'fr'
+    }
   }
 
   componentDidMount () {
     helpers.UI.inputs()
+    this.setState({ lng: this.props.i18n.language === 'FR-fr' || 'fr' ? 'fr' : 'en' })
+
   }
 
-  handleTypeRename (event) {
+  handleTypeRename (event, locale) {
     event.preventDefault()
-    const name = event.target.name.value
+
+    let name = new Map()
+    name.set('fr', this.props.type.get('name').get('fr'))
+    name.set('en', this.props.type.get('name').get('en'))
+
+    name.set(locale, event.target['name' + locale].value)
 
     api.tickets
       .renameTicketType(this.props.type.get('_id'), name)
@@ -75,7 +85,7 @@ class TicketTypeBody extends React.Component {
     api.tickets
       .removePriorityFromType({ typeId: this.props.type.get('_id'), priority: priorityId })
       .then(() => {
-        helpers.UI.showSnackbar(`Priority removed from type: ${this.props.type.get('name')}`)
+        helpers.UI.showSnackbar(`Priority removed from type: ${this.props.type.get('name').get(this.state.lng)}`)
         this.props.fetchSettings()
       })
       .catch(error => {
@@ -102,12 +112,28 @@ class TicketTypeBody extends React.Component {
           <hr style={{ margin: '5px 0 25px 0' }} />
           <form
             onSubmit={e => {
-              this.handleTypeRename(e)
+              this.handleTypeRename(e, 'fr')
+            }}
+            style={{marginBottom: '12px'}}
+          >
+            <div className='uk-input-group'>
+              <label htmlFor='ticket-type-name'>{t('Type Name')} (fr)</label>
+              <input name={'namefr'} type='text' className={'md-input'} defaultValue={type.get('name').get('fr')} />
+              <div className='uk-input-group-addon'>
+                <button type='submit' className={'md-btn md-btn-small'}>
+                  {t('Rename')}
+                </button>
+              </div>
+            </div>
+          </form>
+          <form
+            onSubmit={e => {
+              this.handleTypeRename(e, 'en')
             }}
           >
             <div className='uk-input-group'>
-              <label htmlFor='ticket-type-name'>{t('Type Name')}</label>
-              <input name={'name'} type='text' className={'md-input'} defaultValue={type.get('name')} />
+              <label htmlFor='ticket-type-name'>{t('Type Name')} (en)</label>
+              <input name={'nameen'} type='text' className={'md-input'} defaultValue={type.get('name').get('en')} />
               <div className='uk-input-group-addon'>
                 <button type='submit' className={'md-btn md-btn-small'}>
                   {t('Rename')}
@@ -148,7 +174,7 @@ class TicketTypeBody extends React.Component {
                 >
                   <div className={'view-priority uk-clearfix'}>
                     <SettingSubItem
-                      title={item.get('name')}
+                      title={item.get('name').get(this.state.lng)}
                       titleCss={{ color: item.get('htmlColor') }}
                       subtitle={
                         <div>

@@ -21,14 +21,12 @@ require('./user')
 var COLLECTION = 'teams'
 
 var teamSchema = mongoose.Schema({
-  name: { type: String, required: true },
+  name: { type: Map, of: String },
   normalized: { type: String, required: true, lowercase: true },
   organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
   members: { type: [Number], required: true, default: [] }
 })
 teamSchema.index({ normalized: 1, organizationId: 1 }, { unique: true })
-
-teamSchema.plugin(require('mongoose-autopopulate'))
 
 teamSchema.pre('validate', function () {
   this.normalized = this.name.trim().toLowerCase()
@@ -39,6 +37,11 @@ teamSchema.pre('save', function (next) {
 
   return next()
 })
+teamSchema.methods.localize = function (locale) {
+  let toReturn = this.toJSON()
+  toReturn.name = this.name.get(locale) || this.name
+  return toReturn
+}
 
 teamSchema.methods.addMember = function (memberId, callback) {
   if (_.isUndefined(memberId)) return callback('Invalid MemberId - TeamSchema.AddMember()')

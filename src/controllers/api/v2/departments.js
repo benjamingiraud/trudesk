@@ -23,7 +23,9 @@ apiDepartments.get = function (req, res) {
 
   Department.find({ organizationId: organizationId }, function (err, departments) {
     if (err) return apiUtils.sendApiError(res, 500, err.message)
-
+    if (req.query.locale) {
+      departments = departments.map(d => d.localize(req.query.locale))
+    }
     return apiUtils.sendApiSuccess(res, { departments: departments })
   })
 }

@@ -79,10 +79,15 @@ apiGroups.get = function (req, res) {
               }
             }
           }
-          console.log(groups)
+          if (req.query.locale) {
+            groups = groups.map(d => d.localize(req.query.locale))
+          }
           return apiUtils.sendApiSuccess(res, { groups: groups, count: groups.length })
         })
       } else {
+        if (req.query.locale) {
+          groups = groups.map(d => d.localize(req.query.locale))
+        }
         return apiUtils.sendApiSuccess(res, { groups: groups, count: groups.length })
       }
     })
@@ -92,7 +97,9 @@ apiGroups.get = function (req, res) {
         req.user.id,
         function (err, groups) {
           if (err) return apiUtils.sendApiError(res, 500, err.message)
-
+          if (req.query.locale) {
+            groups = groups.map(d => d.localize(req.query.locale))
+          }
           return apiUtils.sendApiSuccess(res, { groups: groups, count: groups.length })
         },
         organizationId
@@ -102,7 +109,9 @@ apiGroups.get = function (req, res) {
         req.user.id,
         function (err, groups) {
           if (err) return apiUtils.sendApiError(res, 500, err.message)
-
+          if (req.query.locale) {
+            groups = groups.map(d => d.localize(req.query.locale))
+          }
           return apiUtils.sendApiSuccess(res, { groups: groups, count: groups.length })
         },
         organizationId

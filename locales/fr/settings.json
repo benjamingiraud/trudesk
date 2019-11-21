@@ -87,6 +87,7 @@
   "Favicon": "Icône des favoris",
   "Favicon Desc": "Charger une image des favoris personnalisée (image apparaissant dans l'onglet du navigateur)",
   "Color Scheme": "Palette de couleurs",
+  "Color": "Couleur",
   "Color Scheme Desc": "Personnalisez les couleurs du site.",
   "Save": "Enregistrer",
   "Built-in Color Scheme": "Palette de couleurs prédéfini",
@@ -110,7 +111,7 @@
   "Show Overdue Tickets Desc": "Activer/Désactiver la mise en évidance des tickets non traité dans les délais d'entente de niveau de service (SLA).",
   "Minimum Subject Length": "Taille minimum du sujet du ticket",
   "Minimum Subject Length Desc": "Nombre minimum de caractère pour le sujet du ticket.",
-  "Minimum Issue Length": "Taille minimul de la description du ticket",
+  "Minimum Issue Length": "Taille minimum de la description du ticket",
   "Minimum Issue Length Desc": "Nombre minimum de caractère pour la description du ticket.",
   "Ticket Types": "Types de tickets",
   "Create/Modify Ticket Types": "Créer/Modifier les types de tickets",
@@ -130,5 +131,6 @@
   "Priorities linked to this type": "Priorités associées à ce type de ticket",
   "Delete this type": "Supprimer ce type de ticket",
   "Delete this type desc": "Supprimer un type de ticket est irréversible, soyez sûr de ce que vous faites.",
-  "SwiziGroups": "Groupes swizi associés"
+  "SwiziGroups": "Groupes swizi associés",
+  "Priority Name": "Nom de la priorité"
 }

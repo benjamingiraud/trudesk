@@ -32,11 +32,12 @@ import { withTranslation } from 'react-i18next';
 
 @observer
 class CreateGroupModal extends React.Component {
-  @observable name = ''
+  @observable name = new Map()
 
   componentDidMount () {
     this.props.fetchAccounts({ type: 'customers' })
-
+    this.name.set('fr', '')
+    this.name.set('en', '')
     helpers.UI.inputs()
     helpers.UI.reRenderInputs()
     helpers.formvalidator()
@@ -50,8 +51,8 @@ class CreateGroupModal extends React.Component {
     this.props.unloadAccounts()
   }
 
-  onInputChange (e) {
-    this.name = e.target.value
+  onInputChange(e, code) {
+    this.name.set(code, e.target.value)
   }
 
   onFormSubmit (e) {
@@ -83,12 +84,22 @@ class CreateGroupModal extends React.Component {
         </div>
         <form className={'uk-form-stacked'} onSubmit={e => this.onFormSubmit(e)}>
           <div className={'uk-margin-medium-bottom'}>
-            <label>{t('Group Name')}</label>
+            <label>{t('Group Name')} (fr)</label>
             <input
               type='text'
               className={'md-input'}
-              value={this.name}
-              onChange={e => this.onInputChange(e)}
+              value={this.name.get('fr')}
+              onChange={e => this.onInputChange(e, 'fr')}
+              data-validation='length'
+              data-validation-length={'min2'}
+              data-validation-error-msg={'Please enter a valid Group name. (Must contain 2 characters)'}
+            />
+            <label>{t('Group Name')} (en)</label>
+            <input
+              type='text'
+              className={'md-input'}
+              value={this.name.get('en')}
+              onChange={e => this.onInputChange(e, 'en')}
               data-validation='length'
               data-validation-length={'min2'}
               data-validation-error-msg={'Please enter a valid Group name. (Must contain 2 characters)'}

@@ -27,7 +27,7 @@ class CreateTicketTypeModal extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
-      typeName: ''
+      name : new Map([['fr', ''], ['en', '']])
     }
   }
 
@@ -36,19 +36,24 @@ class CreateTicketTypeModal extends React.Component {
     helpers.formvalidator()
   }
 
-  onTypeNameChanged (e) {
+  onTypeNameChanged (e, locale) {
+    let name = this.state.name
+    name.set(locale, e.target.value)
     this.setState({
-      typeName: e.target.value
+      name
     })
   }
 
   onCreateTicketTypeSubmit (e) {
-    e.preventDefault()
-    const $form = $(e.target)
-    if (!$form.isValid(null, null, false)) return true
-
+    // e.preventDefault()
+    // const $form = $(e.target)
+    // if (!$form.isValid(null, null, false)) return true
+    let name = {
+      'fr': this.state.name.get('fr'),
+      'en': this.state.name.get('en')
+    }
     //  Form is valid... Submit..
-    this.props.createTicketType({ name: this.state.typeName })
+    this.props.createTicketType({ name })
   }
 
   render () {
@@ -60,13 +65,24 @@ class CreateTicketTypeModal extends React.Component {
           <div>
             <h2 className='nomargin mb-5'>{t('Create Ticket Type')}</h2>
             <p className='uk-text-small uk-text-muted'>{t('Create Ticket Type')}</p>
-            <label htmlFor='typeName'>{t('Type name')}</label>
+            <label htmlFor='typeName'>{t('Type name')} (fr)</label>
             <input
-              value={this.state.typeName}
-              onChange={e => this.onTypeNameChanged(e)}
+              value={this.state.name.get('fr')}
+              onChange={e => this.onTypeNameChanged(e, 'fr')}
               type='text'
               className={'md-input'}
-              name={'typeName'}
+              name={'namefr'}
+              data-validation='length'
+              data-validation-length='min3'
+              data-validation-error-msg='Please enter a valid type name. Type name must contain at least 3 characters'
+            />
+            <label htmlFor='typeName'>{t('Type name')} (en)</label>
+            <input
+              value={this.state.name.get('en')}
+              onChange={e => this.onTypeNameChanged(e, 'en')}
+              type='text'
+              className={'md-input'}
+              name={'nameen'}
               data-validation='length'
               data-validation-length='min3'
               data-validation-error-msg='Please enter a valid type name. Type name must contain at least 3 characters'

@@ -52,6 +52,7 @@ class AccountsContainer extends React.Component {
 
   componentDidMount () {
     this.initialLoad = false
+    this.setState({ lng: this.props.i18n.language === 'FR-fr' || 'fr' ? 'fr' : 'en' })
   }
 
   componentDidUpdate () {
@@ -180,7 +181,7 @@ class AccountsContainer extends React.Component {
                         <span className='tru-list-heading'>{t('Groups')}</span>
                         <span className='uk-text-small uk-text-muted uk-text-truncate'>
                           {user.get('tgroups').map(group => {
-                            return group.get('name') + (user.get('tgroups').toArray().length > 1 ? ', ' : '')
+                            return group.get('name').get(this.state.lng) + (user.get('tgroups').toArray().length > 1 ? ', ' : '')
                           })}
                         </span>
                       </div>
@@ -190,7 +191,7 @@ class AccountsContainer extends React.Component {
                         <span className='tru-list-heading'>{t('Teams')}</span>
                         <span className='uk-text-small uk-text-muted uk-text-truncate'>
                           {user.get('teams').map(team => {
-                            return team.get('name') + (user.get('teams').toArray().length > 1 ? ', ' : '')
+                            return team.get('name').get(this.state.lng) + (user.get('teams').toArray().length > 1 ? ', ' : '')
                           })}
                         </span>
                       </div>
@@ -202,7 +203,7 @@ class AccountsContainer extends React.Component {
                         <span className='tru-list-heading'>{t('Departments')}</span>
                         <span className='uk-text-small uk-text-muted uk-text-truncate'>
                           {user.get('departments').map(department => {
-                            return department.get('name') + (user.get('departments').toArray().length > 1 ? ', ' : '')
+                            return department.get('name').get(this.state.lng) + (user.get('departments').toArray().length > 1 ? ', ' : '')
                           })}
                         </span>
                       </div>

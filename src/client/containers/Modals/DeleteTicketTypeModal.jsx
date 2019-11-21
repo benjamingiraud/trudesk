@@ -27,10 +27,13 @@ class DeleteTicketTypeModal extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
-      selectedType: ''
+      selectedType: '',
+      lng: 'fr'
     }
   }
-
+  componentDidMount() {
+    this.setState({ lng: this.props.i18n.language === 'FR-fr' || 'fr' ? 'fr' : 'en' })
+  }
   getTicketTypes () {
     return this.props.settings && this.props.settings.get('ticketTypes')
       ? this.props.settings.get('ticketTypes').toArray()
@@ -57,10 +60,10 @@ class DeleteTicketTypeModal extends React.Component {
     const { type, t } = this.props
     const mappedTypes = this.getTicketTypes()
       .filter(obj => {
-        return type.get('name') !== obj.get('name')
+        return type.get('_id') !== obj.get('_id')
       })
       .map(item => {
-        return { text: item.get('name'), value: item.get('_id') }
+        return { text: item.get('name').get(this.state.lng), value: item.get('_id') }
       })
     return (
       <BaseModal {...this.props} options={{ bgclose: false }}>
@@ -85,7 +88,7 @@ class DeleteTicketTypeModal extends React.Component {
           </div>
           <div className='uk-margin-medium-bottom uk-clearfix'>
             <span className='uk-text-danger'>
-              {t('WarningTT')} <strong>{type.get('name')}</strong> {t('WarningTT2')}
+              {t('WarningTT')} <strong>{type.get('name').get(this.state.lng)}</strong> {t('WarningTT2')}
               <br />
               <strong>{t('This is permanent!')}</strong>
             </span>

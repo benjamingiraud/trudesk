@@ -21,7 +21,7 @@ var COLLECTION = 'priorities'
 
 var prioritySchema = mongoose.Schema(
   {
-    name: { type: String, required: true },
+    name: { type: Map, of: String },
     organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
     overdueIn: { type: Number, required: true, default: 2880 }, // Minutes until overdue (48 Hours)
     htmlColor: { type: String, default: '#29b955' },
@@ -36,10 +36,12 @@ var prioritySchema = mongoose.Schema(
   }
 )
 prioritySchema.index({ name: 1, organizationId: 1 }, { unique: true })
-
+prioritySchema.methods.localize = function (locale) {
+  let toReturn = this.toJSON()
+  toReturn.name = this.name.get(locale) || this.name
+  return toReturn
+}
 prioritySchema.pre('save', function (next) {
-  this.name = this.name.trim()
-  console.log('priority saved')
   return next()
 })
 

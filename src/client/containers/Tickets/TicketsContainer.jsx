@@ -56,12 +56,17 @@ class TicketsContainer extends React.Component {
     this.onTicketCreated = this.onTicketCreated.bind(this)
     this.onTicketUpdated = this.onTicketUpdated.bind(this)
     this.onTicketDeleted = this.onTicketDeleted.bind(this)
+
+    this.state = {
+      lng: 'fr'
+    }
   }
   componentDidMount() {
     socket.socket.on('$trudesk:client:ticket:created', this.onTicketCreated)
     socket.socket.on('$trudesk:client:ticket:updated', this.onTicketUpdated)
     socket.socket.on('$trudesk:client:ticket:deleted', this.onTicketDeleted)
 
+    this.setState({ lng: this.props.i18n.language === 'FR-fr' || 'fr' ? 'fr' : 'en' })
     this.props.fetchTickets({ limit: 50, page: this.props.page, type: this.props.view, filter: this.props.filter, organizationId: this.props.common.organizationSlug })
   }
 
@@ -432,7 +437,7 @@ class TicketsContainer extends React.Component {
                       {helpers.formatDate(ticket.get('date'), helpers.getShortDateFormat())}
                     </TableCell>
                     <TableCell className={'vam nbb'}>{ticket.getIn(['owner', 'firstname'])} {ticket.getIn(['owner', 'lastname'])}</TableCell>
-                    <TableCell className={'vam nbb'}>{ticket.getIn(['group', 'name'])}</TableCell>
+                    <TableCell className={'vam nbb'}>{ticket.getIn(['group', 'name']).get(this.state.lng)}</TableCell>
                     <TableCell className={'vam nbb'}>{assignee()}</TableCell>
                     <TableCell className={'vam nbb'}>{dueDate}</TableCell>
                     <TableCell className={'vam nbb'}>{updated}</TableCell>

@@ -36,6 +36,8 @@ import { withTranslation } from 'react-i18next';
 class GroupsContainer extends React.Component {
   componentDidMount () {
     this.props.fetchGroups({ type: 'all' })
+    this.setState({ lng: this.props.i18n.language === 'FR-fr' || 'fr' ? 'fr' : 'en' })
+
   }
 
   onCreateGroupClick () {
@@ -73,7 +75,7 @@ class GroupsContainer extends React.Component {
     const tableItems = groups.map(group => {
       return (
         <TableRow key={group.get('_id')} className={'vam nbb'}>
-          <TableCell style={{ fontWeight: 500, padding: '18px 15px' }}>{group.get('name')}</TableCell>
+          <TableCell style={{ fontWeight: 500, padding: '18px 15px' }}>{group.get('name').get(this.state.lng)}</TableCell>
           <TableCell style={{ padding: '13px 20px 8px 8px' }}>
             {group.get('members') &&
               group.get('members').size > 0 &&

@@ -26,7 +26,7 @@ import EnableSwitch from 'components/Settings/EnableSwitch'
 import SettingSubItem from 'components/Settings/SettingSubItem'
 import Zone from 'components/ZoneBox/zone'
 import ZoneBox from 'components/ZoneBox'
-// import { withTranslation } from 'react-i18next';
+import { withTranslation } from 'react-i18next';
 
 class GeneralSettings extends React.Component {
   constructor (props) {
@@ -202,7 +202,7 @@ const mapStateToProps = state => ({
   settings: state.settings.settings
 })
 
-export default connect(
+export default withTranslation('settings')(connect(
   mapStateToProps,
   { updateSetting }
-)(GeneralSettings)
+)(GeneralSettings))

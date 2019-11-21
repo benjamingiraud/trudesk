@@ -84,6 +84,10 @@ class SingleTicketContainer extends React.Component {
     this.onUpdateTicketGroup = this.onUpdateTicketGroup.bind(this)
     this.onUpdateTicketDueDate = this.onUpdateTicketDueDate.bind(this)
     this.onUpdateTicketTags = this.onUpdateTicketTags.bind(this)
+     
+    this.state = {
+      lng: 'fr'
+    }
   }
 
   componentDidMount () {
@@ -98,6 +102,8 @@ class SingleTicketContainer extends React.Component {
 
     fetchTicket(this)
     this.props.fetchGroups()
+    this.setState({ lng: this.props.i18n.language === 'FR-fr' || 'fr' ? 'fr' : 'en' })
+
   }
 
   componentDidUpdate () {
@@ -230,13 +236,13 @@ class SingleTicketContainer extends React.Component {
   render () {
     const mappedGroups = this.props.groupsState
       ? this.props.groupsState.groups.map(group => {
-          return { text: group.get('name'), value: group.get('_id') }
+          return { text: group.get('name').get(this.state.lng), value: group.get('_id') }
         })
       : []
 
     const mappedTypes = this.props.common.ticketTypes
       ? this.props.common.ticketTypes.map(type => {
-          return { text: type.name, value: type._id, raw: type }
+        return { text: type.name[this.state.lng], value: type._id, raw: type }
         })
       : []
 
@@ -353,7 +359,7 @@ class SingleTicketContainer extends React.Component {
                                   ))}
                               </select>
                             )}
-                            {!hasTicketUpdate && <div className='input-box'>{this.ticket.type.name}</div>}
+                            {!hasTicketUpdate && <div className='input-box'>{this.ticket.type.name[this.state.lng]}</div>}
                           </div>
                         </div>
                         {/* Priority */}
@@ -371,12 +377,12 @@ class SingleTicketContainer extends React.Component {
                                   this.ticket.type.priorities &&
                                   this.ticket.type.priorities.map(priority => (
                                     <option key={priority._id} value={priority._id}>
-                                      {priority.name}
+                                      {priority.name[this.state.lng]}
                                     </option>
                                   ))}
                               </select>
                             )}
-                            {!hasTicketUpdate && <div className={'input-box'}>{this.ticket.priority.name}</div>}
+                            {!hasTicketUpdate && <div className={'input-box'}>{this.ticket.priority.name[this.state.lng]}</div>}
                           </div>
                         </div>
                         {/*  Group */}
@@ -397,7 +403,7 @@ class SingleTicketContainer extends React.Component {
                                 ))}
                             </select>
                           )}
-                          {!hasTicketUpdate && <div className={'input-box'}>{this.ticket.group.name}</div>}
+                          {!hasTicketUpdate && <div className={'input-box'}>{this.ticket.group.name[this.state.lng]}</div>}
                         </div>
                         {/*  Due Date */}
                         <div className='uk-width-1-1 p-0'>
@@ -458,7 +464,7 @@ class SingleTicketContainer extends React.Component {
                             {this.ticket.tags &&
                               this.ticket.tags.map(tag => (
                                 <div key={tag._id} className='item'>
-                                  {tag.name}
+                                  {tag.name[this.state.lng]}
                                 </div>
                               ))}
                           </div>

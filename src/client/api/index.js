@@ -130,11 +130,11 @@ api.tickets.createTag = ({ name }) => {
 }
 
 api.accounts = {}
-api.accounts.create = payload => {
-  return axios.post('/api/v2/accounts', payload).then(res => {
-    return res.data
-  })
-}
+// api.accounts.create = payload => {
+//   return axios.post('/api/v2/accounts', payload).then(res => {
+//     return res.data
+//   })
+// }
 
 api.accounts.getWithPage = payload => {
   const limit = payload && payload.limit ? payload.limit : 25
@@ -150,21 +150,21 @@ api.accounts.getWithPage = payload => {
       return res.data
     })
 }
-api.accounts.updateUser = payload => {
-  return axios.put(`/api/v2/accounts/${payload.username}`, payload).then(res => {
-    return res.data
-  })
-}
-api.accounts.deleteAccount = ({ username }) => {
-  return axios.delete(`/api/v1/users/${username}`).then(res => {
-    return res.data
-  })
-}
-api.accounts.enableAccount = ({ username }) => {
-  return axios.get(`/api/v1/users/${username}/enable`).then(res => {
-    return res.data
-  })
-}
+// api.accounts.updateUser = payload => {
+//   return axios.put(`/api/v2/accounts/${payload.username}`, payload).then(res => {
+//     return res.data
+//   })
+// }
+// api.accounts.deleteAccount = ({ username }) => {
+//   return axios.delete(`/api/v1/users/${username}`).then(res => {
+//     return res.data
+//   })
+// }
+// api.accounts.enableAccount = ({ username }) => {
+//   return axios.get(`/api/v1/users/${username}/enable`).then(res => {
+//     return res.data
+//   })
+// }
 
 api.groups = {}
 api.groups.create = payload => {

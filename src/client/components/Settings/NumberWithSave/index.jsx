@@ -19,6 +19,7 @@ import { connect } from 'react-redux'
 import helpers from 'lib/helpers'
 
 import { updateSetting } from 'actions/settings'
+import { withTranslation } from 'react-i18next';
 
 class NumberWithSave extends React.Component {
   constructor (props) {
@@ -60,7 +61,7 @@ class NumberWithSave extends React.Component {
       <div className='uk-width-3-4 uk-float-right'>
         <div className='uk-width-1-4 uk-float-right' style={{ marginTop: '10px', textAlign: 'center' }}>
           <button className='md-btn md-btn-small' onClick={e => this.onSaveClicked(e)}>
-            Save
+            {this.props.t('Save')}
           </button>
         </div>
         <div className='uk-width-3-4 uk-float-right' style={{ paddingRight: '10px', width: width }}>
@@ -85,7 +86,7 @@ NumberWithSave.propTypes = {
   width: PropTypes.string
 }
 
-export default connect(
+export default withTranslation('settings')(connect(
   null,
   { updateSetting }
-)(NumberWithSave)
+)(NumberWithSave))

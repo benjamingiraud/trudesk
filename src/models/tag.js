@@ -26,15 +26,21 @@ var COLLECTION = 'tags'
  * @property {String} name ```Required``` ```unique``` Name of Tag
  */
 var tagSchema = mongoose.Schema({
-  name: { type: String, required: true },
+  name: { type: Map, of: String },
   organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
   normalized: String
 })
 tagSchema.index({ name: 1, organizationId: 1 }, { unique: true })
-
+tagSchema.methods.localize = function (locale) {
+  let toReturn = this.toJSON()
+  toReturn.name = this.name.get(locale) || this.name
+  return toReturn
+}
 tagSchema.pre('save', function (next) {
-  this.name = this.name.trim()
-  this.normalized = this.name.toLowerCase().trim()
+  this.normalized = this.name
+    .get('fr')
+    .trim()
+    .toLowerCase()
 
   return next()
 })

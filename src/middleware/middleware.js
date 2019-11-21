@@ -18,8 +18,9 @@ var _ = require('lodash')
 var db = require('../database')
 var mongoose = require('mongoose')
 var winston = require('winston')
-
+var jwt = require('jsonwebtoken')
 var middleware = {}
+var SwiziConnector = require('../connectors/SwiziConnector')
 
 middleware.db = function (req, res, next) {
   if (mongoose.connection.readyState !== 1) {
@@ -187,36 +188,64 @@ middleware.checkOrigin = function (req, res, next) {
 
 // API
 middleware.api = function (req, res, next) {
-  var accessToken = req.headers.accesstoken
-
-  if (_.isUndefined(accessToken) || _.isNull(accessToken)) {
-    var user = req.user
-
-    if (_.isUndefined(user) || _.isNull(user)) return res.status(401).json({ error: 'Invalid Access Token' })
-
-    var organizationId = req.user.organizationId
-    var organizationSchema = require('../models/organization')
-    organizationSchema.getById(organizationId, function (err, organization) {
-      if (err) return res.status(401).json({ error: err.message })
-      if (!organization) return res.status(401).json({ error: 'Organization not found' })
-      req.organization = organization
-      return next()
-    })
-  } else {
-    var userSchema = require('../models/user')
-
-    userSchema.getUserByAccessToken(accessToken, function (err, user) {
-      if (err) return res.status(401).json({ error: err.message })
-      if (!user) return res.status(401).json({ error: 'Invalid Access Token' })
+  if (req.user) {
+    if (req.organization) return next()
+    else {
       var organizationSchema = require('../models/organization')
-      organizationSchema.getById(user.organizationId, function (err, organization) {
+      organizationSchema.getById(req.user.organizationId, function (err, organization) {
         if (err) return res.status(401).json({ error: err.message })
         if (!organization) return res.status(401).json({ error: 'Organization not found' })
-        req.user = user
         req.organization = organization
         return next()
       })
+    }
+  } else if (
+    req.headers['x-api-key'] &&
+    req.headers['x-secret-key'] &&
+    req.headers.authorization &&
+    req.headers.authorization.split(' ')[0] === 'Bearer'
+  ) {
+    // Authorization: Bearer g1jipjgi1ifjioj
+    // Handle token presented as a Bearer token in the Authorization header
+    let apiKey = req.headers['x-api-key']
+    let secretKey = req.headers['x-secret-key']
+    let organizationSchema = require('../models/organization')
+
+    organizationSchema.getByKeys(apiKey, secretKey, function (err, organization) {
+      if (err) return res.status(401).json({ error: err.message })
+      console.log()
+      let token = req.headers.authorization.split(' ')[1]
+      if (token && token.length) {
+        let Swizi = new SwiziConnector({ apikey: organization.swiziApiKey })
+        try {
+          Swizi.checkToken(token).then(user => {
+            user.swiziApiKey = organization.swiziApiKey
+            user.organizationId = organization.id
+            let Role = require('../models/role')
+
+            Role.getRoleBySwiziGroup(
+              user.groups,
+              function (err, role) {
+                if (err) return res.status(401).json({ success: false, error: 'Not Authorized for this API call.' })
+                if (role) {
+                  user.role = role
+                  req.user = user
+                  req.organization = organization
+                  return next()
+                } else {
+                  return res.status(401).json({ success: false, error: 'Not Authorized for this API call.' })
+                }
+              },
+              organization.id
+            )
+          })
+        } catch (err) {
+          return res.status(401).json({ success: false, error: 'Not Authorized for this API call.' })
+        }
+      }
     })
+  } else {
+    return res.status(401).json({ success: false, error: 'Not Authorized for this API call.' })
   }
 }
 
@@ -224,19 +253,66 @@ middleware.hasAuth = middleware.api
 
 middleware.apiv2 = function (req, res, next) {
   // ByPass auth for now if user is set through session
-  winston.warn('IN APIV2 MIDDLERWARE OHOHOHOH')
   if (req.user) return next()
+  else if (
+    req.headers['x-api-key'] &&
+    req.headers['x-secret-key'] &&
+    req.headers.authorization &&
+    req.headers.authorization.split(' ')[0] === 'Bearer'
+  ) {
+    // Authorization: Bearer g1jipjgi1ifjioj
+    // Handle token presented as a Bearer token in the Authorization header
+    let apiKey = req.headers['x-api-key']
+    let secretKey = req.headers['x-secret-key']
+    let organizationSchema = require('../models/organization')
 
-  var passport = require('passport')
-  passport.authenticate('jwt', { session: true }, function (err, user) {
-    if (err || !user) return res.status(401).json({ success: false, error: 'Invalid Authentication Token' })
-    if (user) {
-      req.user = user
-      return next()
-    }
+    organizationSchema.getByKeys(apiKey, secretKey, function (err, organization) {
+      if (err) return res.status(401).json({ error: err.message })
+      console.log()
+      let token = req.headers.authorization.split(' ')[1]
+      if (token && token.length) {
+        let Swizi = new SwiziConnector({ apikey: organization.swiziApiKey })
+        try {
+          Swizi.checkToken(token).then(user => {
+            user.swiziApiKey = organization.swiziApiKey
+            user.organizationId = organization.id
+            let Role = require('../models/role')
 
-    return res.status(500).json({ success: false, error: 'Unknown Error Occurred' })
-  })(req, res, next)
+            Role.getRoleBySwiziGroup(
+              user.groups,
+              function (err, role) {
+                if (err) return res.status(401).json({ success: false, error: 'Not Authorized for this API call.' })
+                if (role) {
+                  user.role = role
+                  req.user = user
+                  req.organization = organization
+                  return next()
+                } else {
+                  return res.status(401).json({ success: false, error: 'Not Authorized for this API call.' })
+                }
+              },
+              organization.id
+            )
+          })
+        } catch (err) {
+          return res.status(401).json({ success: false, error: 'Not Authorized for this API call.' })
+        }
+      }
+    })
+  } else {
+    return res.status(401).json({ success: false, error: 'Not Authorized for this API call.' })
+  }
+
+  // var passport = require('passport')
+  // passport.authenticate('jwt', { session: true }, function (err, user) {
+  //   if (err || !user) return res.status(401).json({ success: false, error: 'Invalid Authentication Token' })
+  //   if (user) {
+  //     req.user = user
+  //     return next()
+  //   }
+
+  //   return res.status(500).json({ success: false, error: 'Unknown Error Occurred' })
+  // })(req, res, next)
 }
 
 middleware.canUser = function (action) {

@@ -24,7 +24,7 @@ var Groups = require('./group')
 var COLLECTION = 'departments'
 
 var departmentSchema = mongoose.Schema({
-  name: { type: String, required: true },
+  name: { type: Map, of: String },
   organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
   normalized: { type: String },
   teams: [{ type: mongoose.Schema.Types.ObjectId, ref: 'teams', autopopulate: true }],
@@ -37,11 +37,22 @@ departmentSchema.index({ name: 1, organizationId: 1 }, { unique: true })
 departmentSchema.plugin(require('mongoose-autopopulate'))
 
 departmentSchema.pre('save', function (next) {
-  this.name = this.name.trim()
-  this.normalized = this.name.trim().toLowerCase()
+  // this.name = this.name.trim()
 
+  this.normalized = this.name
+    .get('fr')
+    .trim()
+    .toLowerCase()
   return next()
 })
+
+departmentSchema.methods.localize = function (locale) {
+  let toReturn = this.toJSON()
+  toReturn.name = this.name.get(locale) || this.name
+  toReturn.teams = this.teams.map(t => (t instanceof mongoose.Document ? t.localize(locale) : t))
+  toReturn.groups = this.groups.map(t => (t instanceof mongoose.Document ? t.localize(locale) : t))
+  return toReturn
+}
 
 departmentSchema.statics.getDepartmentsByTeam = function (teamIds, callback, organizationId) {
   return this.model(COLLECTION)
@@ -51,7 +62,6 @@ departmentSchema.statics.getDepartmentsByTeam = function (teamIds, callback, org
 
 departmentSchema.statics.getUserDepartments = function (userId, callback, organizationId) {
   var self = this
-
   Teams.getTeamsOfUser(
     userId,
     function (err, teams) {
@@ -68,7 +78,6 @@ departmentSchema.statics.getUserDepartments = function (userId, callback, organi
 
 departmentSchema.statics.getDepartmentGroupsOfUser = function (userId, callback, organizationId) {
   var self = this
-
   Teams.getTeamsOfUser(
     userId,
     function (err, teams) {
@@ -100,7 +109,6 @@ departmentSchema.statics.getDepartmentGroupsOfUser = function (userId, callback,
 
 departmentSchema.statics.getDepartmentsByGroup = function (groupId, callback) {
   var self = this
-
   return self
     .model(COLLECTION)
     .find({ $or: [{ groups: groupId }, { allGroups: true }] })

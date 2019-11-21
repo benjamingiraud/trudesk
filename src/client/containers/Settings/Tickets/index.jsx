@@ -46,12 +46,17 @@ import { withTranslation } from 'react-i18next';
 class TicketsSettings extends React.Component {
   constructor (props) {
     super(props)
-
+    
     this.getTicketTags = this.getTicketTags.bind(this)
+    this.state = {
+      lng: 'fr'
+    }
   }
 
   componentDidMount () {
     this.getTicketTags(null, 0)
+    this.setState({ lng: this.props.i18n.language === 'FR-fr' || 'fr' ? 'fr' : 'en' })
+
     const $tagPagination = $('#tagPagination')
     this.tagsPagination = UIKit.pagination($tagPagination, {
       items: this.props.tagsSettings.totalCount ? this.props.tagsSettings.totalCount : 0,
@@ -77,7 +82,7 @@ class TicketsSettings extends React.Component {
       : ''
   }
 
-  getTicketTypes () {
+  getTicketTypes = () => {
     return this.props.settings && this.props.settings.get('ticketTypes')
       ? this.props.settings.get('ticketTypes').toArray()
       : []
@@ -151,14 +156,17 @@ class TicketsSettings extends React.Component {
   onSubmitUpdateTag (e, tagId) {
     e.preventDefault()
     e.persist()
-    const name = e.target.name.value
-    if (name.length < 2) return helpers.UI.showSnackbar('Invalid Tag Name', true)
+    let name = {
+      'fr': e.target.namefr.value,
+      'en': e.target.nameen.value
+    }
+    if (name.fr.length < 2 || name.en.length < 2) return helpers.UI.showSnackbar('Invalid Tag Name', true)
 
     axios
       .put(`/api/v1/tags/${tagId}`, { name })
       .then(res => {
         TicketsSettings.toggleEditTag(e)
-        helpers.UI.showSnackbar(`Tag: ${res.data.tag.name} updated successfully`)
+        helpers.UI.showSnackbar(`Tag: ${res.data.tag.name[this.state.lng]} updated successfully`)
         this.getTicketTags(null, this.tagsPagination.currentPage)
       })
       .catch(err => {
@@ -172,14 +180,14 @@ class TicketsSettings extends React.Component {
 
   onRemoveTagClicked (e, tag) {
     UIKit.modal.confirm(
-      `Really delete tag <strong>${tag.get()}</strong><br />
+      `Really delete tag <strong>${tag.get('name').get(this.state.lng)}</strong><br />
         <i style="font-size: 13px; color: #e53935">This will remove the tag from all associated tickets.</i>`,
       () => {
         axios
           .delete(`/api/v1/tags/${tag.get('_id')}`)
           .then(res => {
             if (res.data.success) {
-              helpers.UI.showSnackbar(`Successfully removed tag: ${tag.get('name')}`)
+              helpers.UI.showSnackbar(`Successfully removed tag: ${tag.get('name').get(this.state.lng)}`)
 
               this.getTicketTags(null, this.tagsPagination.currentPage)
             }
@@ -199,8 +207,10 @@ class TicketsSettings extends React.Component {
 
   render () {
     const { active, viewdata, t } = this.props
-    const mappedTypes = this.getTicketTypes().map(function (type) {
-      return { text: type.get('name'), value: type.get('_id') }
+    let { lng } = this.state
+    const mappedTypes = this.getTicketTypes().map((type) => {
+      console.log(type)
+      return { text: type.get('name').get(lng), value: type.get('_id') }
     })
 
     return (
@@ -292,8 +302,8 @@ class TicketsSettings extends React.Component {
               }}
             />
           }
-          menuItems={this.getTicketTypes().map(function (type) {
-            return { key: type.get('_id'), title: type.get('name'), bodyComponent: <TicketTypeBody type={type} /> }
+          menuItems={this.getTicketTypes().map( (type) => {
+            return { key: type.get('_id'), title: type.get('name').get(this.state.lng), bodyComponent: <TicketTypeBody type={type} /> }
           })}
         />
         <SettingItem
@@ -317,7 +327,7 @@ class TicketsSettings extends React.Component {
                 <ZoneBox key={p.get('_id')} extraClass={'priority-wrapper'}>
                   <SettingSubItem
                     parentClass={'view-priority'}
-                    title={p.get('name')}
+                    title={p.get('name').get(this.state.lng)}
                     titleCss={{ color: p.get('htmlColor') }}
                     subtitle={
                       <div>
@@ -386,7 +396,7 @@ class TicketsSettings extends React.Component {
                                     fontWeight: 300
                                   }}
                                 >
-                                  {i.get('name')}
+                                  {i.get('name').get(this.state.lng)}
                                 </h5>
                               </GridItem>
                               <GridItem width={'1-2'} extraClass={'uk-text-right'}>
@@ -416,8 +426,11 @@ class TicketsSettings extends React.Component {
                         <GridItem width={'1-1'}>
                           <form onSubmit={e => this.onSubmitUpdateTag(e, i.get('_id'))}>
                             <Grid>
-                              <GridItem width={'2-3'}>
-                                <input type='text' className={'md-input'} name={'name'} defaultValue={i.get('name')} />
+                              <GridItem width={'1-3'}>
+                                <input type='text' className={'md-input'} name={'namefr'} defaultValue={i.get('name').get('fr')} />
+                              </GridItem>
+                              <GridItem width={'1-3'}>
+                                <input type='text' className={'md-input'} name={'nameen'} defaultValue={i.get('name').get('en')} />
                               </GridItem>
                               <GridItem width={'1-3'} style={{ paddingTop: '10px' }}>
                                 <ButtonGroup classNames={'uk-float-right uk-text-right'}>
@@ -471,7 +484,7 @@ const mapStateToProps = state => ({
   tagsSettings: state.tagsSettings
 })
 
-export default connect(
+export default withTranslation('settings')(connect(
   mapStateToProps,
   { updateSetting, getTagsWithPage, tagsUpdateCurrentPage, showModal }
-)(TicketsSettings)
+)(TicketsSettings))

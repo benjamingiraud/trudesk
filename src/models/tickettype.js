@@ -30,11 +30,18 @@ require('./ticketpriority')
  * @property {String} name ```Required``` ```unique``` Name of Ticket Type
  */
 var ticketTypeSchema = mongoose.Schema({
-  name: { type: String, required: true },
+  name: { type: Map, of: String },
   organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
   priorities: [{ type: mongoose.Schema.Types.ObjectId, ref: 'priorities' }]
 })
 ticketTypeSchema.index({ name: 1, organizationId: 1 }, { unique: true })
+
+ticketTypeSchema.methods.localize = function (locale) {
+  let toReturn = this.toJSON()
+  toReturn.name = this.name.get(locale) || this.name
+  toReturn.priorities = this.priorities.map(t => (t instanceof mongoose.Document ? t.localize(locale) : t))
+  return toReturn
+}
 
 var autoPopulatePriorities = function (next) {
   this.populate('priorities')
@@ -45,8 +52,7 @@ ticketTypeSchema.pre('find', autoPopulatePriorities)
 ticketTypeSchema.pre('findOne', autoPopulatePriorities)
 
 ticketTypeSchema.pre('save', function (next) {
-  this.name = this.name.trim()
-
+  // this.name = this.name.trim()
   return next()
 })
 

@@ -30,9 +30,6 @@ ticketsV2.create = function (req, res) {
 }
 
 ticketsV2.get = function (req, res) {
-  // console.log(req.user)
-  // console.log(req.user.organizationId)
-
   var query = req.query
   var type = query.type || 'all'
 
@@ -120,6 +117,14 @@ ticketsV2.get = function (req, res) {
 
         Ticket.getTicketsWithObject(mappedGroups, queryObject, function (err, tickets) {
           if (err) return next(err)
+          // if (req.query.locale) {
+          //   tickets = tickets.map(t => {
+          //     t.group.name = t.group.name.get(req.query.locale)
+          //     t.type.name = t.type.name.get(req.query.locale)
+          //     t.priority.name = t.priority.name.get(req.query.locale)
+          //     return t
+          //   })
+          // }
           let Swizi = new SwiziConnector({ apikey: req.user.swiziApiKey })
           let userIds = []
           for (let i = 0; i < tickets.length; i++) {
@@ -137,14 +142,11 @@ ticketsV2.get = function (req, res) {
             }
           }
           userIds = _.uniq(userIds)
-          console.log(userIds)
           tickets = JSON.parse(JSON.stringify(tickets))
           if (userIds.length) {
             Swizi.findUserByIds(userIds).then(users => {
               for (let i = 0; i < tickets.length; i++) {
                 tickets[i].owner = users.find(u => u.id === tickets[i].owner)
-                console.log(users.find(u => u.id === tickets[i].owner))
-                console.log(tickets[i].owner)
                 if (tickets[i].assignee) tickets[i].assignee = users.find(u => u.id === tickets[i].assignee)
                 tickets[i].subscribers = tickets[i].subscribers.map(t => users.find(u => u.id === t))
                 for (let j = 0; j < tickets[i].history.length; j++) {
@@ -157,7 +159,6 @@ ticketsV2.get = function (req, res) {
                   tickets[i].notes[j].owner = users.find(u => u.id === tickets[i].notes[j].notes)
                 }
               }
-              console.log(users)
               return next(null, mappedGroups, tickets)
             })
           } else {
@@ -177,7 +178,6 @@ ticketsV2.get = function (req, res) {
       }
     ],
     function (err, resultObject) {
-      console.log(err)
       if (err) return apiUtils.sendApiError(res, 500, err.message)
 
       return apiUtils.sendApiSuccess(res, {
@@ -216,7 +216,6 @@ ticketsV2.single = function (req, res) {
       userIds.push(ticket.notes[j].owner)
     }
     userIds = _.uniq(userIds)
-    console.log(userIds)
     if (userIds.length) {
       Swizi.findUserByIds(userIds).then(users => {
         async.eachSeries(

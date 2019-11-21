@@ -117,7 +117,7 @@
     type: 'logger',
 
     log: function log (args) {
-      this.output('log', args)
+      // this.output('log', args)
     },
     warn: function warn (args) {
       this.output('warn', args)
@@ -126,10 +126,9 @@
       this.output('error', args)
     },
     output: function output (type, args) {
-      var _console
-
-      /* eslint no-console: 0 */
-      if (console && console[type]) (_console = console)[type].apply(_console, toConsumableArray(args))
+      // var _console
+      // /* eslint no-console: 0 */
+      // if (console && console[type]) (_console = console)[type].apply(_console, toConsumableArray(args))
     }
   }
 

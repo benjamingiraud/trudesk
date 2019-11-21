@@ -93,6 +93,21 @@ viewController.getData = async function (request, cb) {
                 },
                 organizationId
               )
+            },
+            function (done) {
+              settingSchema.getSetting(
+                'color:headerbg',
+                function (err, setting) {
+                  if (!err && setting && setting.value) {
+                    viewdata.colorHeaderBG = setting.value
+                  } else {
+                    viewdata.colorHeaderBG = '#ffffff'
+                  }
+
+                  return done()
+                },
+                organizationId
+              )
             }
           ],
           callback

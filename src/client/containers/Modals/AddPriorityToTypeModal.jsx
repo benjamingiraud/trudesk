@@ -32,8 +32,13 @@ import { withTranslation } from 'react-i18next';
 class AddPriorityToTypeModal extends React.Component {
   constructor (props) {
     super(props)
+    this.state = {
+      lng: 'fr'
+    }
   }
-
+  componentDidMount() {
+    this.setState({ lng: this.props.i18n.language === 'FR-fr' || 'fr' ? 'fr' : 'en' })
+  }
   getPriorities () {
     return this.props.settings && this.props.settings.get('priorities')
       ? this.props.settings.get('priorities').toArray()
@@ -96,7 +101,7 @@ class AddPriorityToTypeModal extends React.Component {
                 return (
                   <div key={priority.get('_id')} className={'z-box uk-clearfix'}>
                     <div className='uk-float-left'>
-                      <h5 style={{ color: priority.get('htmlColor'), fontWeight: 'bold' }}>{priority.get('name')}</h5>
+                      <h5 style={{ color: priority.get('htmlColor'), fontWeight: 'bold' }}>{priority.get('name').get(this.state.lng)}</h5>
                       <p className={'uk-text-muted'}>
                         {t('SLA Overdue')}: <strong>{priority.get('durationFormatted')}</strong>
                       </p>

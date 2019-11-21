@@ -69,10 +69,15 @@ apiTeams.get = function (req, res) {
             }
           }
         }
-        console.log(results)
+        if (req.query.locale) {
+          results = results.map(d => d.localize(req.query.locale))
+        }
         return apiUtils.sendApiSuccess(res, { count: results.length, teams: results })
       })
     } else {
+      if (req.query.locale) {
+        results = results.map(d => d.localize(req.query.locale))
+      }
       return apiUtils.sendApiSuccess(res, { count: results.length, teams: results })
     }
   })

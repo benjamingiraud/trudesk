@@ -20,7 +20,7 @@ var COLLECTION = 'roles'
 
 var roleSchema = mongoose.Schema(
   {
-    name: { type: String, required: true },
+    name: { type: Map, of: String },
     organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'organizations', required: true },
     normalized: String,
     description: String,
@@ -33,7 +33,12 @@ var roleSchema = mongoose.Schema(
     toJSON: { virtuals: true }
   }
 )
-roleSchema.index({ name: 1, organizationId: 1 }, { unique: true })
+roleSchema.index({ organizationId: 1 }, { unique: true })
+roleSchema.methods.localize = function (locale) {
+  let toReturn = this.toJSON()
+  toReturn.name = this.name.get(locale) || this.name
+  return toReturn
+}
 
 roleSchema.virtual('isAdmin').get(function () {
   if (_.isUndefined(global.roles)) return false
@@ -54,8 +59,10 @@ roleSchema.virtual('isAgent').get(function () {
 roleSchema.plugin(mongooseLeanVirtuals)
 
 roleSchema.pre('save', function (next) {
-  this.name = this.name.trim()
-  this.normalized = this.name.toLowerCase().trim()
+  this.normalized = this.name
+    .get('en')
+    .trim()
+    .toLowerCase()
 
   return next()
 })

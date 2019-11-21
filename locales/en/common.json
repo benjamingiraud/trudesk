@@ -124,7 +124,7 @@
   "Profile": "Profile",
   "Start_Conversation": "Start_Conversation",
   "Customers": "Customers",
-  "_t": "Wed Nov 13 2019 17:28:17 GMT+0100 (heure normale d’Europe centrale)",
+  "_t": "Thu Nov 21 2019 15:29:03 GMT+0100 (heure normale d’Europe centrale)",
   "Agents": "Agents",
   "Teams": "Teams",
   "Departments": "Departments",
@@ -222,5 +222,6 @@
   "No Tags Found": "No Tags Found",
   "Update": "Update",
   "View": "View",
-  "Special_Permissions": "Special_Permissions"
+  "Special_Permissions": "Special_Permissions",
+  "Please select the ticket type you wish to reassign tickets to in order to delete this ticket type.": "Please select the ticket type you wish to reassign tickets to in order to delete this ticket type."
 }

@@ -26,10 +26,10 @@ import { withTranslation } from 'react-i18next';
 
 @observer
 class CreateRoleModal extends React.Component {
-  @observable name = ''
+  @observable name = new Map([['fr', ''], ['en', '']])
 
-  onNameChange (e) {
-    this.name = e.target.value
+  onNameChange (e, locale) {
+    this.name.set(locale, e.target.value)
   }
 
   onCreateRoleClicked (e) {
@@ -48,16 +48,27 @@ class CreateRoleModal extends React.Component {
             <h2 className={'nomargin mb-5'}>{t('Create Role')}</h2>
             <p className='uk-text-muted'>{t('Once created, the role will become editable in the permission editor')}</p>
 
-            <label>{t('Role Name')}</label>
+            <label>{t('Role Name')} (fr)</label>
             <input
               type='text'
               className={'md-input'}
-              name={'name'}
+              name={'namefr'}
               data-validation='length'
               data-validation-length='min3'
               data-validation-error-msg='Please enter a valid role name. Role name must contain at least 3 characters.'
-              value={this.name}
-              onChange={e => this.onNameChange(e)}
+              value={this.name.get('fr')}
+              onChange={e => this.onNameChange(e, 'fr')}
+            />
+            <label>{t('Role Name')} (en)</label>
+            <input
+              type='text'
+              className={'md-input'}
+              name={'nameen'}
+              data-validation='length'
+              data-validation-length='min3'
+              data-validation-error-msg='Please enter a valid role name. Role name must contain at least 3 characters.'
+              value={this.name.get('en')}
+              onChange={e => this.onNameChange(e, 'en')}
             />
           </div>
           <div className='uk-modal-footer uk-text-right'>

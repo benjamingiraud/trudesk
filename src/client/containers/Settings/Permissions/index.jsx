@@ -24,13 +24,18 @@ import Button from 'components/Button'
 // import SingleSelect from 'components/SingleSelect'
 import SplitSettingsPanel from 'components/Settings/SplitSettingsPanel'
 import PermissionBody from './permissionBody'
-// import { withTranslation } from 'react-i18next';
+import { withTranslation } from 'react-i18next';
 
 import $ from 'jquery'
 
 class PermissionsSettingsContainer extends React.Component {
+  state = {
+    lng: 'fr'
+  }
   componentDidMount () {
     this.props.fetchRoles()
+    this.setState({ lng: this.props.i18n.language === 'FR-fr' || 'fr' ? 'fr' : 'en' })
+
   }
 
   getSetting (name) {
@@ -101,8 +106,7 @@ class PermissionsSettingsContainer extends React.Component {
           tooltip={t('Permissions_legend')}
           subtitle={
             <div>
-              {t('Create_Role')}
-              <span className={'uk-text-danger'}>{t('Create_Role_Note')}</span>
+              {t('Create_Role')}{' '}<span className={'uk-text-danger'}>{t('Create_Role_Note')}</span>
             </div>
           }
           rightComponent={
@@ -115,7 +119,15 @@ class PermissionsSettingsContainer extends React.Component {
             />
           }
           menuItems={this.getRoleMenu().map(role => {
-            return { key: role.get('_id'), title: role.get('name'), bodyComponent: <PermissionBody role={role} swiziGroups={this.props.swiziGroups} t={t} /> }
+            return { 
+              key: role.get('_id'), 
+              title: role.get('name').get(this.state.lng), 
+              bodyComponent: <PermissionBody 
+                lng={this.state.lng} 
+                role={role} 
+                swiziGroups={this.props.swiziGroups} 
+                t={t}  />
+            }
           })}
           menuDraggable={true}
           menuOnDrag={e => {
@@ -146,7 +158,7 @@ const mapStateToProps = state => ({
   swiziGroups: state.common.swiziGroups
 })
 
-export default connect(
+export default withTranslation('settings')(connect(
   mapStateToProps,
   { fetchRoles, updateRoleOrder, showModal, updateSetting }
-)(PermissionsSettingsContainer)
+)(PermissionsSettingsContainer))

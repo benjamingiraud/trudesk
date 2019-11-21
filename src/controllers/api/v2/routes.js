@@ -21,14 +21,14 @@ module.exports = function (middleware, router, controllers) {
   var isAgentOrAdmin = middleware.isAgentOrAdmin
   var canUser = middleware.canUser
 
-  // Common
-  router.post('/api/v2/login/:organizationId', controllers.api.v2.common.login)
-  router.post('/api/v2/token/:organizationId', controllers.api.v2.common.token)
+  // // Common
+  // router.post('/api/v2/login/:organizationId', controllers.api.v2.common.login)
+  // router.post('/api/v2/token/:organizationId', controllers.api.v2.common.token)
 
-  // Accounts
+  // // Accounts
   router.get('/api/v2/accounts', apiv2Auth, apiv2.accounts.get)
-  router.post('/api/v2/accounts', apiv2Auth, apiv2.accounts.create)
-  router.put('/api/v2/accounts/:username', apiv2Auth, apiv2.accounts.update)
+  // router.post('/api/v2/accounts', apiv2Auth, apiv2.accounts.create)
+  // router.put('/api/v2/accounts/:username', apiv2Auth, apiv2.accounts.update)
 
   // Tickets
   router.get('/api/v2/tickets', apiv2Auth, apiv2.tickets.get)

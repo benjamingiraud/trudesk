@@ -25,22 +25,28 @@ class CreateTagModal extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
-      name: ''
+      name: new Map([['fr', ''], ['en', '']])
     }
   }
 
-  onNameChange (e) {
+  onNameChange (e, locale) {
+    let name = this.state.name
+    name.set(locale, e.target.value)
     this.setState({
-      name: e.target.value
+      name
     })
   }
 
   onSubmit (e) {
     e.preventDefault()
+    let name = {
+      'fr': this.state.name.get('fr'),
+      'en': this.state.name.get('en')
+    }
     if (this.props.page === 'settings')
-      return this.props.createTag({ name: this.state.name, currentPage: this.props.currentPage })
+      return this.props.createTag({ name, currentPage: this.props.currentPage })
 
-    this.props.createTag({ name: this.state.name })
+    this.props.createTag({ name })
   }
 
   render () {
@@ -53,16 +59,27 @@ class CreateTagModal extends React.Component {
             <h2 className={'nomargin mb-5'}>{t('Create Tag')}</h2>
             <p className='uk-text-muted'>{t('Tags categorize tickets, making it easy to identify issues')}</p>
 
-            <label>{t('Tag Name')}</label>
+            <label>{t('Tag Name')} (fr)</label>
             <input
               type='text'
               className={'md-input'}
-              name={'name'}
+              name={'namefr'}
               data-validation='length'
               data-validation-length='min2'
               data-validation-error-msg='Please enter a valid tag name. Tag name must contain at least 2 characters.'
-              value={this.state.name}
-              onChange={e => this.onNameChange(e)}
+              value={this.state.name.get('fr')}
+              onChange={e => this.onNameChange(e, 'fr')}
+            />
+            <label>{t('Tag Name')} (en)</label>
+            <input
+              type='text'
+              className={'md-input'}
+              name={'nameen'}
+              data-validation='length'
+              data-validation-length='min2'
+              data-validation-error-msg='Please enter a valid tag name. Tag name must contain at least 2 characters.'
+              value={this.state.name.get('en')}
+              onChange={e => this.onNameChange(e, 'en')}
             />
           </div>
           <div className='uk-modal-footer uk-text-right'>

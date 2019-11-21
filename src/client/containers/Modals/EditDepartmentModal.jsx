@@ -32,14 +32,17 @@ import { withTranslation } from 'react-i18next';
 
 @observer
 class EditDepartmentModal extends React.Component {
-  @observable name = ''
+  @observable name = new Map()
   @observable allGroups = false
 
   componentDidMount () {
     this.props.fetchTeams()
     this.props.fetchGroups({ type: 'all' })
 
-    this.name = this.props.department.get('name')
+    this.name = new Map()
+    this.name.set('fr', this.props.department.get('name').get('fr'))
+    this.name.set('en', this.props.department.get('name').get('en'))
+
     this.allGroups = this.props.department.get('allGroups')
 
     helpers.UI.inputs()
@@ -57,8 +60,8 @@ class EditDepartmentModal extends React.Component {
     this.props.unloadGroups()
   }
 
-  onInputChange (e) {
-    this.name = e.target.value
+  onInputChange (e, code) {
+    this.name.set(code, e.target.value)
   }
 
   onFormSubmit (e) {
@@ -83,29 +86,39 @@ class EditDepartmentModal extends React.Component {
     const departmentGroups = department.get('groups')
     const mappedTeams = this.props.teams
       .map(team => {
-        return { text: team.get('name'), value: team.get('_id') }
+        return { text: team.get('name').get(this.props.lng), value: team.get('_id') }
       })
       .toArray()
 
     const mappedGroups = this.props.groups
       .map(group => {
-        return { text: group.get('name'), value: group.get('_id') }
+        return { text: group.get('name').get(this.props.lng), value: group.get('_id') }
       })
       .toArray()
 
     return (
       <BaseModal {...this.props} options={{ bgclose: false }}>
         <div className={'mb-25'}>
-          <h2>{t('Edit Department')}: {department.get('name')}</h2>
+          <h2>{t('Edit Department')}: <b>{department.get('name').get(this.props.lng)}</b></h2>
         </div>
         <form className={'uk-form-stacked'} onSubmit={e => this.onFormSubmit(e)}>
           <div className={'uk-margin-medium-bottom'}>
-            <label>{t('Department Name')}</label>
+            <label>{t('Department Name')} (fr)</label>
             <input
               type='text'
               className={'md-input'}
-              value={this.name}
-              onChange={e => this.onInputChange(e)}
+              value={this.name.get('fr')}
+              onChange={e => this.onInputChange(e, 'fr')}
+              data-validation='length'
+              data-validation-length={'min2'}
+              data-validation-error-msg={'Please enter a valid department name. (Must contain 2 characters)'}
+            />
+            <label>{t('Department Name')} (en)</label>
+            <input
+              type='text'
+              className={'md-input'}
+              value={this.name.get('en')}
+              onChange={e => this.onInputChange(e, 'en')}
               data-validation='length'
               data-validation-length={'min2'}
               data-validation-error-msg={'Please enter a valid department name. (Must contain 2 characters)'}

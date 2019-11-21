@@ -393,7 +393,7 @@ const mapStateToProps = state => ({
   settings: state.settings.settings
 })
 
-export default connect(
+export default withTranslation('settings')(connect(
   mapStateToProps,
   { updateSetting, updateMultipleSettings, updateColorScheme }
-)(AppearanceSettings)
+)(AppearanceSettings))

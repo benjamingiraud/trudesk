@@ -88,6 +88,7 @@ module.exports.init = function (callback, connectionString, opts) {
       }
 
       db.connection = mongoose.connection
+
       mongoose.connection.db.admin().command({ buildInfo: 1 }, function (err, info) {
         if (err) winston.warn(err.message)
         db.version = info.version

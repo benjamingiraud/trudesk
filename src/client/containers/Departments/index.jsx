@@ -30,19 +30,20 @@ import helpers from 'lib/helpers'
 import { withTranslation } from 'react-i18next';
 
 class DepartmentsContainer extends React.Component {
-  componentDidMount () {
+  componentDidMount() {
     this.props.fetchDepartments()
+    this.setState({ lng: this.props.i18n.language === 'FR-fr' || 'fr' ? 'fr' : 'en' })
   }
 
-  onCreateDepartmentClick () {
-    this.props.showModal('CREATE_DEPARTMENT')
+  onCreateDepartmentClick() {
+    this.props.showModal('CREATE_DEPARTMENT', {lng: this.state.lng})
   }
 
-  onEditDepartmentClick (department) {
-    this.props.showModal('EDIT_DEPARTMENT', { department })
+  onEditDepartmentClick(department) {
+    this.props.showModal('EDIT_DEPARTMENT', { department, lng: this.state.lng })
   }
 
-  onDeleteDepartmentClick (_id) {
+  onDeleteDepartmentClick(_id) {
     UIKit.modal.confirm(
       `<h2>Are you sure?</h2>
         <p style="font-size: 15px;">
@@ -62,8 +63,8 @@ class DepartmentsContainer extends React.Component {
     )
   }
 
-  render () {
-    const {t} = this.props
+  render() {
+    const { t } = this.props
     return (
       <div>
         <PageTitle
@@ -102,7 +103,7 @@ class DepartmentsContainer extends React.Component {
                 </th>
                 <th style={{ verticalAlign: 'middle', fontSize: 12, textTransform: 'uppercase' }}>{t('Teams')}</th>
                 <th style={{ width: '25%', verticalAlign: 'middle', fontSize: 12, textTransform: 'uppercase' }}>
-                {t('Groups')}
+                  {t('Groups')}
                 </th>
                 <th
                   style={{
@@ -138,14 +139,14 @@ class DepartmentsContainer extends React.Component {
                       {/*  </label>*/}
                       {/*</td>*/}
                       <td style={{ verticalAlign: 'middle', padding: '8px 8px 8px 26px' }}>
-                        <div style={{ fontWeight: '500' }}>{department.get('name')}</div>
+                        <div style={{ fontWeight: '500' }}>{department.get('name').get(this.state.lng)}</div>
                       </td>
                       <td style={{ verticalAlign: 'middle' }}>
                         {teams &&
                           teams.map(team => {
                             return (
                               <div key={team.get('_id')} style={{ marginBottom: 4 }}>
-                                {team.get('name')}
+                                {team.get('name').get(this.state.lng)}
                               </div>
                             )
                           })}
@@ -154,7 +155,7 @@ class DepartmentsContainer extends React.Component {
                         {department.get('allGroups') === true && (
                           <div>
                             <h6 className={'text-success'} style={{ fontWeight: 'bold' }}>
-                            {t('All Groups')}
+                              {t('All Groups')}
                             </h6>
                           </div>
                         )}
@@ -163,7 +164,7 @@ class DepartmentsContainer extends React.Component {
                           groups.map(group => {
                             return (
                               <div key={group.get('_id')} style={{ marginBottom: 4 }}>
-                                {group.get('name')}
+                                {group.get('name').get(this.state.lng)}
                               </div>
                             )
                           })}
