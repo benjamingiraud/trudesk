@@ -99,8 +99,7 @@ departmentSchema.statics.getDepartmentGroupsOfUser = function (userId, callback,
               return department.groups
             })
           )
-
-          return callback(null, groups)
+          return callback(null, _.uniqBy(groups, 'id'))
         })
     },
     organizationId

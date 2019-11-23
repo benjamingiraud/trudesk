@@ -130,16 +130,6 @@ ticketsV2.get = function (req, res) {
           for (let i = 0; i < tickets.length; i++) {
             userIds.push(tickets[i].owner)
             if (tickets[i].assignee) userIds.push(tickets[i].assignee)
-            userIds = userIds.concat(tickets[i].subscribers)
-            for (let j = 0; j < tickets[i].history.length; j++) {
-              userIds.push(tickets[i].history[j].owner)
-            }
-            for (let j = 0; j < tickets[i].comments.length; j++) {
-              userIds.push(tickets[i].history[j].owner)
-            }
-            for (let j = 0; j < tickets[i].notes.length; j++) {
-              userIds.push(tickets[i].history[j].owner)
-            }
           }
           userIds = _.uniq(userIds)
           tickets = JSON.parse(JSON.stringify(tickets))
@@ -148,16 +138,6 @@ ticketsV2.get = function (req, res) {
               for (let i = 0; i < tickets.length; i++) {
                 tickets[i].owner = users.find(u => u.id === tickets[i].owner)
                 if (tickets[i].assignee) tickets[i].assignee = users.find(u => u.id === tickets[i].assignee)
-                tickets[i].subscribers = tickets[i].subscribers.map(t => users.find(u => u.id === t))
-                for (let j = 0; j < tickets[i].history.length; j++) {
-                  tickets[i].history[j].owner = users.find(u => u.id === tickets[i].history[j].owner)
-                }
-                for (let j = 0; j < tickets[i].comments.length; j++) {
-                  tickets[i].comments[j].owner = users.find(u => u.id === tickets[i].comments[j].comments)
-                }
-                for (let j = 0; j < tickets[i].notes.length; j++) {
-                  tickets[i].notes[j].owner = users.find(u => u.id === tickets[i].notes[j].notes)
-                }
               }
               return next(null, mappedGroups, tickets)
             })
@@ -296,7 +276,10 @@ ticketsV2.batchUpdate = function (req, res) {
             ticket.status = batchTicket.status
             var HistoryItem = {
               action: 'ticket:set:status',
-              description: 'status set to: ' + batchTicket.status,
+              description: new Map([
+                ['en', 'status set to: ' + batchTicket.status],
+                ['fr', 'Le statut du ticket est passé à : ' + batchTicket.status]
+              ]),
               owner: req.user.id
             }
 

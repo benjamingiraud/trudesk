@@ -91,7 +91,7 @@ function rolesDefault (callback, organizationId) {
 
             roleSchema.create(
               {
-                name: 'User',
+                name: new Map([['fr', 'Utilisateur'], ['en', 'User']]),
                 description: 'Default role for users',
                 grants: userGrants,
                 organizationId: organizationId
@@ -132,7 +132,7 @@ function rolesDefault (callback, organizationId) {
             } else
               roleSchema.create(
                 {
-                  name: 'Support',
+                  name: new Map([['fr', 'Support'], ['en', 'Support']]),
                   description: 'Default role for agents',
                   grants: supportGrants,
                   organizationId: organizationId
@@ -153,7 +153,7 @@ function rolesDefault (callback, organizationId) {
             else {
               roleSchema.create(
                 {
-                  name: 'Admin',
+                  name: new Map([['fr', 'Admin'], ['en', 'Admin']]),
                   description: 'Default role for admins',
                   grants: adminGrants,
                   organizationId: organizationId
@@ -316,6 +316,7 @@ function timezoneDefault (callback, organizationId) {
           winston.debug('Timezone set to ' + setting.value)
           winston.debug('Timezone created set to ' + setting.value)
 
+          if (!moment.tz.zone(setting.value)) moment.tz.add(setting.value)
           moment.tz.setDefault(setting.value)
 
           global.timezone = setting.value
@@ -325,6 +326,8 @@ function timezoneDefault (callback, organizationId) {
       } else {
         winston.debug('Timezone set to ' + setting.value)
         winston.debug('Timezone already set to ' + setting.value)
+        if (!moment.tz.zone(setting.value)) moment.tz.add(setting.value)
+
         moment.tz.setDefault(setting.value)
 
         global.timezone = setting.value
@@ -336,31 +339,31 @@ function timezoneDefault (callback, organizationId) {
   )
 }
 
-function showTourSettingDefault (callback) {
-  SettingsSchema.getSettingByName('showTour:enable', function (err, setting) {
-    if (err) {
-      winston.warn(err)
-      if (_.isFunction(callback)) return callback(err)
-      return false
-    }
+// function showTourSettingDefault (callback) {
+//   SettingsSchema.getSettingByName('showTour:enable', function (err, setting) {
+//     if (err) {
+//       winston.warn(err)
+//       if (_.isFunction(callback)) return callback(err)
+//       return false
+//     }
 
-    if (!setting) {
-      var defaultShowTour = new SettingsSchema({
-        name: 'showTour:enable',
-        value: 0
-      })
+//     if (!setting) {
+//       var defaultShowTour = new SettingsSchema({
+//         name: 'showTour:enable',
+//         value: 0
+//       })
 
-      defaultShowTour.save(function (err) {
-        if (err) {
-          winston.warn(err)
-          if (_.isFunction(callback)) return callback(err)
-        }
+//       defaultShowTour.save(function (err) {
+//         if (err) {
+//           winston.warn(err)
+//           if (_.isFunction(callback)) return callback(err)
+//         }
 
-        if (_.isFunction(callback)) return callback()
-      })
-    } else if (_.isFunction(callback)) return callback()
-  })
-}
+//         if (_.isFunction(callback)) return callback()
+//       })
+//     } else if (_.isFunction(callback)) return callback()
+//   })
+// }
 
 function ticketTypeSettingDefault (callback, organizationId) {
   SettingsSchema.getSettingByName(
@@ -427,14 +430,14 @@ function ticketPriorityDefaults (callback, organizationId) {
   var priorities = []
 
   var normal = new PrioritySchema({
-    name: 'Normal',
+    name: new Map([['fr', 'Normal'], ['en', 'Normal']]),
     migrationNum: 1,
     default: true,
     organizationId: organizationId
   })
 
   var urgent = new PrioritySchema({
-    name: 'Urgent',
+    name: new Map([['fr', 'Urgent'], ['en', 'Urgent']]),
     migrationNum: 2,
     htmlColor: '#8e24aa',
     default: true,
@@ -442,7 +445,7 @@ function ticketPriorityDefaults (callback, organizationId) {
   })
 
   var critical = new PrioritySchema({
-    name: 'Critical',
+    name: new Map([['fr', 'Critique'], ['en', 'Critical']]),
     migrationNum: 3,
     htmlColor: '#e65100',
     default: true,

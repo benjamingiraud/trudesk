@@ -32,11 +32,13 @@ import { withTranslation } from 'react-i18next';
 
 @observer
 class EditTeamModal extends React.Component {
-  @observable name = ''
+  @observable name = new Map()
 
   componentDidMount () {
     this.props.fetchAccounts({ type: 'all', limit: -1 })
-    this.name = this.props.team.name
+    this.name.set('fr', this.props.team.name['fr'])
+    this.name.set('en', this.props.team.name['en'])
+
 
     helpers.UI.inputs()
     helpers.UI.reRenderInputs()
@@ -51,8 +53,8 @@ class EditTeamModal extends React.Component {
     this.props.unloadAccounts()
   }
 
-  onInputChange (e) {
-    this.name = e.target.value
+  onInputChange(e, code) {
+    this.name.set(code, e.target.value)
   }
 
   onSaveTeamEdit (e) {
@@ -90,12 +92,22 @@ class EditTeamModal extends React.Component {
         </div>
         <form className={'uk-form-stacked'} onSubmit={e => this.onSaveTeamEdit(e)}>
           <div className={'uk-margin-medium-bottom'}>
-            <label>{t('Team Name')}</label>
+            <label>{t('Team Name')} (fr)</label>
             <input
               type='text'
               className={'md-input'}
-              value={this.name}
-              onChange={e => this.onInputChange(e)}
+              value={this.name.get('fr')}
+              onChange={e => this.onInputChange(e, 'fr')}
+              data-validation='length'
+              data-validation-length={'2-25'}
+              data-validation-error-msg={'Please enter a valid Team name. (Must contain 2 characters)'}
+            />
+            <label>{t('Team Name')} (en)</label>
+            <input
+              type='text'
+              className={'md-input'}
+              value={this.name.get('en')}
+              onChange={e => this.onInputChange(e, 'en')}
               data-validation='length'
               data-validation-length={'2-25'}
               data-validation-error-msg={'Please enter a valid Team name. (Must contain 2 characters)'}

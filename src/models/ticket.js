@@ -244,7 +244,10 @@ ticketSchema.methods.setStatus = function (ownerId, status, callback) {
   self.status = status
   var historyItem = {
     action: 'ticket:set:status:' + status,
-    description: 'Ticket Status set to: ' + statusToString(status),
+    description: new Map([
+      ['en', 'Ticket Status set to: ' + statusToString(status, 'en')],
+      ['fr', 'Le statut du ticket est passé à: ' + statusToString(status, 'fr')]
+    ]),
     owner: ownerId
   }
   self.history.push(historyItem)
@@ -262,33 +265,28 @@ ticketSchema.methods.setStatus = function (ownerId, status, callback) {
  * @param {Object} userId User ID to set as assignee
  * @param {TicketCallback} callback Callback with the updated ticket.
  */
-ticketSchema.methods.setAssignee = function (ownerId, userId, callback, organizationId) {
-  if (_.isUndefined(userId)) return callback('Invalid User Id', null)
+ticketSchema.methods.setAssignee = function (ownerId, user, callback, organizationId) {
+  if (_.isUndefined(user)) return callback('Invalid User', null)
   var permissions = require('../permissions')
   var self = this
 
-  self.assignee = userId
-  userSchema.getUser(
-    userId,
-    function (err, user) {
-      if (err) return callback(err, null)
+  self.assignee = user.id
+  if (!permissions.canThis(user.role, 'tickets:update') && !permissions.canThis(user.role, 'agent:*')) {
+    return callback('User does not have permission to be set as an assignee.', null)
+  }
 
-      if (!permissions.canThis(user.role, 'tickets:update') && !permissions.canThis(user.role, 'agent:*')) {
-        return callback('User does not have permission to be set as an assignee.', null)
-      }
+  var historyItem = {
+    action: 'ticket:set:assignee',
+    description: new Map([
+      ['en', user.firstname + ' ' + user.lastname + ' was set as assignee'],
+      ['fr', user.firstname + ' ' + user.lastname + ' a été désigné comme attributaire du ticket']
+    ]),
+    owner: ownerId
+  }
 
-      var historyItem = {
-        action: 'ticket:set:assignee',
-        description: user.fullname + ' was set as assignee',
-        owner: ownerId
-      }
+  self.history.push(historyItem)
 
-      self.history.push(historyItem)
-
-      return callback(null, self)
-    },
-    organizationId
-  )
+  return callback(null, self)
 }
 
 /**
@@ -305,7 +303,7 @@ ticketSchema.methods.clearAssignee = function (ownerId, callback) {
   self.assignee = undefined
   var historyItem = {
     action: 'ticket:set:assignee',
-    description: 'Assignee was cleared',
+    description: new Map([['en', 'Assignee was cleared'], ['fr', "Le ticket n'est plus attribué"]]),
     owner: ownerId
   }
   self.history.push(historyItem)
@@ -332,7 +330,10 @@ ticketSchema.methods.setTicketType = function (ownerId, typeId, callback, organi
 
     var historyItem = {
       action: 'ticket:set:type',
-      description: 'Ticket type set to: ' + type.name,
+      description: new Map([
+        ['en', 'Ticket type set to: ' + type.name],
+        ['fr', 'Le type du ticket est passé à: ' + type.name]
+      ]),
       owner: ownerId
     }
 
@@ -359,7 +360,10 @@ ticketSchema.methods.setTicketPriority = function (ownerId, priority, callback) 
   self.priority = priority._id
   var historyItem = {
     action: 'ticket:set:priority',
-    description: 'Ticket Priority set to: ' + priority.name,
+    description: new Map([
+      ['en', 'Ticket Priority set to: ' + priority.name.get('en')],
+      ['fr', 'La priorité du ticket est passé à: ' + priority.name.get('fr')]
+    ]),
     owner: ownerId
   }
   self.history.push(historyItem)
@@ -394,7 +398,10 @@ ticketSchema.methods.setTicketGroup = function (ownerId, groupId, callback) {
 
     var historyItem = {
       action: 'ticket:set:group',
-      description: 'Ticket Group set to: ' + ticket.group.name,
+      description: new Map([
+        ['en', 'Ticket Group set to: ' + ticket.group.name.get('en')],
+        ['fr', 'Le groupe du ticket est passé à: ' + ticket.group.name.get('fr')]
+      ]),
       owner: ownerId
     }
     self.history.push(historyItem)
@@ -409,7 +416,10 @@ ticketSchema.methods.setTicketDueDate = function (ownerId, dueDate, callback) {
 
   var historyItem = {
     action: 'ticket:set:duedate',
-    description: 'Ticket Due Date set to: ' + self.dueDate,
+    description: new Map([
+      ['en', 'Ticket Due Date set to: ' + self.dueDate],
+      ['fr', "La date d'échéance du ticket a été établi à: " + self.dueDate]
+    ]),
     owner: ownerId
   }
 
@@ -446,7 +456,7 @@ ticketSchema.methods.setIssue = function (ownerId, issue, callback) {
 
   var historyItem = {
     action: 'ticket:update:issue',
-    description: 'Ticket Issue was updated.',
+    description: new Map([['en', 'Ticket Issue was updated.'], ['fr', 'Le numéro de ticket a été mis à jour.']]),
     owner: ownerId
   }
 
@@ -460,7 +470,7 @@ ticketSchema.methods.setSubject = function (ownerId, subject, callback) {
   self.subject = subject
   var historyItem = {
     action: 'ticket:update:subject',
-    description: 'Ticket Subject was updated.',
+    description: new Map([['en', 'Ticket Subject was updated.'], ['fr', 'Le sujet du ticket a été mis à jour.']]),
     owner: ownerId
   }
 
@@ -499,7 +509,10 @@ ticketSchema.methods.updateComment = function (ownerId, commentId, commentText, 
 
   var historyItem = {
     action: 'ticket:comment:updated',
-    description: 'Comment was updated: ' + commentId,
+    description: new Map([
+      ['en', 'Comment was updated: ' + commentId],
+      ['fr', 'Le commentaire a été mis à jour: ' + commentId]
+    ]),
     owner: ownerId
   }
   self.history.push(historyItem)
@@ -525,7 +538,10 @@ ticketSchema.methods.removeComment = function (ownerId, commentId, callback) {
 
   var historyItem = {
     action: 'ticket:delete:comment',
-    description: 'Comment was deleted: ' + commentId,
+    description: new Map([
+      ['en', 'Comment was deleted: ' + commentId],
+      ['fr', 'Le commentaire a été supprimé: ' + commentId]
+    ]),
     owner: ownerId
   }
   self.history.push(historyItem)
@@ -563,7 +579,7 @@ ticketSchema.methods.updateNote = function (ownerId, noteId, noteText, callback)
 
   var historyItem = {
     action: 'ticket:note:updated',
-    description: 'Note was updated: ' + noteId,
+    description: new Map([['en', 'Note was updated: ' + noteId], ['fr', 'Une note a été mise à jour: ' + noteId]]),
     owner: ownerId
   }
   self.history.push(historyItem)
@@ -589,7 +605,7 @@ ticketSchema.methods.removeNote = function (ownerId, noteId, callback) {
 
   var historyItem = {
     action: 'ticket:delete:note',
-    description: 'Note was deleted: ' + noteId,
+    description: new Map([['en', 'Note was deleted: ' + noteId], ['fr', 'Une note a supprimée: ' + noteId]]),
     owner: ownerId
   }
   self.history.push(historyItem)
@@ -621,7 +637,10 @@ ticketSchema.methods.removeAttachment = function (ownerId, attachmentId, callbac
 
   var historyItem = {
     action: 'ticket:delete:attachment',
-    description: 'Attachment was deleted: ' + attachment.name,
+    description: new Map([
+      ['en', 'Attachment was deleted: ' + attachment.name],
+      ['fr', 'Un fichier a été supprimé: ' + attachment.name]
+    ]),
     owner: ownerId
   }
 
@@ -634,7 +653,7 @@ ticketSchema.methods.addSubscriber = function (userId, callback) {
   var self = this
 
   var hasSub = _.some(self.subscribers, function (i) {
-    return i._id.toString() === userId.toString()
+    return i.toString() === userId.toString()
   })
 
   if (!hasSub) {
@@ -1673,20 +1692,20 @@ ticketSchema.statics.getDeleted = function (callback, organizationId) {
     .exec(callback)
 }
 
-function statusToString (status) {
+function statusToString (status, locale) {
   var str
   switch (status) {
     case 0:
-      str = 'New'
+      str = locale === 'fr' ? 'Nouveau' : 'New'
       break
     case 1:
-      str = 'Open'
+      str = locale === 'fr' ? 'Ouvert' : 'Open'
       break
     case 2:
-      str = 'Pending'
+      str = locale === 'fr' ? 'En attente' : 'Pending'
       break
     case 3:
-      str = 'Closed'
+      str = locale === 'fr' ? 'Fermé' : 'Closed'
       break
     default:
       str = status

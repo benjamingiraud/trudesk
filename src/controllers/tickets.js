@@ -718,7 +718,10 @@ ticketsController.uploadAttachment = function (req, res) {
 
       var historyItem = {
         action: 'ticket:added:attachment',
-        description: 'Attachment ' + object.filename + ' was added.',
+        description: {
+          en: 'Attachment ' + object.filename + ' was added.',
+          fr: 'Le fichier ' + object.filename + ' a été ajouté.'
+        },
         owner: object.ownerId
       }
       ticket.history.push(historyItem)

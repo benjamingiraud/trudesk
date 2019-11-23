@@ -26,6 +26,8 @@
   "This_will_change_all_tickets_with_type": "Ceci aura pour effet de modifier le type de tout les tickets",
   "to_the_selected_ticket_type_above": "au type de ticket sélectionné ci-dessous",
   "Assignee": "Attributaire",
+  "Select Assignee": "Sélectionner l'attributaire",
+  "Clear Assignee": "Supprimer l'attributaire",
   "Add_Comment": "Ajouter un commentaire",
   "No_Tags_Found_for": "Aucun tag trouvé pour",
   "Create_Tag": "Créer un tag",

@@ -1,9 +1,9 @@
-var _ = require('lodash'),
-  path = require('path'),
-  nconf = require('nconf'),
-  i18next = require('i18next'),
-  i18nextMiddleware = require('i18next-express-middleware'),
-  i18nextBackend = require('i18next-node-fs-backend')
+var _ = require('lodash')
+var path = require('path')
+var nconf = require('nconf')
+var i18next = require('i18next')
+var i18nextMiddleware = require('i18next-express-middleware')
+var i18nextBackend = require('i18next-node-fs-backend')
 
 var obj = {}
 obj.register = function (app, handlebars) {
@@ -16,8 +16,8 @@ obj.register = function (app, handlebars) {
       },
       // lng: 'en_US',
       // lng: 'de',
-      lng: nconf.get('locale') ? nconf.get('locale') : 'dev',
-      preload: ['en', 'de'],
+      lng: nconf.get('locale') ? nconf.get('locale') : 'fr',
+      preload: ['en', 'fr'],
       ns: ['install', 'account', 'ticket', 'group', 'messages', 'settings', 'client', 'common', 'error'],
       defaultNS: 'client',
       missingKeyHandler: function (lng, ns, key, fallbackValue) {
@@ -40,9 +40,9 @@ obj.register = function (app, handlebars) {
     return new handlebars.SafeString(i18next.t(key, options.hash))
   })
 
-  /*handlebars.registerHelper('t', function(str){
+  /* handlebars.registerHelper('t', function(str){
     return (I18n != undefined ? I18n.t(str) : str);
-  })*/
+  }) */
 }
 
 module.exports = obj

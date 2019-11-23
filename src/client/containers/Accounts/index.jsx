@@ -164,7 +164,7 @@ class AccountsContainer extends React.Component {
                   <li>
                     <div className='tru-list-content'>
                       <span className='tru-list-heading'>Role</span>
-                      <span className='uk-text-small uk-text-muted'>{user.getIn(['role', 'name'])}</span>
+                      <span className='uk-text-small uk-text-muted'>{user.getIn(['role', 'name']).get(this.state.lng)}</span>
                     </div>
                   </li>
                   <li>

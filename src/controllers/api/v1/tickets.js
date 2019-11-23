@@ -19,6 +19,7 @@ var winston = require('winston')
 var permissions = require('../../../permissions')
 var emitter = require('../../../emitter')
 var sanitizeHtml = require('sanitize-html')
+var SwiziConnector = require('../../../connectors/SwiziConnector')
 
 var apiTickets = {}
 
@@ -449,7 +450,7 @@ apiTickets.create = function (req, res) {
 
   var HistoryItem = {
     action: 'ticket:created',
-    description: 'Ticket was created.',
+    description: new Map([['en', 'Ticket was created.'], ['fr', 'Le ticket a été crée']]),
     owner: req.user.id
   }
 
@@ -817,7 +818,10 @@ apiTickets.update = function (req, res) {
 
                   var HistoryItem = {
                     action: 'ticket:set:assignee',
-                    description: t.assignee.fullname + ' was set as assignee',
+                    description: new Map([
+                      ['en', t.assignee.firstname + ' ' + t.assignee.lastname + ' was set as assignee'],
+                      ['fr', 'Le ticket a été attribué à ' + t.assignee.firstname + ' ' + t.assignee.lastname]
+                    ]),
                     owner: req.user.id
                   }
 
@@ -963,21 +967,53 @@ apiTickets.postComment = function (req, res) {
       t.comments.push(Comment)
       var HistoryItem = {
         action: 'ticket:comment:added',
-        description: 'Comment was added',
+        description: new Map([['en', 'Comment was added'], ['fr', 'Un commentaire a été ajouté']]),
         owner: owner
       }
       t.history.push(HistoryItem)
 
       t.save(function (err, tt) {
         if (err) return res.status(400).json({ success: false, error: err.message })
-
         if (!permissions.canThis(req.user.role, 'tickets:notes')) {
           tt.notes = []
         }
-
-        emitter.emit('ticket:comment:added', tt, Comment, req.headers.host)
-
-        return res.json({ success: true, error: null, ticket: tt })
+        let userIds = []
+        userIds.push(tt.owner)
+        if (tt.assignee) userIds.push(tt.assignee)
+        userIds = userIds.concat(tt.subscribers)
+        for (let j = 0; j < tt.history.length; j++) {
+          userIds.push(tt.history[j].owner)
+        }
+        for (let j = 0; j < tt.comments.length; j++) {
+          userIds.push(tt.comments[j].owner)
+        }
+        for (let j = 0; j < tt.notes.length; j++) {
+          userIds.push(tt.notes[j].owner)
+        }
+        userIds = _.uniq(userIds)
+        if (userIds.length) {
+          let Swizi = new SwiziConnector({ apikey: req.user.swiziApiKey })
+          tt = JSON.parse(JSON.stringify(tt))
+          Swizi.findUserByIds(userIds).then(users => {
+            tt.owner = users.find(u => u.id === tt.owner)
+            if (tt.assignee) users.find(u => u.id === tt.assignee)
+            tt.subscribers = tt.subscribers.map(t => users.find(u => u.id === t))
+            for (let j = 0; j < tt.history.length; j++) {
+              tt.history[j].owner = users.find(u => u.id === tt.history[j].owner)
+            }
+            for (let j = 0; j < tt.comments.length; j++) {
+              tt.comments[j].owner = users.find(u => u.id === tt.comments[j].owner)
+            }
+            for (let j = 0; j < tt.notes.length; j++) {
+              tt.notes[j].owner = users.find(u => u.id === tt.notes[j].owner)
+            }
+            emitter.emit('ticket:comment:added', tt, Comment)
+            return res.json({ success: true, error: null, ticket: tt })
+          })
+        } else {
+          emitter.emit('ticket:comment:added', tt, Comment)
+          return res.json({ success: true, error: null, ticket: tt })
+        }
       })
     },
     organizationId
@@ -1043,21 +1079,58 @@ apiTickets.postInternalNote = function (req, res) {
       ticket.notes.push(Note)
       var HistoryItem = {
         action: 'ticket:note:added',
-        description: 'Internal note was added',
+        description: new Map([['en', 'Internal note was added'], ['fr', 'Une note interne a été ajouté']]),
         owner: payload.owner || req.user.id
       }
       ticket.history.push(HistoryItem)
 
       ticket.save(function (err, savedTicket) {
         if (err) return res.status(400).json({ success: false, error: err.message })
-
-        ticketModel.populate(savedTicket, 'subscribers notes.owner history.owner', function (err, savedTicket) {
-          if (err) return res.json({ success: true, ticket: savedTicket })
-
+        emitter.emit('ticket:note:added', savedTicket, Note)
+        let userIds = []
+        userIds.push(savedTicket.owner)
+        if (savedTicket.assignee) userIds.push(savedTicket.assignee)
+        userIds = userIds.concat(savedTicket.subscribers)
+        for (let j = 0; j < savedTicket.history.length; j++) {
+          userIds.push(savedTicket.history[j].owner)
+        }
+        for (let j = 0; j < savedTicket.comments.length; j++) {
+          userIds.push(savedTicket.comments[j].owner)
+        }
+        for (let j = 0; j < savedTicket.notes.length; j++) {
+          userIds.push(savedTicket.notes[j].owner)
+        }
+        userIds = _.uniq(userIds)
+        if (userIds.length) {
+          let Swizi = new SwiziConnector({ apikey: req.user.swiziApiKey })
+          savedTicket = JSON.parse(JSON.stringify(savedTicket))
+          Swizi.findUserByIds(userIds).then(users => {
+            savedTicket.owner = users.find(u => u.id === savedTicket.owner)
+            if (savedTicket.assignee) users.find(u => u.id === savedTicket.assignee)
+            savedTicket.subscribers = savedTicket.subscribers.map(t => users.find(u => u.id === t))
+            for (let j = 0; j < savedTicket.history.length; j++) {
+              savedTicket.history[j].owner = users.find(u => u.id === savedTicket.history[j].owner)
+            }
+            for (let j = 0; j < savedTicket.comments.length; j++) {
+              savedTicket.comments[j].owner = users.find(u => u.id === savedTicket.comments[j].owner)
+            }
+            for (let j = 0; j < savedTicket.notes.length; j++) {
+              savedTicket.notes[j].owner = users.find(u => u.id === savedTicket.notes[j].owner)
+            }
+            emitter.emit('ticket:note:added', savedTicket, Note)
+            return res.json({ success: true, ticket: savedTicket })
+          })
+        } else {
           emitter.emit('ticket:note:added', savedTicket, Note)
-
           return res.json({ success: true, ticket: savedTicket })
-        })
+        }
+        // ticketModel.populate(savedTicket, 'subscribers notes.owner history.owner', function (err, savedTicket) {
+        //   if (err) return res.json({ success: true, ticket: savedTicket })
+
+        //   emitter.emit('ticket:note:added', savedTicket, Note)
+
+        //   return res.json({ success: true, ticket: savedTicket })
+        // })
       })
     },
     organizationId

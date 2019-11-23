@@ -29,11 +29,14 @@ var teamSchema = mongoose.Schema({
 teamSchema.index({ normalized: 1, organizationId: 1 }, { unique: true })
 
 teamSchema.pre('validate', function () {
-  this.normalized = this.name.trim().toLowerCase()
+  this.normalized = this.name
+    .get('fr')
+    .trim()
+    .toLowerCase()
 })
 
 teamSchema.pre('save', function (next) {
-  this.name = this.name.trim()
+  // this.name = this.name.trim()
 
   return next()
 })

@@ -1531,7 +1531,6 @@ define([
     if (!timezone) {
       timezone = 'Europe/Paris'
     }
-    console.log(global.timezone)
 
     return moment
       .utc(date)

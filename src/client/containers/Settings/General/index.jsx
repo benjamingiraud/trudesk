@@ -74,9 +74,9 @@ class GeneralSettings extends React.Component {
       <InputWithSave stateName='siteTitle' settingName='gen:sitetitle' value={this.getSettingsValue('siteTitle')} />
     )
 
-    const SiteUrl = (
-      <InputWithSave stateName='siteUrl' settingName='gen:siteurl' value={this.getSettingsValue('siteUrl')} />
-    )
+    // const SiteUrl = (
+    //   <InputWithSave stateName='siteUrl' settingName='gen:siteurl' value={this.getSettingsValue('siteUrl')} />
+    // )
 
     const Timezone = (
       <SingleSelect

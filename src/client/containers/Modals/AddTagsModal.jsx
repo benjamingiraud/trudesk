@@ -27,8 +27,10 @@ import socket from 'lib/socket'
 import { withTranslation } from 'react-i18next';
 
 class AddTagsModal extends React.Component {
+  state = {lng: 'fr'}
   componentDidMount () {
     this.props.getTagsWithPage({ limit: -1, page: 0 })
+    this.setState({ lng: this.props.i18n.language === 'FR-fr' || 'fr' ? 'fr' : 'en' })
   }
 
   componentDidUpdate () {
@@ -65,7 +67,7 @@ class AddTagsModal extends React.Component {
       this.props.tagsSettings.tags
         .map(tag => {
           return {
-            text: tag.get('name'),
+            text: tag.get('name').get(this.state.lng),
             value: tag.get('_id')
           }
         })

@@ -98,7 +98,7 @@ apiOrganization.create = function (req, res) {
             },
             function (next) {
               var type = new TicketTypeSchema({
-                name: 'Incident',
+                name: new Map([['fr', 'Incident'], ['en', 'Incident']]),
                 organizationId: organizationId
               })
 
@@ -108,7 +108,7 @@ apiOrganization.create = function (req, res) {
             },
             function (next) {
               var type = new TicketTypeSchema({
-                name: 'Demande',
+                name: new Map([['fr', 'Demande'], ['en', 'Request']]),
                 organizationId: organizationId
               })
 
@@ -124,7 +124,7 @@ apiOrganization.create = function (req, res) {
                   function (done) {
                     roleSchema.create(
                       {
-                        name: 'Admin',
+                        name: new Map([['fr', 'Admin'], ['en', 'Admin']]),
                         description: 'Rôle par défaut pour les administrateur',
                         grants: defaults.roleDefaults.adminGrants,
                         organizationId: organizationId
@@ -139,7 +139,7 @@ apiOrganization.create = function (req, res) {
                   function (done) {
                     roleSchema.create(
                       {
-                        name: 'Support',
+                        name: new Map([['fr', 'Support'], ['en', 'Support']]),
                         description: "Rôle par défaut pour l'équipe support",
                         grants: defaults.roleDefaults.supportGrants,
                         organizationId: organizationId
@@ -154,7 +154,7 @@ apiOrganization.create = function (req, res) {
                   function (done) {
                     roleSchema.create(
                       {
-                        name: 'Utilisateur',
+                        name: new Map([['fr', 'Utilisateur'], ['en', 'User']]),
                         description: 'Rôle par défaut pour les utilisateurs',
                         grants: defaults.roleDefaults.userGrants,
                         organizationId: organizationId
@@ -176,7 +176,7 @@ apiOrganization.create = function (req, res) {
               var TeamSchema = require('../../../models/team')
               TeamSchema.create(
                 {
-                  name: 'Support',
+                  name: new Map([['fr', 'Support'], ['en', 'Support']]),
                   members: [],
                   organizationId: organizationId
                 },
@@ -186,69 +186,70 @@ apiOrganization.create = function (req, res) {
               )
             },
             function (defaultTeam, roleResults, next) {
-              UserSchema.getUserByUsername(
-                user.username,
-                function (err, admin) {
-                  if (err) {
-                    winston.error('Database Error: ' + err.message)
-                    return next('Database Error: ' + err.message)
-                  }
+              // UserSchema.getUserByUsername(
+              //   user.username,
+              //   function (err, admin) {
+              //     if (err) {
+              //       winston.error('Database Error: ' + err.message)
+              //       return next('Database Error: ' + err.message)
+              //     }
 
-                  if (!_.isNull(admin) && !_.isUndefined(admin) && !_.isEmpty(admin)) {
-                    return next('Username: ' + user.username + ' already exists.')
-                  }
+              //     if (!_.isNull(admin) && !_.isUndefined(admin) && !_.isEmpty(admin)) {
+              //       return next('Username: ' + user.username + ' already exists.')
+              //     }
 
-                  if (user.password !== user.passconfirm) {
-                    return next('Passwords do not match!')
-                  }
+              //     if (user.password !== user.passconfirm) {
+              //       return next('Passwords do not match!')
+              //     }
 
-                  var chance = new Chance()
-                  var adminUser = new UserSchema({
-                    username: user.username,
-                    password: user.password,
-                    fullname: user.fullname,
-                    email: user.email,
-                    role: roleResults.adminRole._id,
-                    title: 'Administrateur',
-                    accessToken: chance.hash(),
-                    organizationId: organizationId
-                  })
+              //     var chance = new Chance()
+              //     var adminUser = new UserSchema({
+              //       username: user.username,
+              //       password: user.password,
+              //       fullname: user.fullname,
+              //       email: user.email,
+              //       role: roleResults.adminRole._id,
+              //       title: 'Administrateur',
+              //       accessToken: chance.hash(),
+              //       organizationId: organizationId
+              //     })
 
-                  adminUser.save(function (err, savedUser) {
-                    if (err) {
-                      winston.error('Database Error: ' + err.message)
-                      return next('Database Error: ' + err.message)
-                    }
+              //     adminUser.save(function (err, savedUser) {
+              //       if (err) {
+              //         winston.error('Database Error: ' + err.message)
+              //         return next('Database Error: ' + err.message)
+              //       }
 
-                    defaultTeam.addMember(savedUser._id, function (err, success) {
-                      if (err) {
-                        winston.error('Database Error: ' + err.message)
-                        return next('Database Error: ' + err.message)
-                      }
+              //       defaultTeam.addMember(savedUser._id, function (err, success) {
+              //         if (err) {
+              //           winston.error('Database Error: ' + err.message)
+              //           return next('Database Error: ' + err.message)
+              //         }
 
-                      if (!success) {
-                        return next('Unable to add user to Administrator group!')
-                      }
+              //         if (!success) {
+              //           return next('Unable to add user to Administrator group!')
+              //         }
 
-                      defaultTeam.save(function (err) {
-                        if (err) {
-                          winston.error('Database Error: ' + err.message)
-                          return next('Database Error: ' + err.message)
-                        }
+              //         defaultTeam.save(function (err) {
+              //           if (err) {
+              //             winston.error('Database Error: ' + err.message)
+              //             return next('Database Error: ' + err.message)
+              //           }
 
-                        return next(null, defaultTeam)
-                      })
-                    })
-                  })
-                },
-                organizationId
-              )
+              //           return next(null, defaultTeam)
+              //         })
+              //       })
+              //     })
+              //   },
+              //   organizationId
+              // )
+              return next(null, defaultTeam)
             },
             function (defaultTeam, next) {
               var DepartmentSchema = require('../../../models/department')
               DepartmentSchema.create(
                 {
-                  name: 'Support - Tout les groupes',
+                  name: new Map([['fr', 'Support - Tout les groupes'], ['en', 'Support - All groups']]),
                   teams: [defaultTeam._id],
                   allGroups: true,
                   groups: [],
@@ -267,11 +268,9 @@ apiOrganization.create = function (req, res) {
             if (err) {
               return res.status(400).json({ success: false, error: err })
             }
-            console.log('hey1')
             res.json({ success: true, organization: organization })
           }
         )
-        console.log('hey2')
       })
     }
   })

@@ -36,10 +36,13 @@ import { withTranslation } from 'react-i18next';
 class TeamsContainer extends React.Component {
   constructor (props) {
     super(props)
+    this.state = {lng: 'fr'}
   }
 
   componentDidMount () {
     this.props.fetchTeams({ page: 0, limit: 1000 })
+    this.setState({ lng: this.props.i18n.language === 'FR-fr' || 'fr' ? 'fr' : 'en' })
+
   }
 
   componentDidUpdate () {
@@ -91,11 +94,9 @@ class TeamsContainer extends React.Component {
     const {t} = this.props
 
     const tableItems = this.props.teamsState.teams.map(team => {
-      console.log(team.members)
-      console.log(team.get('members'))
       return (
         <TableRow key={team.get('_id')} className={'vam nbb'}>
-          <TableCell style={{ fontWeight: 500, padding: '18px 15px' }}>{team.get('name')}</TableCell>
+          <TableCell style={{ fontWeight: 500, padding: '18px 15px' }}>{team.get('name').get(this.state.lng)}</TableCell>
           <TableCell style={{ padding: '13px 8px 8px 8px' }}>
             {team.get('members') &&
               team.get('members').size > 0 &&

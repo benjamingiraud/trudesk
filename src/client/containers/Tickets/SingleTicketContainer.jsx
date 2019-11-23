@@ -485,7 +485,7 @@ class SingleTicketContainer extends React.Component {
                                   <em>
                                     {t('Action by')}: <span>{item.owner.firstname} {item.owner.lastname}</span>
                                   </em>
-                                  <p>{item.description}</p>
+                                  <p>{item.description[this.state.lng]}</p>
                                 </div>
                               ))}
                           </div>

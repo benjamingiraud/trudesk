@@ -24,6 +24,7 @@ var userSchema = require('../models/user')
 var roleSchema = require('../models/role')
 var permissions = require('../permissions')
 var SwiziConnector = require('../connectors/SwiziConnector')
+var Role = require('../models/role')
 
 var events = {}
 
@@ -144,61 +145,67 @@ events.onSetAssignee = function (socket) {
     var ownerId = socket.request.user.id
     var ticketId = data.ticketId
     var organizationId = socket.request.user.organizationId
+    let Swizi = new SwiziConnector({ apikey: socket.request.user.swiziApiKey })
+    Swizi.findUserById(userId).then(user => {
+      Role.getRoleBySwiziGroup(
+        user.groups,
+        function (err, role) {
+          if (err) return true
+          if (role) {
+            user.role = role
+          }
+          ticketSchema.getTicketById(
+            ticketId,
+            function (err, ticket) {
+              if (err) return true
 
-    ticketSchema.getTicketById(
-      ticketId,
-      function (err, ticket) {
-        if (err) return true
-
-        async.parallel(
-          {
-            setAssignee: function (callback) {
-              ticket.setAssignee(
-                ownerId,
-                userId,
-                function (err, ticket) {
-                  callback(err, ticket)
+              async.parallel(
+                {
+                  setAssignee: function (callback) {
+                    ticket.setAssignee(
+                      ownerId,
+                      user,
+                      function (err, ticket) {
+                        callback(err, ticket)
+                      },
+                      organizationId
+                    )
+                  },
+                  subscriber: function (callback) {
+                    ticket.addSubscriber(userId, function (err, ticket) {
+                      callback(err, ticket)
+                    })
+                  }
                 },
-                organizationId
+                function (err, results) {
+                  if (err) return true
+
+                  ticket = results.subscriber
+                  ticket.save(function (err, ticket) {
+                    if (err) return true
+                    emitter.emit('ticket:subscriber:update', {
+                      user: userId,
+                      subscribe: true,
+                      organizationId: organizationId
+                    })
+                    emitter.emit('ticket:setAssignee', {
+                      assigneeId: ticket.assignee.id,
+                      ticketId: ticket._id,
+                      ticketUid: ticket.uid,
+                      hostname: socket.handshake.headers.host,
+                      organizationId: organizationId
+                    })
+                    utils.sendToAllConnectedClients(io, 'updateAssignee', ticket)
+                  })
+                }
               )
             },
-            subscriber: function (callback) {
-              ticket.addSubscriber(userId, function (err, ticket) {
-                callback(err, ticket)
-              })
-            }
-          },
-          function (err, results) {
-            if (err) return true
-
-            ticket = results.subscriber
-            ticket.save(function (err, ticket) {
-              if (err) return true
-              ticket.populate('assignee', function (err, ticket) {
-                if (err) return true
-
-                emitter.emit('ticket:subscriber:update', {
-                  user: userId,
-                  subscribe: true,
-                  organizationId: organizationId
-                })
-                emitter.emit('ticket:setAssignee', {
-                  assigneeId: ticket.assignee.id,
-                  ticketId: ticket._id,
-                  ticketUid: ticket.uid,
-                  hostname: socket.handshake.headers.host,
-                  organizationId: organizationId
-                })
-
-                // emitter.emit('ticket:updated', ticket)
-                utils.sendToAllConnectedClients(io, 'updateAssignee', ticket)
-              })
-            })
-          }
-        )
-      },
-      organizationId
-    )
+            organizationId
+          )
+        },
+        organizationId
+      )
+    })
   })
 }
 

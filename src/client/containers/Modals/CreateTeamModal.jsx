@@ -32,7 +32,7 @@ import { withTranslation } from 'react-i18next'
 
 @observer
 class CreateTeamModal extends React.Component {
-  @observable name = ''
+  @observable name = new Map([['fr', ''], ['en', '']])
 
   componentDidMount () {
     this.props.fetchAccounts({ limit: -1 })
@@ -51,17 +51,20 @@ class CreateTeamModal extends React.Component {
     this.props.unloadAccounts()
   }
 
-  onInputChange (e) {
-    this.name = e.target.value
+  onInputChange (e, locale) {
+    this.name.set(locale, e.target.value)
   }
 
   onFormSubmit (e) {
     e.preventDefault()
     const $form = $(e.target)
     if (!$form.isValid(null, null, false)) return false
-
+    let name = {
+      'fr': this.name.get('fr'),
+      'en': this.name.get('en')
+    }
     const payload = {
-      name: this.name,
+      name,
       members: this.membersSelect.getSelected()
     }
 
@@ -73,7 +76,6 @@ class CreateTeamModal extends React.Component {
 
     let mappedAccounts = this.props.accounts
       .filter(account => {
-        console.log(account)
         return account.getIn(['role', 'isAgent']) === true && account.get('enabled')
       })
       .map(account => {
@@ -88,12 +90,22 @@ class CreateTeamModal extends React.Component {
         </div>
         <form className={'uk-form-stacked'} onSubmit={e => this.onFormSubmit(e)}>
           <div className={'uk-margin-medium-bottom'}>
-            <label>{t('Team Name')}</label>
+            <label>{t('Team Name')} (fr)</label>
             <input
               type='text'
               className={'md-input'}
-              value={this.name}
-              onChange={e => this.onInputChange(e)}
+              value={this.name.get('fr')}
+              onChange={e => this.onInputChange(e, 'fr')}
+              data-validation='length'
+              data-validation-length={'min2'}
+              data-validation-error-msg={'Please enter a valid Team name. (Must contain 2 characters)'}
+            />
+            <label>{t('Team Name')} (en)</label>
+            <input
+              type='text'
+              className={'md-input'}
+              value={this.name.get('en')}
+              onChange={e => this.onInputChange(e, 'en')}
               data-validation='length'
               data-validation-length={'min2'}
               data-validation-error-msg={'Please enter a valid Team name. (Must contain 2 characters)'}

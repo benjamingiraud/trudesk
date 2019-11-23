@@ -45,10 +45,14 @@ class CreateTicketModal extends React.Component {
 
   constructor (props) {
     super(props)
+    this.state = {
+      lng: 'fr'
+    }
   }
 
   componentDidMount () {
     this.props.fetchGroups()
+    this.setState({ lng: this.props.i18n.language === 'FR-fr' || 'fr' ? 'fr' : 'en' })
     helpers.UI.inputs()
     helpers.formvalidator()
     this.defaultTicketTypeWatcher = when(
@@ -140,15 +144,15 @@ class CreateTicketModal extends React.Component {
     const { viewdata } = this.props
     const mappedGroups = this.props.groups
       .map(grp => {
-        return { text: grp.get('name'), value: grp.get('_id') }
+        return { text: grp.get('name').get(this.state.lng), value: grp.get('_id') }
       })
       .toArray()
 
     const mappedTicketTypes = this.props.viewdata.ticketTypes.map(type => {
-      return { text: type.name, value: type._id }
+      return { text: type.name[this.state.lng], value: type._id }
     })
     const mappedTicketTags = this.props.viewdata.ticketTags.map(tag => {
-      return { text: tag.name, value: tag._id }
+      return { text: tag.name[this.state.lng], value: tag._id }
     })
 
     const { t } = this.props;
@@ -184,7 +188,7 @@ class CreateTicketModal extends React.Component {
                   showTextbox={false}
                   items={mappedTicketTypes}
                   width={'100%'}
-                  defaultValue={this.props.viewdata.defaultTicketType._id}
+                  defaultValue={this.props.viewdata.defaultTicketType.id}
                   onSelectChange={e => {
                     this.onTicketTypeSelectChange(e)
                   }}
@@ -235,7 +239,7 @@ class CreateTicketModal extends React.Component {
                       />
                       <label htmlFor={'p___' + priority._id} className={'mb-10 inline-label'}>
                         <span className='uk-badge' style={{ backgroundColor: priority.htmlColor }}>
-                          {priority.name}
+                          {priority.name[this.state.lng]}
                         </span>
                       </label>
                     </span>

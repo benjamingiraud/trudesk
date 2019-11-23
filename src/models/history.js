@@ -18,7 +18,7 @@ var historySchema = mongoose.Schema({
   action: { type: String, required: true },
   date: { type: Date, default: Date.now, required: true },
   owner: { type: mongoose.Schema.Types.Number },
-  description: { type: String }
+  description: { type: Map, of: String }
 })
 
 module.exports = historySchema
